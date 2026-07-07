@@ -113,24 +113,26 @@ def bao_cao_tong_hop(
             ten = r.get("ten_hang", "")
             sl  = float(r.get("so_luong") or 0)
             tt  = float(r.get("thanh_tien") or 0)
+            dvt = r.get("dvt", "")
             if p.get("loai") == "NK":
                 if ten not in hang_nk:
-                    hang_nk[ten] = {"so_luong": 0, "thanh_tien": 0}
+                    hang_nk[ten] = {"so_luong": 0, "thanh_tien": 0, "dvt": dvt}
                 hang_nk[ten]["so_luong"]   += sl
                 hang_nk[ten]["thanh_tien"] += tt
             elif p.get("loai") == "XK":
                 if ten not in hang_xk:
-                    hang_xk[ten] = {"so_luong": 0, "thanh_tien": 0}
+                    hang_xk[ten] = {"so_luong": 0, "thanh_tien": 0, "dvt": dvt}
                 hang_xk[ten]["so_luong"]   += sl
                 hang_xk[ten]["thanh_tien"] += tt
 
+        # Sort theo so_luong (nhiều phiếu không có đơn giá → thanh_tien = 0)
         top_nk = sorted(
             [{"ten_hang": k, **v} for k, v in hang_nk.items()],
-            key=lambda x: x["thanh_tien"], reverse=True
+            key=lambda x: x["so_luong"], reverse=True
         )[:10]
         top_xk = sorted(
             [{"ten_hang": k, **v} for k, v in hang_xk.items()],
-            key=lambda x: x["thanh_tien"], reverse=True
+            key=lambda x: x["so_luong"], reverse=True
         )[:10]
 
         # ── 7. Bảng tổng hợp theo công trình ─────────────────────────────────

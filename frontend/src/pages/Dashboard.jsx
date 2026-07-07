@@ -261,9 +261,9 @@ function TonKhoWidget({ data, loading }) {
 
 // ── Bảng nhập/xuất chi tiết ──────────────────────────────────
 function TopVatTuWidget({ title, data, loading, type }) {
-  const color = type === 'nk' ? 'text-blue-600' : 'text-orange-500'
-  const bg    = type === 'nk' ? 'bg-blue-50' : 'bg-orange-50'
-  const Icon  = type === 'nk' ? TrendingUp : TrendingDown
+  const color    = type === 'nk' ? 'text-blue-600' : 'text-orange-500'
+  const barColor = type === 'nk' ? 'bg-blue-400' : 'bg-orange-400'
+  const Icon     = type === 'nk' ? TrendingUp : TrendingDown
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
       <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
@@ -276,18 +276,21 @@ function TopVatTuWidget({ title, data, loading, type }) {
           ? <div className="text-gray-400 text-sm text-center py-4">Chưa có dữ liệu</div>
           : <div className="space-y-1.5 max-h-52 overflow-y-auto">
               {data.slice(0, 8).map((item, i) => {
-                const maxTT = data[0]?.thanh_tien || 1
-                const pct = Math.round((item.thanh_tien / maxTT) * 100)
+                const maxSL = data[0]?.so_luong || 1
+                const pct   = Math.round((item.so_luong / maxSL) * 100)
+                const label = item.thanh_tien > 0
+                  ? formatVND(item.thanh_tien)
+                  : `${fmt(item.so_luong)} ${item.dvt || ''}`
                 return (
                   <div key={i} className="flex items-center gap-2">
                     <span className="text-xs text-gray-400 w-4 flex-shrink-0">{i + 1}</span>
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-center mb-0.5">
-                        <span className="text-xs text-gray-700 truncate max-w-[120px]" title={item.ten_hang}>{item.ten_hang}</span>
-                        <span className={`text-xs font-semibold ${color}`}>{formatVND(item.thanh_tien)}</span>
+                        <span className="text-xs text-gray-700 truncate max-w-[140px]" title={item.ten_hang}>{item.ten_hang}</span>
+                        <span className={`text-xs font-semibold ${color} ml-2 whitespace-nowrap`}>{label}</span>
                       </div>
                       <div className="w-full bg-gray-100 rounded-full h-1">
-                        <div className={`h-1 rounded-full ${type === 'nk' ? 'bg-blue-400' : 'bg-orange-400'}`} style={{ width: `${pct}%` }} />
+                        <div className={`h-1 rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
                       </div>
                     </div>
                   </div>
@@ -593,9 +596,6 @@ export default function Dashboard() {
             </div>
         }
       </div>
-
-      {/* Ghi chú công việc */}
-      <GhiChuWidget />
 
       {/* Flow Diagram */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">

@@ -2,7 +2,7 @@
 import React, { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import {
-  BarChart2, Bell,
+  BarChart2, Bell, StickyNote,
   Download, Upload, Package, Box, Building2,
   Users, Shield, ChevronLeft, ChevronRight,
   Database, CheckCircle,
@@ -16,8 +16,9 @@ const groupTongQuan = {
   label: 'TỔNG QUAN',
   keep: true,
   items: [
-    { icon: BarChart2, label: 'Báo cáo tổng hợp', path: '/' },
-    { icon: Bell,      label: 'Cảnh báo',         path: '/canh-bao', badge: true },
+    { icon: BarChart2,  label: 'Báo cáo tổng hợp', path: '/' },
+    { icon: Bell,       label: 'Cảnh báo',          path: '/canh-bao', badge: true },
+    { icon: StickyNote, label: 'Ghi chú công việc', path: '/ghi-chu' },
   ]
 }
 
