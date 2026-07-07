@@ -34,6 +34,7 @@ import CTTonKho from './pages/ct/CTTonKho'
 import CTAIReader from './pages/ct/CTAIReader'
 import CTDanhMuc from './pages/ct/CTDanhMuc'
 import CTImportData from './pages/ct/CTImportData'
+import CTGhiChu from './pages/ct/CTGhiChu'
 
 // ── Guard: chuyển về /login nếu chưa đăng nhập ───────────────
 function PrivateRoute({ children }) {
@@ -99,6 +100,7 @@ export default function App() {
           <Route path="danh-muc"    element={<CTDanhMuc />} />
           <Route path="ai-reader"   element={<CTAIReader />} />
           <Route path="import-data" element={<CTImportData />} />
+          <Route path="ghi-chu"     element={<CTGhiChu />} />
         </Route>
       </Routes>
     </AuthProvider>

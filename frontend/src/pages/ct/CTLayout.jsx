@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { NavLink, Outlet, useParams, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Download, Upload, Package,
-  Cpu, ChevronLeft, ChevronRight, ArrowLeft, Warehouse, BookOpen, FileUp
+  Cpu, ChevronLeft, ChevronRight, ArrowLeft, Warehouse, BookOpen, FileUp, StickyNote
 } from 'lucide-react'
 import { getCongTrinh } from '../../api'
 
@@ -14,6 +14,7 @@ const menuItems = [
   { icon: BookOpen,        label: 'Danh mục hàng',   path: 'danh-muc' },
   { icon: Cpu,             label: 'AI đọc PDF',      path: 'ai-reader' },
   { icon: FileUp,          label: 'Import dữ liệu',  path: 'import-data' },
+  { icon: StickyNote,      label: 'Ghi chú',         path: 'ghi-chu' },
 ]
 
 export default function CTLayout() {
