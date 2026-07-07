@@ -36,7 +36,7 @@ Chỉ 2 vai trò: **admin** (toàn quyền) và **user = NV thủ kho** (chỉ t
 
 ```
 CLAUDE_API_KEY=sk-ant-api03-...
-GEMINI_API_KEY=[REDACTED-ROTATED]
+GEMINI_API_KEY=<your-gemini-api-key>
 GEMINI_MODEL=gemini-1.5-flash   ← đọc từ đây, KHÔNG hard-code
 JWT_SECRET=[REDACTED-ROTATED]
 SETUP_KEY=HPCONS_SETUP_2026

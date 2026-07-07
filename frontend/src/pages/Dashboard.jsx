@@ -7,7 +7,8 @@ ChartJS.register(...registerables)
 import {
   Building2, Download, Upload, Package, DollarSign, AlertTriangle,
   ArrowRight, Database, Smartphone, RefreshCw, Monitor, AlertCircle,
-  CheckCircle, RotateCcw, StickyNote, Plus, Trash2, X
+  CheckCircle, RotateCcw, StickyNote, Plus, X, TrendingDown, TrendingUp,
+  Layers
 } from 'lucide-react'
 import { getBaoCaoTongHop, getBieuDo } from '../api'
 import { useCongTrinh } from '../context/CongTrinhContext'
@@ -38,7 +39,6 @@ function GhiChuWidget() {
     localStorage.setItem('khounice_ghi_chu', JSON.stringify(next))
   }
 
-  // Deadline helpers
   const todayMidnight = () => { const d = new Date(); d.setHours(0,0,0,0); return d }
   const in3Days = () => { const d = todayMidnight(); d.setDate(d.getDate() + 3); return d }
 
@@ -95,7 +95,6 @@ function GhiChuWidget() {
         <span className="ml-auto text-xs text-gray-400">{notes.length} ghi chú</span>
       </div>
 
-      {/* Input thêm mới */}
       <div className="flex gap-2 mb-4">
         <div className="flex-1 space-y-1.5">
           <textarea
@@ -127,7 +126,6 @@ function GhiChuWidget() {
         </div>
       </div>
 
-      {/* Danh sách ghi chú */}
       {notes.length === 0
         ? <div className="text-center text-gray-300 py-6 text-sm">Chưa có ghi chú nào</div>
         : <div className="grid grid-cols-2 gap-2 max-h-80 overflow-y-auto pr-1">
@@ -139,13 +137,8 @@ function GhiChuWidget() {
                 <div key={n.id} className={`rounded-xl border-2 p-3 text-sm ${c.bg} ${borderExtra} relative group`}>
                   {editId === n.id
                     ? <div className="space-y-1.5">
-                        <textarea
-                          value={editText}
-                          onChange={e => setEditText(e.target.value)}
-                          autoFocus
-                          rows={3}
-                          className="w-full bg-transparent border-none outline-none text-gray-800 text-sm resize-none"
-                        />
+                        <textarea value={editText} onChange={e => setEditText(e.target.value)} autoFocus rows={3}
+                          className="w-full bg-transparent border-none outline-none text-gray-800 text-sm resize-none" />
                         <div className="flex items-center gap-2 mb-1">
                           <label className="text-xs text-gray-400">Deadline:</label>
                           <input type="date" value={editDeadline} onChange={e => setEditDeadline(e.target.value)}
@@ -158,8 +151,7 @@ function GhiChuWidget() {
                         </div>
                       </div>
                     : <>
-                        <p className="text-gray-800 whitespace-pre-wrap cursor-pointer leading-relaxed"
-                          onClick={() => startEdit(n)}>{n.noi_dung}</p>
+                        <p className="text-gray-800 whitespace-pre-wrap cursor-pointer leading-relaxed" onClick={() => startEdit(n)}>{n.noi_dung}</p>
                         <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                           <p className="text-xs text-gray-400">{n.created_at}</p>
                           {n.deadline && (
@@ -210,15 +202,114 @@ function KPICard({ icon: Icon, iconBg, title, value, subtitle, valueColor, loadi
   )
 }
 
+// ── Bảng tồn kho mini ─────────────────────────────────────────
+function TonKhoWidget({ data, loading }) {
+  const [search, setSearch] = useState('')
+  const filtered = data.filter(r =>
+    !search || (r.ten_hang || '').toLowerCase().includes(search.toLowerCase())
+  )
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+          <Layers className="w-4 h-4 text-purple-500" />
+          Báo cáo tồn kho
+        </h3>
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Tìm hàng..."
+          className="border border-gray-200 rounded-lg px-2 py-1 text-xs w-32 focus:outline-none focus:border-blue-300"
+        />
+      </div>
+      {loading
+        ? <div className="text-gray-400 text-sm text-center py-4">Đang tải...</div>
+        : filtered.length === 0
+          ? <div className="text-gray-400 text-sm text-center py-4">Không có dữ liệu</div>
+          : <div className="overflow-x-auto max-h-64 overflow-y-auto">
+              <table className="w-full text-xs">
+                <thead className="sticky top-0 bg-white">
+                  <tr className="border-b border-gray-100 text-gray-400">
+                    <th className="text-left py-2 font-medium">Tên hàng</th>
+                    <th className="text-right py-2 font-medium">Nhập</th>
+                    <th className="text-right py-2 font-medium">Xuất</th>
+                    <th className="text-right py-2 font-medium">Tồn</th>
+                    <th className="text-right py-2 font-medium">ĐVT</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((r, i) => {
+                    const ton = r.ton_cuoi ?? 0
+                    const tonColor = ton <= 0 ? 'text-red-600 font-bold' : ton <= 20 ? 'text-amber-600 font-semibold' : 'text-green-700 font-semibold'
+                    return (
+                      <tr key={i} className="border-b border-gray-50 hover:bg-gray-50">
+                        <td className="py-1.5 text-gray-700 max-w-[160px] truncate" title={r.ten_hang}>{r.ten_hang}</td>
+                        <td className="py-1.5 text-right text-blue-600">{fmt(r.tong_nhap)}</td>
+                        <td className="py-1.5 text-right text-orange-500">{fmt(r.tong_xuat)}</td>
+                        <td className={`py-1.5 text-right ${tonColor}`}>{fmt(ton)}</td>
+                        <td className="py-1.5 text-right text-gray-400">{r.dvt || ''}</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+      }
+    </div>
+  )
+}
+
+// ── Bảng nhập/xuất chi tiết ──────────────────────────────────
+function TopVatTuWidget({ title, data, loading, type }) {
+  const color = type === 'nk' ? 'text-blue-600' : 'text-orange-500'
+  const bg    = type === 'nk' ? 'bg-blue-50' : 'bg-orange-50'
+  const Icon  = type === 'nk' ? TrendingUp : TrendingDown
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+      <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+        <Icon className={`w-4 h-4 ${color}`} />
+        {title}
+      </h3>
+      {loading
+        ? <div className="text-gray-400 text-sm text-center py-4">Đang tải...</div>
+        : data.length === 0
+          ? <div className="text-gray-400 text-sm text-center py-4">Chưa có dữ liệu</div>
+          : <div className="space-y-1.5 max-h-52 overflow-y-auto">
+              {data.slice(0, 8).map((item, i) => {
+                const maxTT = data[0]?.thanh_tien || 1
+                const pct = Math.round((item.thanh_tien / maxTT) * 100)
+                return (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className="text-xs text-gray-400 w-4 flex-shrink-0">{i + 1}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-center mb-0.5">
+                        <span className="text-xs text-gray-700 truncate max-w-[120px]" title={item.ten_hang}>{item.ten_hang}</span>
+                        <span className={`text-xs font-semibold ${color}`}>{formatVND(item.thanh_tien)}</span>
+                      </div>
+                      <div className="w-full bg-gray-100 rounded-full h-1">
+                        <div className={`h-1 rounded-full ${type === 'nk' ? 'bg-blue-400' : 'bg-orange-400'}`} style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+      }
+    </div>
+  )
+}
+
 export default function Dashboard() {
   const { selectedCT, ctLoading, congTrinhs, isAdmin, dateFrom, dateTo } = useCongTrinh()
   const [chartMode, setChartMode] = useState('month')
   const [loading, setLoading] = useState(true)
   const [kpi, setKpi] = useState(null)
-  const [topVatTu, setTopVatTu] = useState([])
+  const [topNK, setTopNK] = useState([])
+  const [topXK, setTopXK] = useState([])
   const [bangCT, setBangCT] = useState([])
   const [canhBao, setCanhBao] = useState([])
   const [bieuDoData, setBieuDoData] = useState([])
+  const [tonKho, setTonKho] = useState([])
 
   // Non-admin: luôn dùng CT được gán; Admin: dùng selectedCT (null = tất cả)
   const effectiveCTId = isAdmin ? selectedCT?.id : congTrinhs[0]?.id
@@ -245,16 +336,17 @@ export default function Dashboard() {
         const bc = bcRes.data || {}
         console.log('[Dashboard] API response KPI:', bc.kpi)
         setKpi(bc.kpi || {})
-        setTopVatTu(bc.top_vat_tu_xk || [])
+        setTopNK(bc.top_vat_tu_nk || [])
+        setTopXK(bc.top_vat_tu_xk || [])
         setBangCT(bc.bang_cong_trinh || [])
         setCanhBao(bc.canh_bao_ton_thap || [])
         setBieuDoData(bdRes.data?.data || [])
+        setTonKho(bc.ton_kho || [])
       })
       .catch(err => console.error('[Dashboard] Load data error:', err))
       .finally(() => setLoading(false))
   }
 
-  // effectiveCTId trong deps đảm bảo reload khi CT thay đổi dù object reference không đổi
   useEffect(() => { loadData() }, [chartMode, effectiveCTId, ctLoading, dateFrom, dateTo])
 
   const phieuNhap = kpi?.so_phieu_nk || 0
@@ -345,18 +437,26 @@ export default function Dashboard() {
         </button>
       </div>
 
-      {/* KPI Cards */}
+      {/* KPI Cards — Row 1 */}
       <div className="flex gap-4">
-        <KPICard loading={loading} icon={Building2} iconBg="bg-blue-500" title="Tổng công trình" value={kpi?.so_cong_trinh ?? '—'} subtitle="Đang hoạt động" />
-        <KPICard loading={loading} icon={Download} iconBg="bg-green-500" title="Phiếu nhập" value={kpi?.so_phieu_nk ?? '—'} subtitle="Tổng số phiếu" />
-        <KPICard loading={loading} icon={Upload} iconBg="bg-orange-500" title="Phiếu xuất" value={kpi?.so_phieu_xk ?? '—'} subtitle="Tổng số phiếu" />
-        <KPICard loading={loading} icon={Package} iconBg="bg-purple-500" title="Mặt hàng quản lý" value={fmt(kpi?.so_mat_hang)} subtitle="Mã hàng hóa" />
-        <KPICard loading={loading} icon={DollarSign} iconBg="bg-teal-500" title="Tổng tiền nhập" value={formatVND(kpi?.tong_tien_nk)} subtitle="Giá trị phiếu NK" />
-        <KPICard loading={loading} icon={AlertTriangle} iconBg="bg-red-500" title="Cảnh báo hết hàng" value={kpi?.so_canh_bao ?? '—'} subtitle="Cần kiểm tra" valueColor="text-red-600" />
+        <KPICard loading={loading} icon={Building2}     iconBg="bg-blue-500"   title="Tổng công trình"   value={kpi?.so_cong_trinh ?? '—'}         subtitle="Đang hoạt động" />
+        <KPICard loading={loading} icon={Download}      iconBg="bg-green-500"  title="Phiếu nhập"        value={kpi?.so_phieu_nk ?? '—'}            subtitle="Tổng số phiếu" />
+        <KPICard loading={loading} icon={Upload}        iconBg="bg-orange-500" title="Phiếu xuất"        value={kpi?.so_phieu_xk ?? '—'}            subtitle="Tổng số phiếu" />
+        <KPICard loading={loading} icon={Package}       iconBg="bg-purple-500" title="Mặt hàng quản lý"  value={fmt(kpi?.so_mat_hang)}              subtitle="Mã hàng hóa" />
+        <KPICard loading={loading} icon={AlertTriangle} iconBg="bg-red-500"    title="Cảnh báo hết hàng" value={kpi?.so_canh_bao ?? '—'}            subtitle="Tồn ≤ 0" valueColor="text-red-600" />
       </div>
 
-      {/* Row 2: Chart + Donut + Top Vat tu */}
-      <div className="grid gap-4" style={{ gridTemplateColumns: '5fr 3fr 4fr' }}>
+      {/* KPI Cards — Row 2: Giá trị */}
+      <div className="flex gap-4">
+        <KPICard loading={loading} icon={TrendingUp}   iconBg="bg-teal-500"   title="Tổng tiền nhập"   value={formatVND(kpi?.tong_tien_nk)}  subtitle="Giá trị phiếu NK" valueColor="text-teal-700" />
+        <KPICard loading={loading} icon={TrendingDown} iconBg="bg-amber-500"  title="Tổng tiền xuất"   value={formatVND(kpi?.tong_tien_xk)}  subtitle="Giá trị phiếu XK" valueColor="text-amber-700" />
+        <KPICard loading={loading} icon={Layers}       iconBg="bg-indigo-500" title="Giá trị tồn kho"  value={formatVND(kpi?.gia_tri_ton)}   subtitle="Ước tính" valueColor="text-indigo-700" />
+        <KPICard loading={loading} icon={DollarSign}   iconBg="bg-pink-500"   title="Tổng phiếu"       value={fmt(tongPhieu)}                subtitle="NK + XK" />
+        <KPICard loading={loading} icon={AlertCircle}  iconBg="bg-yellow-500" title="Sắp hết hàng"     value={canhBao.length ?? '—'}         subtitle="Tồn ≤ 20" valueColor="text-yellow-700" />
+      </div>
+
+      {/* Row 3: Chart + Donut */}
+      <div className="grid gap-4" style={{ gridTemplateColumns: '5fr 3fr' }}>
         {/* Bar Chart */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
           <div className="flex items-center justify-between mb-4">
@@ -367,7 +467,9 @@ export default function Dashboard() {
               className="text-xs border border-gray-200 rounded-lg px-2 py-1 text-gray-600 focus:outline-none focus:border-blue-300"
             >
               <option value="day">Theo ngày</option>
+              <option value="week">Theo tuần</option>
               <option value="month">Theo tháng</option>
+              <option value="year">Theo năm</option>
             </select>
           </div>
           <div style={{ height: 220 }}>
@@ -396,87 +498,19 @@ export default function Dashboard() {
             }
           </div>
         </div>
-
-        {/* Top Vat tu */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-          <h3 className="font-semibold text-gray-800 mb-4">Top Vật tư xuất nhiều nhất</h3>
-          {loading
-            ? <div className="text-gray-400 text-sm text-center py-4">Đang tải...</div>
-            : topVatTu.length === 0
-              ? <div className="text-gray-400 text-sm text-center py-4">Chưa có dữ liệu</div>
-              : <table className="w-full text-xs">
-                  <thead>
-                    <tr className="border-b border-gray-100">
-                      <th className="text-left py-2 text-gray-400 font-medium w-6">#</th>
-                      <th className="text-left py-2 text-gray-400 font-medium">Tên hàng</th>
-                      <th className="text-right py-2 text-gray-400 font-medium">SL</th>
-                      <th className="text-right py-2 text-gray-400 font-medium">Tiền</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {topVatTu.slice(0, 8).map((item, i) => (
-                      <tr key={i} className="border-b border-gray-50 hover:bg-gray-50">
-                        <td className="py-2 text-gray-400">{i + 1}</td>
-                        <td className="py-2 text-gray-700 truncate max-w-[90px]" title={item.ten_hang}>{item.ten_hang}</td>
-                        <td className="py-2 text-right font-semibold text-gray-800">{fmt(item.so_luong)}</td>
-                        <td className="py-2 text-right text-gray-500">{formatVND(item.thanh_tien)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-          }
-        </div>
       </div>
 
-      {/* Row 3: Tong hop cong trinh + Canh bao */}
+      {/* Row 4: Top vật tư NK + XK */}
       <div className="grid grid-cols-2 gap-4">
-        {/* Tong hop theo cong trinh */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-          <h3 className="font-semibold text-gray-800 mb-4">Tổng hợp theo công trình</h3>
-          {loading
-            ? <div className="text-gray-400 text-sm text-center py-4">Đang tải...</div>
-            : <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="border-b border-gray-100 text-gray-400">
-                      <th className="text-left py-2 font-medium">#</th>
-                      <th className="text-left py-2 font-medium">Công trình</th>
-                      <th className="text-right py-2 font-medium">P.Nhập</th>
-                      <th className="text-right py-2 font-medium">Tiền NK</th>
-                      <th className="text-right py-2 font-medium">P.Xuất</th>
-                      <th className="text-right py-2 font-medium">Tiền XK</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {bangCT.length === 0
-                      ? <tr><td colSpan={6} className="py-4 text-center text-gray-400">Chưa có dữ liệu</td></tr>
-                      : bangCT.map((ct, i) => (
-                          <tr key={ct.id || i} className="border-b border-gray-50 hover:bg-gray-50">
-                            <td className="py-2 text-gray-400">{i + 1}</td>
-                            <td className="py-2 text-gray-700 truncate max-w-[120px]" title={ct.ten_ct}>{ct.ten_ct}</td>
-                            <td className="py-2 text-right text-green-600">{ct.so_phieu_nk || 0}</td>
-                            <td className="py-2 text-right text-gray-700">{formatVND(ct.tong_tien_nk)}</td>
-                            <td className="py-2 text-right text-orange-600">{ct.so_phieu_xk || 0}</td>
-                            <td className="py-2 text-right text-gray-700">{formatVND(ct.tong_tien_xk)}</td>
-                          </tr>
-                        ))
-                    }
-                    {bangCT.length > 0 && (
-                      <tr className="border-t-2 border-gray-200 font-bold bg-gray-50">
-                        <td className="py-2 text-gray-600" colSpan={2}>Tổng cộng</td>
-                        <td className="py-2 text-right text-green-700">{tongCT.so_phieu_nk}</td>
-                        <td className="py-2 text-right text-gray-800">{formatVND(tongCT.tong_tien_nk)}</td>
-                        <td className="py-2 text-right text-orange-700">{tongCT.so_phieu_xk}</td>
-                        <td className="py-2 text-right text-gray-800">{formatVND(tongCT.tong_tien_xk)}</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-          }
-        </div>
+        <TopVatTuWidget title="Top vật tư nhập nhiều nhất"  data={topNK} loading={loading} type="nk" />
+        <TopVatTuWidget title="Top vật tư xuất nhiều nhất"  data={topXK} loading={loading} type="xk" />
+      </div>
 
-        {/* Canh bao ton kho */}
+      {/* Row 5: Tồn kho + Cảnh báo */}
+      <div className="grid grid-cols-2 gap-4">
+        <TonKhoWidget data={tonKho} loading={loading} />
+
+        {/* Cảnh báo tồn kho */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-gray-800">Cảnh báo hết hàng</h3>
@@ -492,21 +526,71 @@ export default function Dashboard() {
                   <span className="text-sm">Không có cảnh báo tồn kho</span>
                 </div>
               : <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {canhBao.map((cb, i) => (
-                    <div key={i} className="flex items-start gap-3 p-3 bg-amber-50 border border-amber-100 rounded-xl">
-                      <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-gray-800 truncate">{cb.ten_hang}</div>
-                        {cb.ma_ct && <div className="text-xs text-gray-500">{cb.ma_ct}</div>}
-                        <div className="text-xs text-red-600 font-medium mt-0.5">
-                          Tồn kho: {fmt(cb.ton_cuoi)} {cb.dvt || ''}
+                  {canhBao.map((cb, i) => {
+                    const ton = cb.ton_cuoi ?? 0
+                    const isZero = ton <= 0
+                    return (
+                      <div key={i} className={`flex items-start gap-3 p-3 rounded-xl border ${isZero ? 'bg-red-50 border-red-100' : 'bg-amber-50 border-amber-100'}`}>
+                        <AlertCircle className={`w-4 h-4 flex-shrink-0 mt-0.5 ${isZero ? 'text-red-500' : 'text-amber-500'}`} />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-gray-800 truncate">{cb.ten_hang}</div>
+                          {cb.ma_ct && <div className="text-xs text-gray-500">{cb.ma_ct}</div>}
+                          <div className={`text-xs font-medium mt-0.5 ${isZero ? 'text-red-600' : 'text-amber-600'}`}>
+                            {isZero ? '❌ Hết hàng' : '⚠'} Tồn: {fmt(ton)} {cb.dvt || ''}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
           }
         </div>
+      </div>
+
+      {/* Row 6: Tổng hợp theo công trình */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <h3 className="font-semibold text-gray-800 mb-4">Tổng hợp theo công trình</h3>
+        {loading
+          ? <div className="text-gray-400 text-sm text-center py-4">Đang tải...</div>
+          : <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-gray-100 text-gray-400">
+                    <th className="text-left py-2 font-medium">#</th>
+                    <th className="text-left py-2 font-medium">Công trình</th>
+                    <th className="text-right py-2 font-medium">P.Nhập</th>
+                    <th className="text-right py-2 font-medium">Tiền NK</th>
+                    <th className="text-right py-2 font-medium">P.Xuất</th>
+                    <th className="text-right py-2 font-medium">Tiền XK</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bangCT.length === 0
+                    ? <tr><td colSpan={6} className="py-4 text-center text-gray-400">Chưa có dữ liệu</td></tr>
+                    : bangCT.map((ct, i) => (
+                        <tr key={ct.id || i} className="border-b border-gray-50 hover:bg-gray-50">
+                          <td className="py-2 text-gray-400">{i + 1}</td>
+                          <td className="py-2 text-gray-700 truncate max-w-[160px]" title={ct.ten_ct}>{ct.ten_ct}</td>
+                          <td className="py-2 text-right text-green-600">{ct.so_phieu_nk || 0}</td>
+                          <td className="py-2 text-right text-gray-700">{formatVND(ct.tong_tien_nk)}</td>
+                          <td className="py-2 text-right text-orange-600">{ct.so_phieu_xk || 0}</td>
+                          <td className="py-2 text-right text-gray-700">{formatVND(ct.tong_tien_xk)}</td>
+                        </tr>
+                      ))
+                  }
+                  {bangCT.length > 0 && (
+                    <tr className="border-t-2 border-gray-200 font-bold bg-gray-50">
+                      <td className="py-2 text-gray-600" colSpan={2}>Tổng cộng</td>
+                      <td className="py-2 text-right text-green-700">{tongCT.so_phieu_nk}</td>
+                      <td className="py-2 text-right text-gray-800">{formatVND(tongCT.tong_tien_nk)}</td>
+                      <td className="py-2 text-right text-orange-700">{tongCT.so_phieu_xk}</td>
+                      <td className="py-2 text-right text-gray-800">{formatVND(tongCT.tong_tien_xk)}</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+        }
       </div>
 
       {/* Ghi chú công việc */}
@@ -517,10 +601,10 @@ export default function Dashboard() {
         <h3 className="font-semibold text-gray-800 mb-4">Luồng dữ liệu hệ thống</h3>
         <div className="flex items-stretch gap-2">
           {[
-            { icon: Smartphone, color: 'bg-blue-500', label: 'APP CON', items: [`${kpi?.so_cong_trinh || 0} app công trình`, 'Nhập / xuất kho', 'Offline capable'] },
-            { icon: RefreshCw, color: 'bg-green-500', label: 'ĐỒNG BỘ', items: ['Auto sync Supabase', 'Real-time update', 'Delta sync'] },
-            { icon: Database, color: 'bg-purple-500', label: 'DATABASE TỔNG', items: ['Supabase PostgreSQL', 'Real-time', 'Backup tự động'] },
-            { icon: Monitor, color: 'bg-orange-500', label: 'WEB APP', items: ['Dashboard', 'Báo cáo', 'Quản trị'] },
+            { icon: Smartphone, color: 'bg-blue-500',   label: 'APP CON',       items: [`${kpi?.so_cong_trinh || 0} app công trình`, 'Nhập / xuất kho', 'Offline capable'] },
+            { icon: RefreshCw,  color: 'bg-green-500',  label: 'ĐỒNG BỘ',      items: ['Auto sync Supabase', 'Real-time update', 'Delta sync'] },
+            { icon: Database,   color: 'bg-purple-500', label: 'DATABASE TỔNG', items: ['Supabase PostgreSQL', 'Real-time', 'Backup tự động'] },
+            { icon: Monitor,    color: 'bg-orange-500', label: 'WEB APP',       items: ['Dashboard', 'Báo cáo', 'Quản trị'] },
           ].map((node, i, arr) => (
             <React.Fragment key={i}>
               <div className="flex-1 border border-gray-100 rounded-xl p-3 flex flex-col items-center text-center gap-2">

@@ -90,8 +90,18 @@ def bao_cao_tong_hop(
             so_mat_hang = len(ton_kho)
 
         # ── 6. Top vật tư (dùng phieu_date — có filter ngày) ─────────────────
-        chi_tiets  = db.get_all_chi_tiet()
-        phieu_map  = {p["id"]: p for p in phieu_date if p.get("id")}
+        # Batch fetch chi tiết chỉ từ phieu_ids thuộc phieu_date (không tải cả DB)
+        phieu_map = {p["id"]: p for p in phieu_date if p.get("id")}
+        phieu_ids = list(phieu_map.keys())
+        chi_tiets = []
+        for i in range(0, len(phieu_ids), 100):
+            chunk   = phieu_ids[i:i + 100]
+            ids_str = ",".join(str(x) for x in chunk)
+            rows    = db.select("chi_tiet_phieu",
+                                query="phieu_id,ten_hang,dvt,so_luong,thanh_tien",
+                                filters=f"phieu_id=in.({ids_str})")
+            chi_tiets.extend(rows)
+        print(f"[bao_cao] chi_tiets batch: {len(chi_tiets)} dòng từ {len(phieu_ids)} phiếu")
 
         hang_nk: dict = {}
         hang_xk: dict = {}
@@ -154,16 +164,30 @@ def bao_cao_tong_hop(
                                       "tong_tien_nk": 0, "tong_tien_xk": 0})
             bang_ct.append({**ct, **stats})
 
+        # Tính tong_tien_xk từ phieu_all nếu chọn CT cụ thể
+        if cong_trinh_id:
+            xk_all = [p for p in phieu_all if p.get("loai") == "XK"]
+            tong_tien_xk = sum(float(p.get("tong_tien") or 0) for p in xk_all)
+        else:
+            tong_tien_xk = thong_ke.get("tong_tien_xk", 0)
+
+        # Tính giá trị tồn kho
+        gia_tri_ton = sum(float(r.get("ton_cuoi") or 0) * float(r.get("don_gia") or 0)
+                         for r in ton_kho)
+
         return {
             "kpi": {
                 **thong_ke,
-                "so_mat_hang": so_mat_hang,
-                "so_canh_bao": len([r for r in ton_kho if (r.get("ton_cuoi") or 0) <= 0]),
+                "so_mat_hang":  so_mat_hang,
+                "so_canh_bao":  len([r for r in ton_kho if (r.get("ton_cuoi") or 0) <= 0]),
+                "tong_tien_xk": tong_tien_xk,
+                "gia_tri_ton":  gia_tri_ton,
             },
             "top_vat_tu_nk":     top_nk,
             "top_vat_tu_xk":     top_xk,
             "bang_cong_trinh":   bang_ct,
             "canh_bao_ton_thap": canh_bao[:20],
+            "ton_kho":           ton_kho[:50],
         }
     except Exception as e:
         import traceback
@@ -270,8 +294,19 @@ def bieu_do_nhap_xuat(
                 continue
             if period == "day":
                 key = ngay[:10]
+            elif period == "week":
+                # ISO week: YYYY-Www
+                from datetime import date as _date
+                try:
+                    d = _date.fromisoformat(ngay[:10])
+                    iso = d.isocalendar()
+                    key = f"{iso[0]}-W{iso[1]:02d}"
+                except Exception:
+                    key = ngay[:7]
+            elif period == "year":
+                key = ngay[:4]
             else:
-                key = ngay[:7]  # YYYY-MM
+                key = ngay[:7]  # YYYY-MM (month)
 
             if key not in buckets:
                 buckets[key] = {"period": key,
