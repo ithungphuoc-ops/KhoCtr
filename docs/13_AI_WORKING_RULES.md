@@ -111,6 +111,42 @@ Trước khi sửa bất kỳ module nào, phải tự kiểm tra:
 | 🟡 Trung bình | Có thể ảnh hưởng nếu không cẩn thận | Sửa router, sửa config |
 | 🔴 Cao | Ảnh hưởng trực tiếp dữ liệu/auth/AI flow | Sửa DB, sửa auth, xóa dữ liệu |
 
+### 4.5 Kiểm tra cú pháp bắt buộc trước khi commit / deploy
+
+> **Quy tắc bổ sung từ 07/07/2026 — áp dụng ngay lập tức.**
+
+AI **KHÔNG ĐƯỢC** commit hoặc yêu cầu Sếp deploy nếu chưa hoàn thành bước kiểm tra sau:
+
+**Backend (Python):**
+```bash
+python3 -c "
+import os, ast
+for r, _, fs in os.walk('backend'):
+    for f in fs:
+        if f.endswith('.py'):
+            ast.parse(open(os.path.join(r,f)).read())
+            print('OK', os.path.join(r,f))
+"
+```
+Hoặc dùng script copy-to-tmp để tránh sandbox mount cache:
+```python
+shutil.copytree(backend_dir, '/tmp/check')
+# rồi ast.parse từng file trong /tmp/check
+```
+
+**Frontend (JS/JSX):**
+```bash
+cd frontend && npx --yes acorn --ecma2020 --module src/**/*.jsx > /dev/null
+```
+hoặc `npm run build` (Vite sẽ báo lỗi syntax).
+
+**Quy tắc:**
+- Nếu còn bất kỳ `SyntaxError` hoặc `IndentationError` → **sửa hết trước** → **chạy lại kiểm tra** → mới được commit.
+- Báo cáo kết quả kiểm tra theo format: `X OK / 0 FAIL` **trước khi** yêu cầu Sếp chạy `git push`.
+- Đây là quy tắc không thể bỏ qua dù là fix nhỏ hay khẩn cấp.
+
+---
+
 ### 4.4 Báo cáo sau khi hoàn thành
 Sau mỗi nhóm công việc, báo cáo:
 - Danh sách file đã thay đổi (tạo mới / sửa)
