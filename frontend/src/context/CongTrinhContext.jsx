@@ -20,8 +20,9 @@ export function CongTrinhProvider({ children }) {
         const admin = res.data?.is_admin || false
         setCongTrinhs(list)
         setIsAdmin(admin)
-        // Tự động chọn CT đầu tiên (cả admin lẫn user thường)
-        if (list.length > 0) {
+        // Non-admin: tự động chọn CT đầu tiên (họ chỉ có 1 CT)
+        // Admin: default null = xem tất cả công trình
+        if (list.length > 0 && !admin) {
           setSelectedCT(list[0])
         }
       })

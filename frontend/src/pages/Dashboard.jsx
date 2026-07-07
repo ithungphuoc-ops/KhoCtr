@@ -311,12 +311,13 @@ export default function Dashboard() {
   const [bieuDoData, setBieuDoData] = useState([])
   const [tonKho, setTonKho] = useState([])
 
-  // Non-admin: luôn dùng CT được gán; Admin: dùng selectedCT (null = tất cả)
-  const effectiveCTId = isAdmin ? selectedCT?.id : congTrinhs[0]?.id
+  // selectedCT?.id — undefined nếu admin chọn "Tất cả CT" (selectedCT=null)
+  // Context đảm bảo: non-admin luôn có selectedCT=list[0]; admin default null
+  const effectiveCTId = selectedCT?.id
 
   const loadData = () => {
     if (ctLoading) return
-    if (!isAdmin && !effectiveCTId) return
+    // Không cần check isAdmin — context đảm bảo non-admin luôn có selectedCT sau khi load
     setLoading(true)
 
     const ctParam   = effectiveCTId ? { cong_trinh_id: effectiveCTId } : {}
