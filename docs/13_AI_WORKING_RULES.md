@@ -147,6 +147,72 @@ hoặc `npm run build` (Vite sẽ báo lỗi syntax).
 
 ---
 
+### 4.6 Kiểm thử bắt buộc
+
+> **Quy tắc bổ sung từ 07/07/2026.**
+
+- AI **KHÔNG ĐƯỢC** báo "đã kiểm thử thành công" nếu chưa thực sự chạy các lệnh kiểm tra của dự án.
+- Chỉ được kết luận **"OK"** khi tất cả kiểm tra đều PASS.
+
+**Báo cáo kiểm thử bắt buộc phải ghi rõ:**
+
+| Mục | Nội dung bắt buộc |
+|-----|-------------------|
+| Lệnh đã chạy | Ghi đúng lệnh thực tế đã chạy |
+| Kết quả | Output thật từ terminal |
+| Số file PASS/FAIL | Ví dụ: `19 OK / 0 FAIL` |
+
+**Ví dụ đúng:**
+```
+Lệnh: python3 ast.parse() trên /tmp/backend_check
+Kết quả: 19 OK / 0 FAIL
+```
+
+**Ví dụ SAI — cấm dùng:**
+```
+"Em đã kiểm tra, không có lỗi." ← không có lệnh, không có output thật
+```
+
+---
+
+### 4.7 Không tự quyết định — bắt buộc chờ Admin
+
+> **Quy tắc bổ sung từ 07/07/2026.**
+
+AI **KHÔNG ĐƯỢC** tự thực hiện bất kỳ hành động nào sau đây mà không có lệnh rõ ràng từ Admin:
+
+- Commit · Push Git · Merge
+- Deploy (Render hoặc bất kỳ nền tảng nào)
+- Chạy SQL Migration
+- Xóa dữ liệu · Sửa dữ liệu
+- Đổi cấu trúc Database
+- Thay đổi Environment Variables
+
+Sau khi hoàn thành công việc, AI **phải dừng lại và báo cáo**. Chỉ khi Admin xác nhận bằng lệnh rõ ràng (ví dụ: "commit", "push", "deploy", "chạy SQL") thì mới được hướng dẫn hoặc thực hiện bước tiếp theo.
+
+---
+
+### Quy trình làm việc bắt buộc cho mỗi nhóm công việc
+
+> Tuyệt đối không được bỏ qua bất kỳ bước nào. Không được tự quyết định thay Admin.
+
+```
+1.  Phân tích yêu cầu
+2.  Phân tích rủi ro + module bị ảnh hưởng
+3.  ── DỪNG → chờ Admin xác nhận ──
+4.  Thực hiện đúng phạm vi đã được duyệt
+5.  Chạy đầy đủ compile / build / test
+6.  Báo cáo kết quả kiểm thử (lệnh + kết quả + PASS/FAIL)
+7.  ── DỪNG → chờ Admin xác nhận ──
+8.  [Admin: "commit"] → commit
+9.  ── DỪNG → chờ Admin xác nhận ──
+10. [Admin: "push"]   → push
+11. ── DỪNG → chờ Admin xác nhận ──
+12. [Admin: "deploy" / "chạy SQL"] → thực hiện
+```
+
+---
+
 ### 4.4 Báo cáo sau khi hoàn thành
 Sau mỗi nhóm công việc, báo cáo:
 - Danh sách file đã thay đổi (tạo mới / sửa)
