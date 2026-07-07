@@ -46,6 +46,10 @@ export default function Header() {
   const [tempTo, setTempTo]         = useState(dateTo)
   const [exporting, setExporting]   = useState(false)
   const [alertCount, setAlertCount] = useState(0)
+  // Số đã xem lần cuối — lưu localStorage để nhớ qua reload
+  const [seenCount, setSeenCount]   = useState(() =>
+    parseInt(localStorage.getItem('canh_bao_seen') || '0', 10)
+  )
 
   // Lấy số lượng hàng cảnh báo tồn thấp (≤20) từ API
   useEffect(() => {
@@ -58,6 +62,16 @@ export default function Header() {
       })
       .catch(() => {})
   }, [selectedCT, ctLoading])
+
+  // Badge chỉ hiện khi có cảnh báo mới hơn lần xem cuối
+  const unreadCount = alertCount > seenCount ? alertCount : 0
+
+  const handleBellClick = () => {
+    // Đánh dấu đã xem — badge sẽ mất
+    setSeenCount(alertCount)
+    localStorage.setItem('canh_bao_seen', String(alertCount))
+    navigate('/canh-bao')
+  }
 
   const pickerRef = useRef(null)
   const pageName  = routeNames[location.pathname] || 'Trang chủ'
@@ -256,13 +270,13 @@ export default function Header() {
         <div className="w-px h-6 bg-gray-200" />
 
         <button
-          onClick={() => navigate('/canh-bao')}
+          onClick={handleBellClick}
           title="Cảnh báo tồn kho thấp"
           className="relative p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
           <Bell className="w-5 h-5" />
-          {alertCount > 0 && (
-            <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center leading-none">
-              {alertCount > 99 ? '99+' : alertCount}
+          {unreadCount > 0 && (
+            <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center leading-none animate-pulse">
+              {unreadCount > 99 ? '99+' : unreadCount}
             </span>
           )}
         </button>
