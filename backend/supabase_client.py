@@ -224,8 +224,14 @@ def get_ton_kho_all() -> list:
 
 def get_ton_kho_by_ct(cong_trinh_id: int = None, ma_ct: str = None) -> list:
     if cong_trinh_id:
-        return select("v_ton_kho", filters=f"cong_trinh_id=eq.{cong_trinh_id}",
-                      order="nhom.asc,ten_hang.asc")
+        # v_ton_kho không có cột cong_trinh_id — lookup ma_ct từ bảng cong_trinh trước
+        cts = select("cong_trinh", query="id,ma_ct", filters=f"id=eq.{cong_trinh_id}")
+        if cts:
+            _ma_ct = cts[0].get("ma_ct", "")
+            if _ma_ct:
+                return select("v_ton_kho", filters=f"ma_ct=eq.{_ma_ct}",
+                              order="nhom.asc,ten_hang.asc")
+        return []
     if ma_ct:
         return select("v_ton_kho", filters=f"ma_ct=eq.{ma_ct}",
                       order="nhom.asc,ten_hang.asc")
