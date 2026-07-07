@@ -448,11 +448,11 @@ export default function Dashboard() {
 
       {/* KPI Cards — Row 2: Giá trị */}
       <div className="flex gap-4">
-        <KPICard loading={loading} icon={TrendingUp}   iconBg="bg-teal-500"   title="Tổng tiền nhập"   value={formatVND(kpi?.tong_tien_nk)}  subtitle="Giá trị phiếu NK" valueColor="text-teal-700" />
-        <KPICard loading={loading} icon={TrendingDown} iconBg="bg-amber-500"  title="Tổng tiền xuất"   value={formatVND(kpi?.tong_tien_xk)}  subtitle="Giá trị phiếu XK" valueColor="text-amber-700" />
-        <KPICard loading={loading} icon={Layers}       iconBg="bg-indigo-500" title="Giá trị tồn kho"  value={formatVND(kpi?.gia_tri_ton)}   subtitle="Ước tính" valueColor="text-indigo-700" />
-        <KPICard loading={loading} icon={DollarSign}   iconBg="bg-pink-500"   title="Tổng phiếu"       value={fmt(tongPhieu)}                subtitle="NK + XK" />
-        <KPICard loading={loading} icon={AlertCircle}  iconBg="bg-yellow-500" title="Sắp hết hàng"     value={canhBao.length ?? '—'}         subtitle="Tồn ≤ 20" valueColor="text-yellow-700" />
+        <KPICard loading={loading} icon={TrendingUp}   iconBg="bg-teal-500"   title="Tổng tiền nhập"  value={formatVND(kpi?.tong_tien_nk)}          subtitle="Giá trị phiếu NK" valueColor="text-teal-700" />
+        <KPICard loading={loading} icon={TrendingDown} iconBg="bg-amber-500"  title="Tổng tiền xuất"  value={formatVND(kpi?.tong_tien_xk)}          subtitle="Giá trị phiếu XK" valueColor="text-amber-700" />
+        <KPICard loading={loading} icon={DollarSign}   iconBg="bg-pink-500"   title="Tổng phiếu"      value={fmt(tongPhieu)}                        subtitle="NK + XK" />
+        <KPICard loading={loading} icon={AlertCircle}  iconBg="bg-yellow-500" title="Sắp hết hàng"    value={kpi?.so_canh_bao_thap ?? canhBao.length} subtitle="Tồn ≤ 20" valueColor="text-yellow-700" />
+        <KPICard loading={loading} icon={Layers}       iconBg="bg-red-600"    title="Âm kho"          value={kpi?.so_am_kho ?? '—'}                 subtitle="Tồn < 0" valueColor="text-red-700" />
       </div>
 
       {/* Row 3: Chart + Donut */}

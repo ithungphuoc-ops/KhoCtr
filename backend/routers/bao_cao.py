@@ -164,30 +164,29 @@ def bao_cao_tong_hop(
                                       "tong_tien_nk": 0, "tong_tien_xk": 0})
             bang_ct.append({**ct, **stats})
 
-        # Tính tong_tien_xk từ phieu_all nếu chọn CT cụ thể
-        if cong_trinh_id:
-            xk_all = [p for p in phieu_all if p.get("loai") == "XK"]
-            tong_tien_xk = sum(float(p.get("tong_tien") or 0) for p in xk_all)
-        else:
-            tong_tien_xk = thong_ke.get("tong_tien_xk", 0)
+        # tong_tien_xk: khi CT cụ thể thì đã có trong thong_ke (line 70); khi tất cả lấy từ get_thong_ke_tong
+        tong_tien_xk = thong_ke.get("tong_tien_xk", 0)
 
-        # Tính giá trị tồn kho
-        gia_tri_ton = sum(float(r.get("ton_cuoi") or 0) * float(r.get("don_gia") or 0)
-                         for r in ton_kho)
+        # Thống kê âm kho (ton_cuoi < 0)
+        so_am_kho = len([r for r in ton_kho if (r.get("ton_cuoi") or 0) < 0])
+        # Tổng nhập - xuất theo số lượng (từ v_ton_kho)
+        tong_nhap_sl = sum(float(r.get("tong_nhap") or 0) for r in ton_kho)
+        tong_xuat_sl = sum(float(r.get("tong_xuat") or 0) for r in ton_kho)
 
         return {
             "kpi": {
                 **thong_ke,
-                "so_mat_hang":  so_mat_hang,
-                "so_canh_bao":  len([r for r in ton_kho if (r.get("ton_cuoi") or 0) <= 0]),
-                "tong_tien_xk": tong_tien_xk,
-                "gia_tri_ton":  gia_tri_ton,
+                "so_mat_hang":        so_mat_hang,
+                "so_canh_bao":        len([r for r in ton_kho if (r.get("ton_cuoi") or 0) <= 0]),
+                "so_canh_bao_thap":   len(canh_bao),   # tổng thật, không bị cap
+                "tong_tien_xk":       tong_tien_xk,
+                "so_am_kho":          so_am_kho,
             },
             "top_vat_tu_nk":     top_nk,
             "top_vat_tu_xk":     top_xk,
             "bang_cong_trinh":   bang_ct,
-            "canh_bao_ton_thap": canh_bao[:20],
-            "ton_kho":           ton_kho[:50],
+            "canh_bao_ton_thap": canh_bao[:100],   # tăng lên 100
+            "ton_kho":           ton_kho[:100],
         }
     except Exception as e:
         import traceback
@@ -221,9 +220,15 @@ def bao_cao_theo_thang(
         tong_tien_nk = sum(float(p.get("tong_tien") or 0) for p in phieu_nk)
         tong_tien_xk = sum(float(p.get("tong_tien") or 0) for p in phieu_xk)
 
-        phieu_ids = {p["id"] for p in phieu_thang if p.get("id")}
-        all_ct    = db.get_all_chi_tiet()
-        ct_thang  = [r for r in all_ct if r.get("phieu_id") in phieu_ids]
+        phieu_ids_list = [p["id"] for p in phieu_thang if p.get("id")]
+        phieu_ids      = set(phieu_ids_list)
+        ct_thang: list = []
+        for i in range(0, len(phieu_ids_list), 100):
+            chunk   = phieu_ids_list[i:i + 100]
+            ids_str = ",".join(str(x) for x in chunk)
+            rows    = db.select("chi_tiet_phieu", query="*",
+                                filters=f"phieu_id=in.({ids_str})")
+            ct_thang.extend(rows)
 
         phieu_map = {p["id"]: p for p in phieu_thang}
         hang_stats: dict = {}
