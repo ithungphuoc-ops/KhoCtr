@@ -405,4 +405,77 @@ def test_connection(cong_trinh_id: int, authorization: Optional[str] = Header(No
                 headers={"Content-Type": "application/json"}, method="POST")
             try:
                 with urllib.request.urlopen(req, timeout=20) as r:
-                    _json.loads(r.read(
+                    _json.loads(r.read())
+                status = "ok"
+            except urllib.error.HTTPError as e:
+                raw = e.read().decode()
+                if e.code == 429:
+                    status = "quota_exceeded"
+                    error_msg = f"Hết quota ({model}). Thử lại sau hoặc đổi model."
+                else:
+                    status = "error"
+                    error_msg = f"HTTP {e.code}: {raw[:200]}"
+
+        # ── Claude ────────────────────────────────────────────
+        elif provider == "claude":
+            url = "https://api.anthropic.com/v1/messages"
+            body_data = _json.dumps({
+                "model": model,
+                "max_tokens": 10,
+                "messages": [{"role": "user", "content": test_prompt}],
+            }).encode()
+            req = urllib.request.Request(url, data=body_data, headers={
+                "Content-Type":      "application/json",
+                "x-api-key":         plain_key,
+                "anthropic-version": "2023-06-01",
+            }, method="POST")
+            try:
+                with urllib.request.urlopen(req, timeout=20) as r:
+                    _json.loads(r.read())
+                status = "ok"
+            except urllib.error.HTTPError as e:
+                raw = e.read().decode()
+                status = "quota_exceeded" if e.code == 429 else "error"
+                error_msg = f"HTTP {e.code}: {raw[:200]}"
+
+        # ── OpenAI ────────────────────────────────────────────
+        elif provider == "openai":
+            url = "https://api.openai.com/v1/chat/completions"
+            body_data = _json.dumps({
+                "model": model,
+                "max_tokens": 10,
+                "messages": [{"role": "user", "content": test_prompt}],
+            }).encode()
+            req = urllib.request.Request(url, data=body_data, headers={
+                "Content-Type":  "application/json",
+                "Authorization": f"Bearer {plain_key}",
+            }, method="POST")
+            try:
+                with urllib.request.urlopen(req, timeout=20) as r:
+                    _json.loads(r.read())
+                status = "ok"
+            except urllib.error.HTTPError as e:
+                raw = e.read().decode()
+                status = "quota_exceeded" if e.code == 429 else "error"
+                error_msg = f"HTTP {e.code}: {raw[:200]}"
+
+        else:
+            status = "error"
+            error_msg = f"Provider '{provider}' chưa có handler test."
+
+        # Lưu kết quả vào DB (kể cả khi lỗi)
+        db.update_ai_config_test_result(cong_trinh_id, status, error_msg)
+        print(f"[ai_config] Test CT={cong_trinh_id} provider={provider} model={model} → {status}")
+
+        return {
+            "cong_trinh_id": cong_trinh_id,
+            "provider":      provider,
+            "model":         model,
+            "status":        status,
+            "message":       "Kết nối thành công!" if status == "ok" else error_msg,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
