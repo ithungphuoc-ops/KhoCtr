@@ -606,4 +606,9 @@ def delete_ai_config(cong_trinh_id: int):
 
 
 def ensure_ai_config_exists(cong_trinh_id: int) -> dict:
- 
+    # Đảm bảo CT có ít nhất 1 config rỗng trong DB.
+    existing = get_ai_config_by_ct(cong_trinh_id)
+    if existing:
+        return existing
+    new_cfg = create_ai_config(cong_trinh_id=cong_trinh_id, is_active=False)
+    return new_cfg or {}
