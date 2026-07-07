@@ -22,6 +22,7 @@ import ImportData from './pages/ImportData'
 import NhatKy from './pages/NhatKy'
 import LichSuGiaoDich from './pages/LichSuGiaoDich'
 import GhiChu from './pages/GhiChu'
+import ThietLapAPI from './pages/ThietLapAPI'
 import Login from './pages/Login'
 
 // Web Con layout + pages
@@ -81,7 +82,8 @@ export default function App() {
           <Route path="input-data"  element={<ImportData />} />
           <Route path="nhat-ky"    element={<NhatKy />} />
           <Route path="lich-su"    element={<LichSuGiaoDich />} />
-          <Route path="ghi-chu"    element={<GhiChu />} />
+          <Route path="ghi-chu"      element={<GhiChu />} />
+          <Route path="thiet-lap-api" element={<ThietLapAPI />} />
         </Route>
 
         {/* ── Web Con (theo id cong trinh) ── */}

@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
-from routers import cong_trinh, phieu, hang_hoa, ton_kho, bao_cao, ai_routes, files, auth, import_data, nhat_ky
+from routers import cong_trinh, phieu, hang_hoa, ton_kho, bao_cao, ai_routes, ai_config, files, auth, import_data, nhat_ky
 
 # ── Khởi tạo app ─────────────────────────────────────────────
 app = FastAPI(
@@ -35,6 +35,7 @@ app.include_router(hang_hoa.router)
 app.include_router(ton_kho.router)
 app.include_router(bao_cao.router)
 app.include_router(ai_routes.router)
+app.include_router(ai_config.router)
 app.include_router(files.router)
 app.include_router(auth.router)
 app.include_router(import_data.router)

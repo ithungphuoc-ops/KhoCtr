@@ -154,6 +154,13 @@ def create_cong_trinh(body: CongTrinhCreate):
         )
         if not row:
             raise HTTPException(status_code=500, detail="Khong the tao")
+        # Tự động tạo config AI rỗng cho CT mới (is_active=False, chưa có key)
+        try:
+            ct_id = row.get("id")
+            if ct_id:
+                db.ensure_ai_config_exists(ct_id)
+        except Exception:
+            pass  # Không làm hỏng luồng tạo CT nếu AI config lỗi
         return row
     except HTTPException:
         raise

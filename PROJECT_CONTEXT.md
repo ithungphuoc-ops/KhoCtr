@@ -1,6 +1,10 @@
 # PROJECT_CONTEXT.md — Hệ thống Quản lý Kho HPCons (KhoUNICE Web)
 
-> File tóm tắt bối cảnh dự án để AI/dev mới nắm nhanh. Cập nhật lần cuối: 06/07/2026.
+> File tóm tắt bối cảnh dự án để AI/dev mới nắm nhanh. Cập nhật lần cuối: 07/07/2026.
+
+> ⚠️ **QUAN TRỌNG — ĐỌC TRƯỚC KHI LÀM BẤT CỨ ĐIỀU GÌ:**
+> Mọi quy tắc làm việc, LOCK MODE và quy trình phát triển bắt buộc được định nghĩa tại **`docs/13_AI_WORKING_RULES.md`**.
+> AI tham gia dự án này phải đọc và tuân thủ tài liệu đó trước khi thực hiện bất kỳ thay đổi nào.
 
 ## 1. Tổng quan
 

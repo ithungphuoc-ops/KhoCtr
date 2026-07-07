@@ -14,27 +14,73 @@ router = APIRouter(prefix="/api/ai", tags=["ai"])
 
 def _resolve_api_key(provider: str,
                      api_key_query: Optional[str],
-                     x_api_key: Optional[str]) -> str:
-    """Lấy API key theo thứ tự ưu tiên: query param → header → config."""
+                     x_api_key: Optional[str],
+                     cong_trinh_id: Optional[int] = None) -> tuple[str, str]:
+    """
+    Lấy API key + model theo thứ tự ưu tiên:
+      1. Config CT trong DB (nếu có cong_trinh_id và is_active=True)
+      2. Query param / Header (backward compat)
+      3. .env (fallback cuối)
+
+    Trả về (api_key, model_to_use).
+    KHÔNG bao giờ log plaintext key.
+    """
+    import supabase_client as db
+    from crypto_utils import decrypt_api_key
+
+    # ── Ưu tiên 1: CT config từ DB ────────────────────────────
+    if cong_trinh_id:
+        try:
+            cfg = db.get_ai_config_by_ct(cong_trinh_id)
+            if cfg and cfg.get("api_key_enc") and cfg.get("is_active"):
+                key = decrypt_api_key(cfg["api_key_enc"])
+                _prov = cfg.get("provider", provider)
+                model = cfg.get("model") or get_settings().GEMINI_MODEL
+                masked = (key[:6] + "..." + key[-4:]) if len(key) > 10 else "SET"
+                print(f"[ai_routes] CT={cong_trinh_id} provider={_prov} source=db key={masked}")
+                return key, model
+            elif cfg and cfg.get("api_key_enc") and not cfg.get("is_active"):
+                # Key có nhưng chưa test → vẫn dùng, chỉ warn
+                try:
+                    key = decrypt_api_key(cfg["api_key_enc"])
+                    _prov = cfg.get("provider", provider)
+                    model = cfg.get("model") or get_settings().GEMINI_MODEL
+                    masked = (key[:6] + "..." + key[-4:]) if len(key) > 10 else "SET"
+                    print(f"[ai_routes] CT={cong_trinh_id} provider={_prov} source=db(not_tested) key={masked}")
+                    return key, model
+                except Exception:
+                    pass  # Fallback xuống .env nếu decrypt lỗi
+        except Exception as ex:
+            print(f"[ai_routes] Không load được CT config (CT={cong_trinh_id}): {ex} — dùng fallback")
+
+    # ── Ưu tiên 2: query param / header ──────────────────────
     key = api_key_query or x_api_key
-    source = "query/header"
-    if not key:
+    if key:
+        masked = (key[:6] + "..." + key[-4:]) if len(key) > 10 else "SET"
+        print(f"[ai_routes] provider={provider} source=query/header key={masked}")
         settings = get_settings()
-        if provider == "gemini":
-            key = settings.GEMINI_API_KEY
-        elif provider == "openai":
-            key = settings.OPENAI_API_KEY
-        else:
-            key = settings.CLAUDE_API_KEY
-        source = ".env"
+        model = settings.OPENAI_MODEL if provider == "openai" else settings.GEMINI_MODEL
+        return key, model
+
+    # ── Ưu tiên 3: .env ───────────────────────────────────────
+    settings = get_settings()
+    if provider == "gemini":
+        key = settings.GEMINI_API_KEY
+    elif provider == "openai":
+        key = settings.OPENAI_API_KEY
+    else:
+        key = settings.CLAUDE_API_KEY
+    model = settings.OPENAI_MODEL if provider == "openai" else settings.GEMINI_MODEL
     masked = (key[:6] + "..." + key[-4:]) if key and len(key) > 10 else ("SET" if key else "EMPTY")
-    print(f"[ai_routes] provider={provider} | key_source={source} | key={masked}")
+    print(f"[ai_routes] provider={provider} source=.env key={masked}")
+
     if not key:
         raise HTTPException(
             status_code=400,
-            detail=f"Thiếu API key cho provider '{provider}' — GEMINI_API_KEY chưa được set trong .env"
+            detail=f"Công trình này chưa được cấu hình API AI. "
+                   f"Admin vui lòng thêm key trong Thiết lập API."
         )
-    return key
+    return key, model
 
 
 @router.get("/test-gemini")
@@ -68,19 +114,20 @@ async def test_gemini_connection(
 @router.post("/doc-phieu")
 async def doc_phieu(
     file: UploadFile = File(..., description="File ảnh hoặc PDF phiếu"),
-    loai: str        = Form("NK",   description="NK hoặc XK"),
-    provider: str    = Form("claude", description="claude hoặc gemini"),
+    loai: str        = Form("NK",    description="NK hoặc XK"),
+    provider: str    = Form("gemini", description="claude | gemini | openai"),
     date_mode: str   = Form("auto",  description="auto | signature | signature_priority"),
-    api_key: Optional[str] = Query(None, description="API key (tùy chọn)"),
-    x_api_key: Optional[str] = Header(None, description="API key qua header"),
+    cong_trinh_id: Optional[int] = Form(None, description="ID công trình — dùng key từ DB nếu có"),
+    api_key: Optional[str] = Query(None, description="API key (tùy chọn, fallback)"),
+    x_api_key: Optional[str] = Header(None, description="API key qua header (fallback)"),
 ):
     """
     Upload 1 file ảnh hoặc PDF, AI đọc và trả về thông tin phiếu.
+    Nếu có cong_trinh_id → ưu tiên dùng key từ DB (đã cấu hình cho CT đó).
     Response: {so_phieu, ngay, doi_tac, ghi_chu, items[]}
     """
-    key = _resolve_api_key(provider, api_key, x_api_key)
+    key, model = _resolve_api_key(provider, api_key, x_api_key, cong_trinh_id)
 
-    # Lưu file tạm
     suffix = os.path.splitext(file.filename or "upload.pdf")[1] or ".pdf"
     tmp_path = None
     try:
@@ -89,8 +136,6 @@ async def doc_phieu(
             tmp.write(content)
             tmp_path = tmp.name
 
-        settings = get_settings()
-        model = settings.OPENAI_MODEL if provider == "openai" else settings.GEMINI_MODEL
         result = ai_reader.doc_phieu(
             file_path=tmp_path,
             loai=loai,
@@ -116,16 +161,18 @@ async def doc_phieu(
 async def doc_phieu_multi(
     file: UploadFile = File(..., description="PDF chứa nhiều phiếu"),
     loai: str        = Form("NK",    description="NK hoặc XK"),
-    provider: str    = Form("claude", description="claude hoặc gemini"),
+    provider: str    = Form("gemini", description="claude | gemini | openai"),
     date_mode: str   = Form("auto",   description="auto | signature | signature_priority"),
+    cong_trinh_id: Optional[int] = Form(None, description="ID công trình — dùng key từ DB nếu có"),
     api_key: Optional[str] = Query(None),
     x_api_key: Optional[str] = Header(None),
 ):
     """
     Upload PDF nhiều phiếu, AI nhận diện và trả về list phiếu.
+    Nếu có cong_trinh_id → ưu tiên dùng key từ DB.
     Response: [{so_phieu, ngay, doi_tac, ghi_chu, items[]}]
     """
-    key = _resolve_api_key(provider, api_key, x_api_key)
+    key, model = _resolve_api_key(provider, api_key, x_api_key, cong_trinh_id)
 
     suffix = os.path.splitext(file.filename or "upload.pdf")[1] or ".pdf"
     tmp_path = None
@@ -135,8 +182,6 @@ async def doc_phieu_multi(
             tmp.write(content)
             tmp_path = tmp.name
 
-        settings = get_settings()
-        model = settings.OPENAI_MODEL if provider == "openai" else settings.GEMINI_MODEL
         results = ai_reader.doc_phieu_multi(
             file_path=tmp_path,
             loai=loai,

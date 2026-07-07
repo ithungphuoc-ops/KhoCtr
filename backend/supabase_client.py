@@ -519,16 +519,91 @@ def get_activity_log(limit: int = 100, offset: int = 0,
         return []
 
 
-# ── Test kết nối ─────────────────────────────────────────────
+# ── AI Config theo công trình ────────────────────────────────
 
-def test_connection() -> tuple[bool, str]:
-    try:
-        rows = select("cong_trinh", query="id", filters="limit=1")
-        return True, f"Kết nối OK — {len(rows)} công trình"
-    except Exception as e:
-        return False, f"Lỗi: {e}"
+def get_ai_config_by_ct(cong_trinh_id: int) -> Optional[dict]:
+    """
+    Lấy config AI của 1 công trình. Trả None nếu chưa có.
+    QUAN TRỌNG: response chứa api_key_enc (đã mã hóa) — KHÔNG trả về frontend.
+    Frontend chỉ nhận dạng masked từ router.
+    """
+    rows = select("project_ai_config",
+                  filters=f"cong_trinh_id=eq.{cong_trinh_id}")
+    return rows[0] if rows else None
 
 
-if __name__ == "__main__":
-    ok, msg = test_connection()
-    print(msg)
+def get_all_ai_configs() -> list:
+    """Lấy tất cả config AI — dành cho admin view tổng hợp."""
+    return select("project_ai_config",
+                  order="cong_trinh_id.asc")
+
+
+def create_ai_config(
+    cong_trinh_id: int,
+    provider: str = "gemini",
+    api_key_enc: str = "",
+    model: str = "",
+    max_tokens: int = 4096,
+    system_prompt: str = "",
+    is_active: bool = False,
+) -> Optional[dict]:
+    """
+    Tạo config AI mới cho 1 công trình.
+    api_key_enc phải là ciphertext (đã qua encrypt_api_key) — không bao giờ plaintext.
+    last_test_at / last_test_status / last_error để NULL — sẽ điền sau khi test kết nối.
+    """
+    data: dict = {
+        "cong_trinh_id": cong_trinh_id,
+        "provider":      provider,
+        "is_active":     is_active,
+        "max_tokens":    max_tokens,
+    }
+    if api_key_enc:    data["api_key_enc"]   = api_key_enc
+    if model:          data["model"]         = model
+    if system_prompt:  data["system_prompt"] = system_prompt
+    rows = insert("project_ai_config", data)
+    return rows[0] if rows else None
+
+
+def update_ai_config_test_result(
+    cong_trinh_id: int,
+    status: str,          # 'ok' | 'error' | 'quota_exceeded'
+    error_msg: str = "",
+) -> Optional[dict]:
+    """
+    Ghi kết quả kiểm tra kết nối API vào DB.
+    Gọi sau endpoint /test-connection — không gọi trực tiếp từ frontend.
+    Nếu status='ok' → tự động set is_active=True và xóa last_error.
+    """
+    data: dict = {
+        "last_test_at":     "now()",   # PostgreSQL NOW() qua REST
+        "last_test_status": status,
+        "last_error":       error_msg if status != "ok" else None,
+    }
+    if status == "ok":
+        data["is_active"] = True
+    rows = update("project_ai_config", data,
+                  filters=f"cong_trinh_id=eq.{cong_trinh_id}")
+    return rows[0] if rows else None
+
+
+def update_ai_config(cong_trinh_id: int, data: dict) -> Optional[dict]:
+    """
+    Cập nhật config AI theo cong_trinh_id.
+    Caller phải tự encrypt api_key trước khi truyền vào data["api_key_enc"].
+    """
+    rows = update("project_ai_config", data,
+                  filters=f"cong_trinh_id=eq.{cong_trinh_id}")
+    return rows[0] if rows else None
+
+
+def delete_ai_config(cong_trinh_id: int):
+    """
+    Xóa config AI theo CT (hiếm dùng trực tiếp — CASCADE tự xóa khi CT bị xóa).
+    """
+    delete("project_ai_config",
+           filters=f"cong_trinh_id=eq.{cong_trinh_id}")
+
+
+def ensure_ai_config_exists(cong_trinh_id: int) -> dict:
+ 

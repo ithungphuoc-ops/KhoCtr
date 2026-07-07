@@ -5,7 +5,7 @@ import {
   BarChart2, Bell, StickyNote,
   Download, Upload, Package, Box, Building2,
   Users, Shield, ChevronLeft, ChevronRight,
-  Database, CheckCircle,
+  Database, CheckCircle, Cpu,
   ChevronDown, ChevronUp, Layers, FileUp, ClipboardList, History
 } from 'lucide-react'
 import { useCongTrinh } from '../../context/CongTrinhContext'
@@ -38,9 +38,10 @@ const groupQuanLy = {
 const groupHeThong = {
   label: 'HỆ THỐNG',
   items: [
-    { icon: Building2, label: 'Công trình', path: '/cong-trinh' },
-    { icon: Shield,    label: 'Phân quyền', path: '/phan-quyen' },
-    { icon: Users,     label: 'Người dùng', path: '/nguoi-dung' },
+    { icon: Building2, label: 'Công trình',      path: '/cong-trinh' },
+    { icon: Shield,    label: 'Phân quyền',      path: '/phan-quyen' },
+    { icon: Users,     label: 'Người dùng',      path: '/nguoi-dung' },
+    { icon: Cpu,       label: 'Thiết lập API AI', path: '/thiet-lap-api', adminOnly: true },
   ]
 }
 
