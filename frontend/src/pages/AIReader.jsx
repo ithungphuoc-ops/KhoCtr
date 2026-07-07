@@ -119,16 +119,20 @@ export default function AIReader() {
             <label className="text-xs text-gray-500 font-medium mb-1.5 block">AI đọc phiếu</label>
             <div className="flex gap-1 p-1 bg-gray-100 rounded-lg">
               <button onClick={() => setProvider('gemini')}
-                className={"flex-1 py-2 px-3 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1.5 " + (provider === 'gemini' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
-                🆓 Gemini <span className={provider === 'gemini' ? 'text-green-600 font-bold' : 'text-green-500'}>Free</span>
+                className={"flex-1 py-2 px-2 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1 " + (provider === 'gemini' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
+                🆓 Gemini
+              </button>
+              <button onClick={() => setProvider('openai')}
+                className={"flex-1 py-2 px-2 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1 " + (provider === 'openai' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
+                🤖 ChatGPT
               </button>
               <button onClick={() => setProvider('claude')}
-                className={"flex-1 py-2 px-3 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1.5 " + (provider === 'claude' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
-                <Zap className="w-3.5 h-3.5 text-purple-500" /> Claude Sonnet
+                className={"flex-1 py-2 px-2 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1 " + (provider === 'claude' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
+                <Zap className="w-3.5 h-3.5 text-purple-500" /> Claude
               </button>
             </div>
             <p className="text-xs text-gray-400 mt-1">
-              {provider === 'gemini' ? '🆓 Miễn phí · Tốc độ nhanh · Phù hợp phiếu in rõ' : '⚡ Chính xác cao hơn · Phù hợp chữ viết tay, scan mờ'}
+              {provider === 'gemini' ? '🆓 Miễn phí · Tốc độ nhanh' : provider === 'openai' ? '🤖 ChatGPT · Cần OpenAI key' : '⚡ Chính xác cao · Phù hợp chữ viết tay'}
             </p>
           </div>
 
@@ -183,6 +187,8 @@ export default function AIReader() {
               ? <><Loader className="w-4 h-4 animate-spin" /> AI đang đọc phiếu...</>
               : provider === 'gemini'
                 ? <>🆓 Đọc phiếu bằng Gemini</>
+                : provider === 'openai'
+                ? <>🤖 Đọc phiếu bằng ChatGPT</>
                 : <><Bot className="w-4 h-4" /> Đọc phiếu bằng Claude</>
             }
           </button>
@@ -310,7 +316,7 @@ export default function AIReader() {
         <div className="grid grid-cols-4 gap-4 text-xs text-blue-700">
           <div className="flex gap-2">
             <span className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold flex-shrink-0 text-[10px]">1</span>
-            <span>Chọn AI: <b>Gemini</b> (miễn phí) hoặc <b>Claude</b> (chính xác cao hơn)</span>
+            <span>Chọn AI: <b>Gemini</b> (miễn phí), <b>ChatGPT</b> (cần key), hoặc <b>Claude</b> (chính xác cao nhất)</span>
           </div>
           <div className="flex gap-2">
             <span className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold flex-shrink-0 text-[10px]">2</span>

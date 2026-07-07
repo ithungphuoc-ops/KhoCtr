@@ -143,11 +143,15 @@ export default function CTAIReader() {
             <label className="text-xs text-gray-500 font-medium block mb-1">AI đọc phiếu</label>
             <div className="flex gap-1 p-1 bg-gray-100 rounded-lg">
               <button onClick={() => setProvider('gemini')}
-                className={"px-3 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 " + (provider === 'gemini' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
-                🆓 Gemini <span className="text-green-600 font-semibold">Free</span>
+                className={"flex-1 px-2 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1 " + (provider === 'gemini' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
+                🆓 Gemini
+              </button>
+              <button onClick={() => setProvider('openai')}
+                className={"flex-1 px-2 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1 " + (provider === 'openai' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
+                🤖 ChatGPT
               </button>
               <button onClick={() => setProvider('claude')}
-                className={"px-3 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 " + (provider === 'claude' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
+                className={"flex-1 px-2 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1 " + (provider === 'claude' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
                 <Zap className="w-3 h-3 text-purple-500" /> Claude
               </button>
             </div>
@@ -186,6 +190,8 @@ export default function CTAIReader() {
             ? <><Loader className="w-4 h-4 animate-spin" /> AI đang đọc phiếu...</>
             : provider === 'gemini'
               ? '🆓 Đọc phiếu bằng Gemini (Free)'
+              : provider === 'openai'
+              ? '🤖 Đọc phiếu bằng ChatGPT'
               : <><Zap className="w-4 h-4" /> Đọc phiếu bằng Claude</>
           }
         </button>
@@ -209,6 +215,8 @@ export default function CTAIReader() {
             </div>
             {provider === 'gemini'
               ? <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 text-xs font-medium rounded-full border border-green-100">🆓 Gemini Free</span>
+              : provider === 'openai'
+              ? <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 text-xs font-medium rounded-full border border-emerald-100">🤖 ChatGPT gpt-4o-mini</span>
               : <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-50 text-purple-600 text-xs font-medium rounded-full border border-purple-100"><Zap className="w-3 h-3" /> Claude Sonnet</span>
             }
           </div>

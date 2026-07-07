@@ -35,16 +35,29 @@ const PRESETS = [
   { label: 'Tất cả',      from: '2025-01-01', to: new Date().toISOString().split('T')[0] },
 ]
 
-export default function Header({ notificationCount = 5 }) {
+export default function Header() {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuth()
-  const { dateFrom, dateTo, setDateFrom, setDateTo, selectedCT, congTrinhs } = useCongTrinh()
+  const { dateFrom, dateTo, setDateFrom, setDateTo, selectedCT, congTrinhs, ctLoading } = useCongTrinh()
   const [showMenu, setShowMenu]     = useState(false)
   const [showPicker, setShowPicker] = useState(false)
   const [tempFrom, setTempFrom]     = useState(dateFrom)
   const [tempTo, setTempTo]         = useState(dateTo)
   const [exporting, setExporting]   = useState(false)
+  const [alertCount, setAlertCount] = useState(0)
+
+  // Lấy số lượng hàng cảnh báo tồn thấp (≤20) từ API
+  useEffect(() => {
+    if (ctLoading) return
+    const params = selectedCT ? { cong_trinh_id: selectedCT.id } : {}
+    getTonKho(params)
+      .then(res => {
+        const rows = res.data?.data || []
+        setAlertCount(rows.filter(r => (r.ton_cuoi ?? 0) <= 20).length)
+      })
+      .catch(() => {})
+  }, [selectedCT, ctLoading])
 
   const pickerRef = useRef(null)
   const pageName  = routeNames[location.pathname] || 'Trang chủ'
@@ -242,11 +255,14 @@ export default function Header({ notificationCount = 5 }) {
 
         <div className="w-px h-6 bg-gray-200" />
 
-        <button className="relative p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
+        <button
+          onClick={() => navigate('/canh-bao')}
+          title="Cảnh báo tồn kho thấp"
+          className="relative p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
           <Bell className="w-5 h-5" />
-          {notificationCount > 0 && (
+          {alertCount > 0 && (
             <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center leading-none">
-              {notificationCount}
+              {alertCount > 99 ? '99+' : alertCount}
             </span>
           )}
         </button>

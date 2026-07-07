@@ -450,12 +450,16 @@ export default function PhieuXuat() {
                   {/* Provider toggle */}
                   <div className="flex gap-1 p-1 bg-gray-100 rounded-lg">
                     <button onClick={() => setAiProvider('gemini')}
-                      className={"flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1.5 " + (aiProvider === 'gemini' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
-                      🆓 Gemini <span className="text-green-600 font-semibold">Free</span>
+                      className={"flex-1 py-1.5 px-2 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1 " + (aiProvider === 'gemini' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
+                      🆓 Gemini
+                    </button>
+                    <button onClick={() => setAiProvider('openai')}
+                      className={"flex-1 py-1.5 px-2 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1 " + (aiProvider === 'openai' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
+                      🤖 ChatGPT
                     </button>
                     <button onClick={() => setAiProvider('claude')}
-                      className={"flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1.5 " + (aiProvider === 'claude' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
-                      <Bot className="w-3.5 h-3.5" /> Claude Sonnet
+                      className={"flex-1 py-1.5 px-2 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1 " + (aiProvider === 'claude' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
+                      <Bot className="w-3.5 h-3.5" /> Claude
                     </button>
                   </div>
                   <div
@@ -489,7 +493,9 @@ export default function PhieuXuat() {
                   <div className="flex items-center justify-center gap-1.5">
                     <span className="text-xs text-gray-400">Powered by</span>
                     {aiProvider === 'gemini'
-                      ? <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 text-xs font-medium rounded-full border border-green-100">🆓 Gemini 2.0 Flash</span>
+                      ? <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 text-xs font-medium rounded-full border border-green-100">🆓 Gemini 1.5 Flash</span>
+                      : aiProvider === 'openai'
+                      ? <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 text-xs font-medium rounded-full border border-emerald-100">🤖 ChatGPT gpt-4o-mini</span>
                       : <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-50 text-purple-600 text-xs font-medium rounded-full border border-purple-100"><Bot className="w-3 h-3" /> Claude Sonnet</span>
                     }
                   </div>

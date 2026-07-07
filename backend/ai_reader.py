@@ -215,7 +215,7 @@ def _claude_multi(file_path, loai, api_key, date_mode='auto'):
     return [_normalize(p) for p in lst if isinstance(p, dict)]
 
 
-def _gemini(file_path, loai, api_key, date_mode='auto', model='gemini-2.0-flash-lite'):
+def _gemini(file_path, loai, api_key, date_mode='auto', model='gemini-1.5-flash'):
     """Goi Gemini API doc phieu. Model mac dinh: gemini-2.0-flash-lite"""
     b64, mt = _file_to_base64(file_path)
     prompt = _build_prompt(loai, date_mode)
@@ -226,24 +226,36 @@ def _gemini(file_path, loai, api_key, date_mode='auto', model='gemini-2.0-flash-
         ]}],
         "generationConfig": {"maxOutputTokens": 8000}
     }).encode()
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1/models/{model}:generateContent?key={api_key}"
+    masked_key = (api_key[:6] + "..." + api_key[-4:]) if api_key and len(api_key) > 10 else "SHORT_KEY"
+    print(f"[ai_reader] Goi Gemini model={model} | key={masked_key}")
     req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"}, method="POST")
     try:
         with urllib.request.urlopen(req, timeout=120) as r:
             result = json.loads(r.read())
     except urllib.error.HTTPError as e:
-        err = e.read().decode()
-        try: msg = json.loads(err).get('error', {}).get('message', err)
-        except: msg = err
-        raise RuntimeError(f"Gemini API loi {e.code}: {msg}")
+        raw = e.read().decode()
+        print(f"[ai_reader] Gemini HTTP {e.code}: {raw[:500]}")
+        try:
+            err_obj = json.loads(raw)
+            msg = err_obj.get('error', {}).get('message', raw)
+            status_str = err_obj.get('error', {}).get('status', '')
+        except Exception:
+            msg = raw
+            status_str = ''
+        if e.code == 429:
+            print(f"[ai_reader] HET QUOTA Gemini model={model} — doi GEMINI_MODEL trong .env hoac cho reset quota")
+            raise RuntimeError(f"Hết quota Gemini ({model}). Thử lại sau hoặc đổi model trong .env")
+        raise RuntimeError(f"Gemini HTTP {e.code}{' (' + status_str + ')' if status_str else ''}: {msg}")
     try:
         text = result['candidates'][0]['content']['parts'][0]['text']
-    except:
-        raise RuntimeError("Gemini khong tra ve ket qua. Thu lai!")
+    except Exception:
+        print(f"[ai_reader] Gemini response unexpected: {str(result)[:300]}")
+        raise RuntimeError(f"Gemini tra ve ket qua khong hop le: {str(result)[:200]}")
     return _normalize(_parse_json(text))
 
 
-def _gemini_multi(file_path, loai, api_key, date_mode='auto', model='gemini-2.0-flash-lite'):
+def _gemini_multi(file_path, loai, api_key, date_mode='auto', model='gemini-1.5-flash'):
     """Goi Gemini API doc nhieu phieu. Tra ve list."""
     b64, mt = _file_to_base64(file_path)
     prompt = _build_prompt_multi(loai, date_mode)
@@ -254,20 +266,156 @@ def _gemini_multi(file_path, loai, api_key, date_mode='auto', model='gemini-2.0-
         ]}],
         "generationConfig": {"maxOutputTokens": 8000}
     }).encode()
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1/models/{model}:generateContent?key={api_key}"
+    masked_key = (api_key[:6] + "..." + api_key[-4:]) if api_key and len(api_key) > 10 else "SHORT_KEY"
+    print(f"[ai_reader] Goi Gemini multi model={model} | key={masked_key}")
     req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"}, method="POST")
     try:
         with urllib.request.urlopen(req, timeout=120) as r:
             result = json.loads(r.read())
     except urllib.error.HTTPError as e:
-        err = e.read().decode()
-        try: msg = json.loads(err).get('error', {}).get('message', err)
-        except: msg = err
-        raise RuntimeError(f"Gemini API loi {e.code}: {msg}")
+        raw = e.read().decode()
+        print(f"[ai_reader] Gemini HTTP {e.code}: {raw[:500]}")
+        try:
+            err_obj = json.loads(raw)
+            msg = err_obj.get('error', {}).get('message', raw)
+            status_str = err_obj.get('error', {}).get('status', '')
+        except Exception:
+            msg = raw
+            status_str = ''
+        if e.code == 429:
+            print(f"[ai_reader] HET QUOTA Gemini multi model={model} — doi GEMINI_MODEL trong .env hoac cho reset quota")
+            raise RuntimeError(f"Hết quota Gemini ({model}). Thử lại sau hoặc đổi model trong .env")
+        raise RuntimeError(f"Gemini HTTP {e.code}{' (' + status_str + ')' if status_str else ''}: {msg}")
     try:
         text = result['candidates'][0]['content']['parts'][0]['text']
-    except:
-        raise RuntimeError("Gemini khong tra ve ket qua. Thu lai!")
+    except Exception:
+        print(f"[ai_reader] Gemini multi response unexpected: {str(result)[:300]}")
+        raise RuntimeError(f"Gemini tra ve ket qua khong hop le: {str(result)[:200]}")
+    lst = _parse_json_list(text)
+    return [_normalize(p) for p in lst if isinstance(p, dict)]
+
+
+def _openai(file_path, loai, api_key, date_mode='auto', model='gpt-4o-mini'):
+    """Goi OpenAI Vision API doc phieu. PDF render qua fitz truoc."""
+    prompt = _build_prompt(loai, date_mode)
+    p = Path(file_path)
+    masked_key = (api_key[:7] + "..." + api_key[-4:]) if api_key and len(api_key) > 11 else "SHORT_KEY"
+    print(f"[ai_reader] Goi OpenAI model={model} | key={masked_key}")
+
+    # Build content: PDF → render PNG; anh → base64 truc tiep
+    content = []
+    if p.suffix.lower() == '.pdf':
+        pages = _render_pages_fitz(file_path, max_pages=8, scale=3.0)
+        if pages:
+            for png_data in pages:
+                b64 = base64.b64encode(png_data).decode()
+                content.append({"type": "image_url",
+                                 "image_url": {"url": f"data:image/png;base64,{b64}", "detail": "high"}})
+        else:
+            b64, _ = _file_to_base64(file_path)
+            content.append({"type": "image_url",
+                             "image_url": {"url": f"data:image/jpeg;base64,{b64}", "detail": "high"}})
+    else:
+        b64, mt = _file_to_base64(file_path)
+        content.append({"type": "image_url",
+                         "image_url": {"url": f"data:{mt};base64,{b64}", "detail": "high"}})
+    content.append({"type": "text", "text": prompt})
+
+    body = json.dumps({
+        "model": model,
+        "messages": [{"role": "user", "content": content}],
+        "max_tokens": 8000
+    }).encode()
+    req = urllib.request.Request(
+        "https://api.openai.com/v1/chat/completions",
+        data=body,
+        headers={"Content-Type": "application/json",
+                 "Authorization": f"Bearer {api_key}"},
+        method="POST"
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=120) as r:
+            result = json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        raw = e.read().decode()
+        print(f"[ai_reader] OpenAI HTTP {e.code}: {raw[:500]}")
+        try:
+            msg = json.loads(raw).get('error', {}).get('message', raw)
+        except Exception:
+            msg = raw
+        if e.code == 429:
+            print(f"[ai_reader] HET QUOTA OpenAI model={model}")
+            raise RuntimeError(f"Hết quota OpenAI ({model}). Kiểm tra billing tại platform.openai.com")
+        if e.code in (401, 403):
+            raise RuntimeError(f"OpenAI API key không hợp lệ (HTTP {e.code})")
+        raise RuntimeError(f"OpenAI HTTP {e.code}: {msg}")
+    try:
+        text = result['choices'][0]['message']['content']
+    except Exception:
+        print(f"[ai_reader] OpenAI response unexpected: {str(result)[:300]}")
+        raise RuntimeError(f"OpenAI trả về kết quả không hợp lệ: {str(result)[:200]}")
+    return _normalize(_parse_json(text))
+
+
+def _openai_multi(file_path, loai, api_key, date_mode='auto', model='gpt-4o-mini'):
+    """Goi OpenAI Vision API doc nhieu phieu. Tra ve list."""
+    prompt = _build_prompt_multi(loai, date_mode)
+    p = Path(file_path)
+    masked_key = (api_key[:7] + "..." + api_key[-4:]) if api_key and len(api_key) > 11 else "SHORT_KEY"
+    print(f"[ai_reader] Goi OpenAI multi model={model} | key={masked_key}")
+
+    content = []
+    if p.suffix.lower() == '.pdf':
+        pages = _render_pages_fitz(file_path, max_pages=16, scale=3.0)
+        if pages:
+            for png_data in pages:
+                b64 = base64.b64encode(png_data).decode()
+                content.append({"type": "image_url",
+                                 "image_url": {"url": f"data:image/png;base64,{b64}", "detail": "high"}})
+        else:
+            b64, _ = _file_to_base64(file_path)
+            content.append({"type": "image_url",
+                             "image_url": {"url": f"data:image/jpeg;base64,{b64}", "detail": "high"}})
+    else:
+        b64, mt = _file_to_base64(file_path)
+        content.append({"type": "image_url",
+                         "image_url": {"url": f"data:{mt};base64,{b64}", "detail": "high"}})
+    content.append({"type": "text", "text": prompt})
+
+    body = json.dumps({
+        "model": model,
+        "messages": [{"role": "user", "content": content}],
+        "max_tokens": 8000
+    }).encode()
+    req = urllib.request.Request(
+        "https://api.openai.com/v1/chat/completions",
+        data=body,
+        headers={"Content-Type": "application/json",
+                 "Authorization": f"Bearer {api_key}"},
+        method="POST"
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=120) as r:
+            result = json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        raw = e.read().decode()
+        print(f"[ai_reader] OpenAI multi HTTP {e.code}: {raw[:500]}")
+        try:
+            msg = json.loads(raw).get('error', {}).get('message', raw)
+        except Exception:
+            msg = raw
+        if e.code == 429:
+            print(f"[ai_reader] HET QUOTA OpenAI multi model={model}")
+            raise RuntimeError(f"Hết quota OpenAI ({model}). Kiểm tra billing tại platform.openai.com")
+        if e.code in (401, 403):
+            raise RuntimeError(f"OpenAI API key không hợp lệ (HTTP {e.code})")
+        raise RuntimeError(f"OpenAI HTTP {e.code}: {msg}")
+    try:
+        text = result['choices'][0]['message']['content']
+    except Exception:
+        print(f"[ai_reader] OpenAI multi response unexpected: {str(result)[:300]}")
+        raise RuntimeError(f"OpenAI trả về kết quả không hợp lệ: {str(result)[:200]}")
     lst = _parse_json_list(text)
     return [_normalize(p) for p in lst if isinstance(p, dict)]
 
@@ -275,24 +423,32 @@ def _gemini_multi(file_path, loai, api_key, date_mode='auto', model='gemini-2.0-
 # ── Public API ────────────────────────────────────────────────
 
 def doc_phieu(file_path: str, loai: str, api_key: str,
-              provider: str = 'claude', date_mode: str = 'auto') -> dict:
+              provider: str = 'claude', date_mode: str = 'auto',
+              model: str = 'gemini-1.5-flash') -> dict:
     """
     Doc 1 phieu tu file anh hoac PDF.
     provider: 'claude' hoac 'gemini'
     date_mode: 'auto' | 'signature' | 'signature_priority'
+    model: Gemini model (doc tu GEMINI_MODEL trong .env)
     Tra ve dict: {so_phieu, ngay, doi_tac, ghi_chu, items[]}
     """
     if provider == 'gemini':
-        return _gemini(file_path, loai, api_key, date_mode)
+        return _gemini(file_path, loai, api_key, date_mode, model=model)
+    if provider == 'openai':
+        return _openai(file_path, loai, api_key, date_mode, model=model)
     return _claude(file_path, loai, api_key, date_mode)
 
 
 def doc_phieu_multi(file_path: str, loai: str, api_key: str,
-                    provider: str = 'claude', date_mode: str = 'auto') -> list:
+                    provider: str = 'claude', date_mode: str = 'auto',
+                    model: str = 'gemini-1.5-flash') -> list:
     """
     Doc nhieu phieu tu 1 file PDF.
+    model: Gemini model (doc tu GEMINI_MODEL trong .env)
     Tra ve list dict: [{so_phieu, ngay, doi_tac, ghi_chu, items[]}]
     """
     if provider == 'gemini':
-        return _gemini_multi(file_path, loai, api_key, date_mode)
+        return _gemini_multi(file_path, loai, api_key, date_mode, model=model)
+    if provider == 'openai':
+        return _openai_multi(file_path, loai, api_key, date_mode, model=model)
     return _claude_multi(file_path, loai, api_key, date_mode)

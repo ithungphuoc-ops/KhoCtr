@@ -27,64 +27,91 @@ def bao_cao_tong_hop(
     date_to:   Optional[str] = Query(None, description="Đến ngày YYYY-MM-DD"),
 ):
     """
-    Thống kê tổng hợp: 5 KPI cards + top vật tư + bảng công trình + cảnh báo tồn kho thấp.
-    Nếu có cong_trinh_id thì filter theo công trình đó.
+    Thống kê tổng hợp: KPI cards + top vật tư + bảng công trình + cảnh báo tồn kho thấp.
+
+    Logic:
+    - KPI counts (so_phieu_nk/xk, tong_tien): lấy TẤT CẢ phiếu của CT, KHÔNG filter date
+      → nhất quán với get_thong_ke_tong() cho "Tất cả"
+    - Top vật tư: lấy phiếu có filter date → tính trong khoảng thời gian đang chọn
+    - Biểu đồ: gọi riêng endpoint /bieu-do
     """
     try:
-        # ── Phiếu ────────────────────────────────────────────
-        phieu_list = db.get_phieu_list(
-            cong_trinh_id=cong_trinh_id, limit=5000,
-            date_from=date_from, date_to=date_to
-        )
+        print(f"[bao_cao] tong-hop: cong_trinh_id={cong_trinh_id}, date_from={date_from}, date_to={date_to}")
 
-        # ── KPI cơ bản ───────────────────────────────────────
+        # ── 1. Phiếu KHÔNG filter date → dùng cho KPI counts ─────────────────
+        phieu_all = db.get_phieu_list(
+            cong_trinh_id=cong_trinh_id,
+            limit=5000
+        )
+        print(f"[bao_cao] phieu_all (no date): {len(phieu_all)} bản ghi")
+
+        # ── 2. Phiếu CÓ filter date → dùng cho top vật tư ────────────────────
+        if date_from or date_to:
+            phieu_date = db.get_phieu_list(
+                cong_trinh_id=cong_trinh_id,
+                limit=5000,
+                date_from=date_from,
+                date_to=date_to
+            )
+        else:
+            phieu_date = phieu_all
+        print(f"[bao_cao] phieu_date (with date): {len(phieu_date)} bản ghi")
+
+        # ── 3. KPI từ phieu_all (không bị ảnh hưởng bởi date filter) ─────────
         if cong_trinh_id:
-            nk = [p for p in phieu_list if p.get("loai") == "NK"]
-            xk = [p for p in phieu_list if p.get("loai") == "XK"]
+            nk_all = [p for p in phieu_all if p.get("loai") == "NK"]
+            xk_all = [p for p in phieu_all if p.get("loai") == "XK"]
             thong_ke = {
                 "so_cong_trinh": 1,
-                "so_phieu_nk": len(nk),
-                "so_phieu_xk": len(xk),
-                "tong_phieu": len(phieu_list),
-                "tong_tien_nk": sum(float(p.get("tong_tien") or 0) for p in nk),
-                "tong_tien_xk": sum(float(p.get("tong_tien") or 0) for p in xk),
+                "so_phieu_nk":   len(nk_all),
+                "so_phieu_xk":   len(xk_all),
+                "tong_phieu":    len(phieu_all),
+                "tong_tien_nk":  sum(float(p.get("tong_tien") or 0) for p in nk_all),
+                "tong_tien_xk":  sum(float(p.get("tong_tien") or 0) for p in xk_all),
             }
         else:
+            # "Tất cả" — dùng get_thong_ke_tong() như cũ (không filter date)
             thong_ke = db.get_thong_ke_tong()
 
-        # ── Tồn kho ──────────────────────────────────────────
+        print(f"[bao_cao] thong_ke: NK={thong_ke.get('so_phieu_nk')}, XK={thong_ke.get('so_phieu_xk')}")
+
+        # ── 4. Tồn kho + cảnh báo ─────────────────────────────────────────────
         if cong_trinh_id:
             ton_kho = db.get_ton_kho_by_ct(cong_trinh_id=cong_trinh_id)
         else:
             ton_kho = db.get_ton_kho_all()
-        canh_bao = [r for r in ton_kho if (r.get("ton_cuoi") or 0) <= 0]
+        # Cảnh báo: tồn <= 20 (nhất quán với trang Cảnh báo)
+        canh_bao = [r for r in ton_kho if (r.get("ton_cuoi") or 0) <= 20]
 
-        # Đếm mặt hàng từ bảng hang_hoa, filter theo CT nếu có
+        # ── 5. Đếm mặt hàng ──────────────────────────────────────────────────
         try:
-            so_mat_hang_dm = len(db.get_all_hang_hoa(cong_trinh_id=cong_trinh_id))
+            so_mat_hang = len(db.get_all_hang_hoa(cong_trinh_id=cong_trinh_id))
         except Exception:
-            so_mat_hang_dm = len(ton_kho)
+            so_mat_hang = len(ton_kho)
 
-        # ── Top vật tư ───────────────────────────────────────
-        # phieu_list đã lấy ở trên
+        # ── 6. Top vật tư (dùng phieu_date — có filter ngày) ─────────────────
         chi_tiets  = db.get_all_chi_tiet()
-        phieu_map  = {p["id"]: p for p in phieu_list if p.get("id")}
+        phieu_map  = {p["id"]: p for p in phieu_date if p.get("id")}
 
         hang_nk: dict = {}
         hang_xk: dict = {}
         for r in chi_tiets:
             pid = r.get("phieu_id")
-            p   = phieu_map.get(pid, {})
+            p   = phieu_map.get(pid)
+            if not p:
+                continue
             ten = r.get("ten_hang", "")
             sl  = float(r.get("so_luong") or 0)
             tt  = float(r.get("thanh_tien") or 0)
             if p.get("loai") == "NK":
-                hang_nk[ten] = hang_nk.get(ten, {"so_luong": 0, "thanh_tien": 0})
-                hang_nk[ten]["so_luong"]  += sl
+                if ten not in hang_nk:
+                    hang_nk[ten] = {"so_luong": 0, "thanh_tien": 0}
+                hang_nk[ten]["so_luong"]   += sl
                 hang_nk[ten]["thanh_tien"] += tt
             elif p.get("loai") == "XK":
-                hang_xk[ten] = hang_xk.get(ten, {"so_luong": 0, "thanh_tien": 0})
-                hang_xk[ten]["so_luong"]  += sl
+                if ten not in hang_xk:
+                    hang_xk[ten] = {"so_luong": 0, "thanh_tien": 0}
+                hang_xk[ten]["so_luong"]   += sl
                 hang_xk[ten]["thanh_tien"] += tt
 
         top_nk = sorted(
@@ -96,12 +123,15 @@ def bao_cao_tong_hop(
             key=lambda x: x["thanh_tien"], reverse=True
         )[:10]
 
-        # ── Bảng công trình ──────────────────────────────────
-        # Nếu filter theo 1 CT cụ thể thì chỉ show CT đó; admin xem tất cả
-        cts = db.get_all_cong_trinh() if not cong_trinh_id else \
-              db.select("cong_trinh", filters=f"id=eq.{cong_trinh_id}")
+        # ── 7. Bảng tổng hợp theo công trình ─────────────────────────────────
+        # Dùng phieu_all để bảng hiện đúng tổng số phiếu (không bị cắt bởi date)
+        if cong_trinh_id:
+            cts = db.select("cong_trinh", filters=f"id=eq.{cong_trinh_id}")
+        else:
+            cts = db.get_all_cong_trinh()
+
         ct_map: dict = {}
-        for p in phieu_list:
+        for p in phieu_all:
             cid = p.get("cong_trinh_id")
             if not cid:
                 continue
@@ -119,7 +149,7 @@ def bao_cao_tong_hop(
 
         bang_ct = []
         for ct in cts:
-            cid = ct.get("id")
+            cid   = ct.get("id")
             stats = ct_map.get(cid, {"so_phieu_nk": 0, "so_phieu_xk": 0,
                                       "tong_tien_nk": 0, "tong_tien_xk": 0})
             bang_ct.append({**ct, **stats})
@@ -127,15 +157,17 @@ def bao_cao_tong_hop(
         return {
             "kpi": {
                 **thong_ke,
-                "so_mat_hang": so_mat_hang_dm,
-                "so_canh_bao": len(canh_bao),
+                "so_mat_hang": so_mat_hang,
+                "so_canh_bao": len([r for r in ton_kho if (r.get("ton_cuoi") or 0) <= 0]),
             },
-            "top_vat_tu_nk": top_nk,
-            "top_vat_tu_xk": top_xk,
-            "bang_cong_trinh": bang_ct,
+            "top_vat_tu_nk":     top_nk,
+            "top_vat_tu_xk":     top_xk,
+            "bang_cong_trinh":   bang_ct,
             "canh_bao_ton_thap": canh_bao[:20],
         }
     except Exception as e:
+        import traceback
+        print(f"[bao_cao] ERROR tong-hop: {e}\n{traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Lỗi báo cáo tổng hợp: {str(e)}")
 
 
@@ -153,7 +185,6 @@ def bao_cao_theo_thang(
         else:
             to_date = f"{year}-{month+1:02d}-01"
 
-        # Lấy phiếu trong tháng
         all_phieu = db.get_phieu_list(cong_trinh_id=cong_trinh_id, limit=10000)
         phieu_thang = [
             p for p in all_phieu
@@ -166,7 +197,6 @@ def bao_cao_theo_thang(
         tong_tien_nk = sum(float(p.get("tong_tien") or 0) for p in phieu_nk)
         tong_tien_xk = sum(float(p.get("tong_tien") or 0) for p in phieu_xk)
 
-        # Chi tiết hàng hóa trong tháng
         phieu_ids = {p["id"] for p in phieu_thang if p.get("id")}
         all_ct    = db.get_all_chi_tiet()
         ct_thang  = [r for r in all_ct if r.get("phieu_id") in phieu_ids]
@@ -196,15 +226,10 @@ def bao_cao_theo_thang(
         )
 
         return {
-            "thang": month,
-            "nam": year,
-            "cong_trinh_id": cong_trinh_id,
-            "tong_phieu_nk": len(phieu_nk),
-            "tong_phieu_xk": len(phieu_xk),
-            "tong_tien_nk": tong_tien_nk,
-            "tong_tien_xk": tong_tien_xk,
-            "phieu_nk": phieu_nk,
-            "phieu_xk": phieu_xk,
+            "thang": month, "nam": year, "cong_trinh_id": cong_trinh_id,
+            "tong_phieu_nk": len(phieu_nk), "tong_phieu_xk": len(phieu_xk),
+            "tong_tien_nk": tong_tien_nk, "tong_tien_xk": tong_tien_xk,
+            "phieu_nk": phieu_nk, "phieu_xk": phieu_xk,
             "chi_tiet_hang": chi_tiet_hang,
         }
     except Exception as e:
@@ -219,21 +244,25 @@ def bieu_do_nhap_xuat(
     cong_trinh_id: Optional[int] = Query(None),
 ):
     """
-    Data cho biểu đồ nhập-xuất-tồn theo ngày hoặc tháng.
-    Trả về list [{period, tong_nk, tong_xk, tong_tien_nk, tong_tien_xk}]
+    Data cho biểu đồ nhập-xuất theo ngày hoặc tháng.
+    Filter theo cong_trinh_id và khoảng thời gian nếu có.
     """
     try:
-        all_phieu = db.get_phieu_list(cong_trinh_id=cong_trinh_id, limit=10000)
+        print(f"[bao_cao] bieu-do: cong_trinh_id={cong_trinh_id}, period={period}, from={from_date}, to={to_date}")
 
-        # Filter theo ngày nếu có
-        if from_date:
-            all_phieu = [p for p in all_phieu
-                         if p.get("ngay") and p["ngay"] >= from_date]
-        if to_date:
-            all_phieu = [p for p in all_phieu
-                         if p.get("ngay") and p["ngay"] <= to_date]
+        # Lấy phiếu — nếu có date filter thì dùng, không thì lấy tất cả của CT
+        all_phieu = db.get_phieu_list(
+            cong_trinh_id=cong_trinh_id,
+            limit=10000,
+            date_from=from_date,
+            date_to=to_date
+        )
 
-        # Nhóm theo period
+        # Fallback: nếu không có dữ liệu trong khoảng ngày, thử lấy không filter ngày
+        if not all_phieu and cong_trinh_id and (from_date or to_date):
+            print(f"[bao_cao] bieu-do: không có phiếu trong khoảng ngày, thử lấy tất cả")
+            all_phieu = db.get_phieu_list(cong_trinh_id=cong_trinh_id, limit=10000)
+
         buckets: dict = {}
         for p in all_phieu:
             ngay = p.get("ngay", "")
@@ -241,7 +270,7 @@ def bieu_do_nhap_xuat(
                 continue
             if period == "day":
                 key = ngay[:10]
-            else:  # month
+            else:
                 key = ngay[:7]  # YYYY-MM
 
             if key not in buckets:
@@ -251,10 +280,10 @@ def bieu_do_nhap_xuat(
             loai = p.get("loai", "")
             tien = float(p.get("tong_tien") or 0)
             if loai == "NK":
-                buckets[key]["tong_nk"] += 1
+                buckets[key]["tong_nk"]      += 1
                 buckets[key]["tong_tien_nk"] += tien
             elif loai == "XK":
-                buckets[key]["tong_xk"] += 1
+                buckets[key]["tong_xk"]      += 1
                 buckets[key]["tong_tien_xk"] += tien
 
         data = sorted(buckets.values(), key=lambda x: x["period"])

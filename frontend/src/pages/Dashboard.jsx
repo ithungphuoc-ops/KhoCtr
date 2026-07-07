@@ -227,25 +227,35 @@ export default function Dashboard() {
     if (ctLoading) return
     if (!isAdmin && !effectiveCTId) return
     setLoading(true)
-    const ctParam = effectiveCTId ? { cong_trinh_id: effectiveCTId } : {}
+
+    const ctParam   = effectiveCTId ? { cong_trinh_id: effectiveCTId } : {}
     const dateParam = { date_from: dateFrom, date_to: dateTo }
+
+    console.log('[Dashboard] loadData:', {
+      effectiveCTId,
+      ctParam,
+      selectedCT: selectedCT?.ten_ct || 'Tất cả',
+    })
+
     Promise.all([
       getBaoCaoTongHop({ ...ctParam, ...dateParam }),
       getBieuDo({ period: chartMode, from_date: dateFrom, to_date: dateTo, ...ctParam })
     ])
       .then(([bcRes, bdRes]) => {
         const bc = bcRes.data || {}
+        console.log('[Dashboard] API response KPI:', bc.kpi)
         setKpi(bc.kpi || {})
         setTopVatTu(bc.top_vat_tu_xk || [])
         setBangCT(bc.bang_cong_trinh || [])
         setCanhBao(bc.canh_bao_ton_thap || [])
         setBieuDoData(bdRes.data?.data || [])
       })
-      .catch(err => console.error('Load data error:', err))
+      .catch(err => console.error('[Dashboard] Load data error:', err))
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { loadData() }, [chartMode, selectedCT, ctLoading, dateFrom, dateTo])
+  // effectiveCTId trong deps đảm bảo reload khi CT thay đổi dù object reference không đổi
+  useEffect(() => { loadData() }, [chartMode, effectiveCTId, ctLoading, dateFrom, dateTo])
 
   const phieuNhap = kpi?.so_phieu_nk || 0
   const phieuXuat = kpi?.so_phieu_xk || 0
