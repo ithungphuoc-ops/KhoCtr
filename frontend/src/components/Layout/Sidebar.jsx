@@ -31,7 +31,7 @@ const groupQuanLy = {
     { icon: Box,       label: 'Danh mục hàng hóa', path: '/danh-muc' },
     { icon: BarChart2,     label: 'Báo cáo',        path: '/bao-cao' },
     { icon: History,       label: 'Lịch sử GD',    path: '/lich-su' },
-    { icon: StickyNote,    label: 'Ghi chú CV',    path: '/ghi-chu' },
+    { icon: StickyNote,    label: 'Ghi chú CV',    path: '/ghi-chu', userOnly: true },
     { icon: ClipboardList, label: 'Nhật ký HĐ',   path: '/nhat-ky', adminOnly: true },
   ]
 }
@@ -71,7 +71,7 @@ export default function Sidebar({ collapsed, onToggle }) {
         </div>
       )}
       {collapsed && <div className="border-t border-gray-100 mx-2 my-2" />}
-      {group.items.filter(item => !item.adminOnly || isAdminUser).map((item) => {
+      {group.items.filter(item => (!item.adminOnly || isAdminUser) && (!item.userOnly || !isAdminUser)).map((item) => {
         const Icon = item.icon
         const active = isActive(item.path)
         return (
@@ -269,7 +269,7 @@ export default function Sidebar({ collapsed, onToggle }) {
       {!collapsed && (
         <div className="px-4 py-3 border-t border-gray-100">
           <p className="text-xs text-gray-400 text-center">© 2026 {isAdminUser ? 'HPCons App Tổng' : `HPCons - ${selectedCT?.ten_ct || ''}`}</p>
-          <p className="text-xs text-gray-400 text-center">Phiên bản 2.0.0</p>
+          <p className="text-xs text-gray-400 text-center">Phiên bản2.0.0</p>
         </div>
       )}
     </aside>
