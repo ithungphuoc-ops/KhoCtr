@@ -5,6 +5,7 @@ Load config từ environment variable thay vì file txt
 """
 import json, urllib.request, urllib.error, os
 from typing import Optional, Any
+from datetime import datetime, timezone
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -612,3 +613,92 @@ def ensure_ai_config_exists(cong_trinh_id: int) -> dict:
         return existing
     new_cfg = create_ai_config(cong_trinh_id=cong_trinh_id, is_active=False)
     return new_cfg or {}
+
+
+# ── Ghi chú công việc ────────────────────────────────────────
+
+def get_ghi_chu_list(
+    cong_trinh_id: Optional[int] = None,
+    trang_thai: Optional[str] = None,
+    uu_tien: Optional[str] = None,
+    search: Optional[str] = None,
+    deadline_from: Optional[str] = None,
+    deadline_to: Optional[str] = None,
+    include_deleted: bool = False,
+    limit: int = 200,
+    offset: int = 0,
+) -> list:
+    """Lấy danh sách ghi chú với filter đầy đủ. Mặc định ẩn soft-deleted."""
+    extra = ""
+    if not include_deleted:
+        extra += "&deleted_at=is.null"
+    if cong_trinh_id:
+        extra += f"&cong_trinh_id=eq.{cong_trinh_id}"
+    if trang_thai:
+        extra += f"&trang_thai=eq.{trang_thai}"
+    if uu_tien:
+        extra += f"&uu_tien=eq.{uu_tien}"
+    if search:
+        extra += f"&or=(tieu_de.ilike.*{search}*,noi_dung.ilike.*{search}*)"
+    if deadline_from:
+        extra += f"&deadline=gte.{deadline_from}"
+    if deadline_to:
+        extra += f"&deadline=lte.{deadline_to}"
+    filters = f"limit={limit}&offset={offset}{extra}"
+    return select("ghi_chu", query="*", filters=filters, order="created_at.desc")
+
+
+def get_ghi_chu_by_id(ghi_chu_id: int) -> Optional[dict]:
+    rows = select("ghi_chu", filters=f"id=eq.{ghi_chu_id}&deleted_at=is.null")
+    return rows[0] if rows else None
+
+
+def create_ghi_chu(
+    cong_trinh_id: int,
+    tieu_de: str,
+    noi_dung: str = "",
+    mau: str = "warning",
+    uu_tien: str = "binh_thuong",
+    trang_thai: str = "mo",
+    deadline: Optional[str] = None,
+    created_by: str = "",
+) -> Optional[dict]:
+    data = {
+        "cong_trinh_id": cong_trinh_id,
+        "tieu_de":       tieu_de,
+        "noi_dung":      noi_dung or "",
+        "mau":           mau,
+        "uu_tien":       uu_tien,
+        "trang_thai":    trang_thai,
+        "created_by":    created_by,
+        "updated_by":    created_by,
+    }
+    if deadline:
+        data["deadline"] = deadline
+    rows = insert("ghi_chu", data)
+    return rows[0] if rows else None
+
+
+def update_ghi_chu(ghi_chu_id: int, data: dict) -> Optional[dict]:
+    rows = update("ghi_chu", data, filters=f"id=eq.{ghi_chu_id}&deleted_at=is.null")
+    return rows[0] if rows else None
+
+
+def soft_delete_ghi_chu(ghi_chu_id: int, deleted_by: str = "") -> bool:
+    """Soft delete — set deleted_at = now(), không xóa row."""
+    now = datetime.now(timezone.utc).isoformat()
+    rows = update("ghi_chu",
+                  {"deleted_at": now, "updated_by": deleted_by},
+                  filters=f"id=eq.{ghi_chu_id}&deleted_at=is.null")
+    return len(rows) > 0
+
+
+def complete_ghi_chu(ghi_chu_id: int, updated_by: str = "") -> Optional[dict]:
+    """Chuyển trạng thái hoan_thanh + ghi completed_at."""
+    now = datetime.now(timezone.utc).isoformat()
+    rows = update("ghi_chu",
+                  {"trang_thai": "hoan_thanh",
+                   "completed_at": now,
+                   "updated_by": updated_by},
+                  filters=f"id=eq.{ghi_chu_id}&deleted_at=is.null")
+    return rows[0] if rows else None

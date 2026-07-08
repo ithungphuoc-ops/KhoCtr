@@ -31,6 +31,7 @@ const groupQuanLy = {
     { icon: Box,       label: 'Danh mục hàng hóa', path: '/danh-muc' },
     { icon: BarChart2,     label: 'Báo cáo',        path: '/bao-cao' },
     { icon: History,       label: 'Lịch sử GD',    path: '/lich-su' },
+    { icon: StickyNote,    label: 'Ghi chú CV',    path: '/ghi-chu' },
     { icon: ClipboardList, label: 'Nhật ký HĐ',   path: '/nhat-ky', adminOnly: true },
   ]
 }

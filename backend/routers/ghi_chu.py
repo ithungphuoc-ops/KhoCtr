@@ -16,6 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from fastapi import APIRouter, HTTPException, Header, Query
 from pydantic import BaseModel, validator
 from typing import Optional
+from datetime import datetime, timezone
 
 import supabase_client as db
 from routers.auth import verify_token
@@ -50,17 +51,16 @@ def _require_admin(authorization: Optional[str]) -> dict:
 def _check_ct_access(user: dict, cong_trinh_id: int):
     """
     Admin: xem mọi CT.
-    User : chỉ xem CT được phân quyền.
+    User : chỉ xem CT được phân quyền (dùng uid khớp với user_congtrinh.user_id).
     """
     if user.get("role") == "admin":
         return
-    # Kiểm tra user có quyền trên CT này không
-    user_email = user.get("email", "")
+    uid = user.get("uid", "")
     try:
         rows = db.select(
             "user_congtrinh",
             query="id",
-            filters=f"user_email=eq.{user_email}&cong_trinh_id=eq.{cong_trinh_id}"
+            filters=f"user_id=eq.{uid}&cong_trinh_id=eq.{cong_trinh_id}"
         )
         if not rows:
             raise HTTPException(
@@ -243,7 +243,7 @@ def update_ghi_chu(
             update_data["trang_thai"] = body.trang_thai
             # Tự động set completed_at nếu chuyển sang hoan_thanh
             if body.trang_thai == "hoan_thanh" and not existing.get("completed_at"):
-                update_data["completed_at"] = "now()"
+                update_data["completed_at"] = datetime.now(timezone.utc).isoformat()
             elif body.trang_thai != "hoan_thanh":
                 update_data["completed_at"] = None
         if body.deadline is not None:
@@ -297,3 +297,4 @@ def complete_ghi_chu(ghi_chu_id: int, authorization: Optional[str] = Header(None
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+                          

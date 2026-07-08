@@ -1,22 +1,29 @@
 /**
- * GhiChuModule.jsx — Core Module Ghi chú, dùng chung cho:
- *   - App Công trình (CTGhiChu.jsx): congTrinhId=id, showCT=false
- *   - App Tổng (GhiChu.jsx): congTrinhId=null, showCT=true, congTrinhList passed
+ * GhiChuModule.jsx — Core Module Ghi chú công việc
+ * Dùng chung cho:
+ *   App Công trình : congTrinhId=<id>, congTrinhList=[]
+ *   App Tổng       : congTrinhId=null, congTrinhList=[...all CTs]
  *
  * Props:
  *   congTrinhId  : number | null
- *   congTrinhList: [{id, ten_ct}]  (App Tổng)
- *   title        : string  (override tiêu đề)
+ *   congTrinhList: [{id, ten_ct}]
+ *   title        : string
  */
 import React, { useState, useMemo } from 'react'
-import { Plus, RefreshCw, Search, Filter, StickyNote } from 'lucide-react'
-import { useGhiChu } from './useGhiChu'
-import GhiChuItem    from './GhiChuItem'
-import GhiChuForm    from './GhiChuForm'
+import { Plus, RefreshCw, Search, StickyNote } from 'lucide-react'
+import { useGhiChu }    from './useGhiChu'
+import GhiChuList       from './GhiChuList'
+import GhiChuForm       from './GhiChuForm'
+import GhiChuDetail     from './GhiChuDetail'
 import { TRANG_THAI_ORDER, TRANG_THAI_MAP, UU_TIEN_OPTIONS } from './ghiChuConfig'
 
-export default function GhiChuModule({ congTrinhId = null, congTrinhList = [], title = 'GHI CHÚ CÔNG VIỆC' }) {
+export default function GhiChuModule({
+  congTrinhId   = null,
+  congTrinhList = [],
+  title         = 'GHI CHÚ CÔNG VIỆC',
+}) {
   const showCT = congTrinhList.length > 0
+
   const {
     items, loading, error,
     filters, setFilters,
@@ -24,11 +31,12 @@ export default function GhiChuModule({ congTrinhId = null, congTrinhList = [], t
     createItem, updateItem, deleteItem, completeItem,
   } = useGhiChu({ congTrinhId })
 
-  const [showForm, setShowForm] = useState(false)
-  const [editItem, setEditItem] = useState(null)
-  const [viewMode, setViewMode] = useState('trello') // 'trello' | 'list'
+  const [showForm,   setShowForm]   = useState(false)
+  const [editItem,   setEditItem]   = useState(null)
+  const [detailItem, setDetailItem] = useState(null)
+  const [viewMode,   setViewMode]   = useState('kanban')
 
-  // Build map id → ten_ct cho App Tổng
+  // Build id → ten_ct map
   const congTrinhMap = useMemo(() => {
     const m = {}
     congTrinhList.forEach(ct => { m[ct.id] = ct.ten_ct })
@@ -36,25 +44,25 @@ export default function GhiChuModule({ congTrinhId = null, congTrinhList = [], t
   }, [congTrinhList])
 
   // Stats
-  const overdueCount = items.filter(x => {
-    if (!x.deadline || x.trang_thai === 'hoan_thanh' || x.trang_thai === 'huy') return false
-    const d = new Date(x.deadline); d.setHours(0, 0, 0, 0)
-    const t = new Date(); t.setHours(0, 0, 0, 0)
-    return d < t
-  }).length
-
-  // Group theo trạng thái cho Trello view
-  const grouped = useMemo(() => {
-    const g = {}
-    TRANG_THAI_ORDER.forEach(k => { g[k] = [] })
-    items.forEach(x => { if (g[x.trang_thai]) g[x.trang_thai].push(x) })
-    return g
+  const stats = useMemo(() => {
+    const now = new Date(); now.setHours(0, 0, 0, 0)
+    return {
+      total:       items.length,
+      mo:          items.filter(x => x.trang_thai === 'mo').length,
+      dang_lam:    items.filter(x => x.trang_thai === 'dang_lam').length,
+      hoan_thanh:  items.filter(x => x.trang_thai === 'hoan_thanh').length,
+      overdue:     items.filter(x => {
+        if (!x.deadline || ['hoan_thanh','huy'].includes(x.trang_thai)) return false
+        const d = new Date(x.deadline.split('T')[0]); d.setHours(0,0,0,0)
+        return d < now
+      }).length,
+    }
   }, [items])
 
   // Handlers
   const handleSave = async (payload) => {
     if (editItem) {
-      const { cong_trinh_id, ...rest } = payload  // không update cong_trinh_id qua PUT
+      const { cong_trinh_id, ...rest } = payload
       await updateItem(editItem.id, rest)
     } else {
       await createItem(payload)
@@ -63,20 +71,27 @@ export default function GhiChuModule({ congTrinhId = null, congTrinhList = [], t
     setEditItem(null)
   }
 
-  const handleEdit = (item) => { setEditItem(item); setShowForm(true) }
-  const handleClose = () => { setShowForm(false); setEditItem(null) }
+  const handleEdit   = (item) => { setEditItem(item);  setShowForm(true) }
+  const handleDetail = (item) => { setDetailItem(item) }
+  const handleClose  = () => { setShowForm(false); setEditItem(null) }
 
   return (
     <div className="space-y-5">
-      {/* Header */}
+
+      {/* ── Header ─────────────────────────────────────────── */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-xl font-bold text-gray-800">{title}</h1>
-          <div className="flex items-center gap-2 mt-0.5">
-            <p className="text-gray-400 text-sm">{items.length} ghi chú</p>
-            {overdueCount > 0 && (
+          <div className="flex items-center gap-3 mt-0.5 flex-wrap">
+            <span className="text-gray-400 text-sm">{stats.total} ghi chú</span>
+            {stats.overdue > 0 && (
               <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs font-bold rounded-full animate-pulse">
-                {overdueCount} quá hạn!
+                {stats.overdue} quá hạn!
+              </span>
+            )}
+            {stats.hoan_thanh > 0 && (
+              <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                {stats.hoan_thanh} hoàn thành
               </span>
             )}
           </div>
@@ -84,17 +99,16 @@ export default function GhiChuModule({ congTrinhId = null, congTrinhList = [], t
         <div className="flex items-center gap-2">
           {/* View toggle */}
           <div className="flex rounded-lg border border-gray-200 overflow-hidden">
-            <button onClick={() => setViewMode('trello')}
-              className={`px-3 py-1.5 text-xs font-medium transition-colors ${viewMode === 'trello' ? 'bg-teal-500 text-white' : 'text-gray-500 hover:bg-gray-50'}`}>
-              Kanban
-            </button>
-            <button onClick={() => setViewMode('list')}
-              className={`px-3 py-1.5 text-xs font-medium transition-colors ${viewMode === 'list' ? 'bg-teal-500 text-white' : 'text-gray-500 hover:bg-gray-50'}`}>
-              Danh sách
-            </button>
+            {['kanban','list'].map(m => (
+              <button key={m} onClick={() => setViewMode(m)}
+                className={`px-3 py-1.5 text-xs font-medium transition-colors capitalize
+                  ${viewMode === m ? 'bg-teal-500 text-white' : 'text-gray-500 hover:bg-gray-50'}`}>
+                {m === 'kanban' ? 'Kanban' : 'Danh sách'}
+              </button>
+            ))}
           </div>
           <button onClick={load}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg">
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
           <button onClick={() => { setEditItem(null); setShowForm(true) }}
@@ -104,17 +118,19 @@ export default function GhiChuModule({ congTrinhId = null, congTrinhList = [], t
         </div>
       </div>
 
-      {/* Filters */}
+      {/* ── Filters ────────────────────────────────────────── */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
         <div className="flex flex-wrap gap-3 items-end">
           {/* Search */}
-          <div className="flex-1 min-w-[200px]">
+          <div className="flex-1 min-w-[180px]">
             <div className="relative">
               <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-300" />
-              <input value={filters.search}
+              <input
+                value={filters.search}
                 onChange={e => setFilters(f => ({ ...f, search: e.target.value }))}
-                placeholder="Tìm kiếm tiêu đề, nội dung..."
-                className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-teal-400" />
+                placeholder="Tìm tiêu đề, nội dung..."
+                className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-teal-400"
+              />
             </div>
           </div>
 
@@ -144,7 +160,7 @@ export default function GhiChuModule({ congTrinhId = null, congTrinhList = [], t
             </select>
           </div>
 
-          {/* Deadline từ–đến */}
+          {/* Deadline range */}
           <div>
             <label className="block text-xs text-gray-400 mb-1">Deadline từ</label>
             <input type="date" value={filters.deadline_from}
@@ -158,30 +174,30 @@ export default function GhiChuModule({ congTrinhId = null, congTrinhList = [], t
               className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-teal-400 text-gray-600" />
           </div>
 
-          {/* Reset */}
           {Object.values(filters).some(Boolean) && (
-            <button onClick={() => setFilters({ trang_thai: '', uu_tien: '', search: '', deadline_from: '', deadline_to: '' })}
-              className="px-3 py-2 text-xs text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-xl border border-gray-100 transition-colors">
+            <button
+              onClick={() => setFilters({ trang_thai:'', uu_tien:'', search:'', deadline_from:'', deadline_to:'' })}
+              className="px-3 py-2 text-xs text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-xl border border-gray-100 transition-colors self-end">
               Xóa lọc
             </button>
           )}
         </div>
       </div>
 
-      {/* Error */}
+      {/* ── Error ──────────────────────────────────────────── */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       )}
 
-      {/* Content */}
+      {/* ── Content ────────────────────────────────────────── */}
       {loading ? (
         <div className="text-center py-16 text-gray-300">
           <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-3" />
           <p className="text-sm">Đang tải ghi chú...</p>
         </div>
-      ) : items.length === 0 ? (
+      ) : items.length === 0 && !Object.values(filters).some(Boolean) ? (
         <div className="text-center py-16">
           <StickyNote className="w-12 h-12 text-gray-200 mx-auto mb-3" />
           <p className="text-gray-400 text-sm">Chưa có ghi chú nào</p>
@@ -190,54 +206,39 @@ export default function GhiChuModule({ congTrinhId = null, congTrinhList = [], t
             + Thêm ghi chú đầu tiên
           </button>
         </div>
-      ) : viewMode === 'trello' ? (
-        /* ── KANBAN VIEW ── */
-        <div className="flex gap-4 overflow-x-auto pb-4">
-          {TRANG_THAI_ORDER.map(status => {
-            const col = TRANG_THAI_MAP[status]
-            const colItems = grouped[status] || []
-            return (
-              <div key={status} className="flex-shrink-0 w-64">
-                <div className="flex items-center justify-between mb-3">
-                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${col.badge}`}>
-                    {col.label}
-                  </span>
-                  <span className="text-xs text-gray-400">{colItems.length}</span>
-                </div>
-                <div className="space-y-2 min-h-[80px]">
-                  {colItems.map(item => (
-                    <GhiChuItem key={item.id} item={item}
-                      showCT={showCT} congTrinhMap={congTrinhMap}
-                      onEdit={handleEdit}
-                      onDelete={deleteItem}
-                      onComplete={completeItem} />
-                  ))}
-                </div>
-              </div>
-            )
-          })}
-        </div>
       ) : (
-        /* ── LIST VIEW ── */
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-          {items.map(item => (
-            <GhiChuItem key={item.id} item={item}
-              showCT={showCT} congTrinhMap={congTrinhMap}
-              onEdit={handleEdit}
-              onDelete={deleteItem}
-              onComplete={completeItem} />
-          ))}
-        </div>
+        <GhiChuList
+          items={items}
+          viewMode={viewMode}
+          showCT={showCT}
+          congTrinhMap={congTrinhMap}
+          onEdit={handleEdit}
+          onDelete={deleteItem}
+          onComplete={completeItem}
+          onDetail={handleDetail}
+        />
       )}
 
-      {/* Form modal */}
+      {/* ── Modals ─────────────────────────────────────────── */}
       {showForm && (
         <GhiChuForm
           congTrinhId={congTrinhId}
           congTrinhList={congTrinhList}
           initial={editItem}
           onSave={handleSave}
-          onCancel={handleClose} />
+          onCancel={handleClose}
+        />
+      )}
+
+      {detailItem && (
+        <GhiChuDetail
+          item={detailItem}
+          congTrinhName={showCT ? congTrinhMap[detailItem.cong_trinh_id] : null}
+          onClose={() => setDetailItem(null)}
+          onEdit={item => { setDetailItem(null); handleEdit(item) }}
+          onComplete={async id => { await completeItem(id); setDetailItem(null) }}
+          onDelete={async id => { await deleteItem(id); setDetailItem(null) }}
+        />
       )}
     </div>
   )
