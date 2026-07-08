@@ -189,6 +189,31 @@ def list_users(authorization: Optional[str] = Header(None)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+class ResetPasswordBody(BaseModel):
+    new_password: str
+
+@router.put("/users/{user_id}/reset-password")
+def reset_password(user_id: int, body: ResetPasswordBody, authorization: Optional[str] = Header(None)):
+    """Admin reset mật khẩu cho user."""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Chua dang nhap")
+    token_data = verify_token(authorization.split(" ", 1)[1])
+    if not token_data or token_data.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Chi admin moi reset duoc")
+    if not body.new_password or len(body.new_password) < 6:
+        raise HTTPException(status_code=400, detail="Mat khau phai tu 6 ky tu tro len")
+    try:
+        new_hash = hash_password(body.new_password)
+        rows = db.update("app_users", {"password_hash": new_hash}, filters=f"id=eq.{user_id}")
+        if not rows:
+            raise HTTPException(status_code=404, detail="Khong tim thay user")
+        return {"success": True, "message": "Da reset mat khau thanh cong"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.delete("/users/{user_id}")
 def delete_user(user_id: int, authorization: Optional[str] = Header(None)):
     """Xóa user — chỉ admin."""
@@ -242,7 +267,7 @@ def create_user(body: CreateUserBody, authorization: Optional[str] = Header(None
     # Kiểm tra quyền
     existing = db.select("app_users")
     if not existing:
-        # Chưa có user nào — cho phép tạo admin đầu tiên với setup_key
+        # Chunà có user nào — cho phép tạo admin đầu tiên với setup_key
         if body.setup_key != SETUP_KEY:
             raise HTTPException(status_code=403, detail=f"Can setup_key de tao admin dau tien")
         body.role = "admin"

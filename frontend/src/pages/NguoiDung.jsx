@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Users, Plus, Trash2, RefreshCw, CheckCircle, XCircle, Eye, EyeOff, X } from 'lucide-react'
+import { Users, Plus, Trash2, RefreshCw, CheckCircle, XCircle, Eye, EyeOff, X, KeyRound } from 'lucide-react'
 import { api } from '../api'
 import { useAuth } from '../context/AuthContext'
 
@@ -12,6 +12,11 @@ export default function NguoiDung() {
   const [msg, setMsg]         = useState(null)  // { type: 'ok'|'err', text }
   const [showPw, setShowPw]   = useState(false)
   const [form, setForm] = useState({ email: '', ten: '', password: '', role: 'user' })
+  // Reset password state
+  const [resetTarget, setResetTarget] = useState(null)  // { id, ten, email }
+  const [resetPw, setResetPw]         = useState('')
+  const [showResetPw, setShowResetPw] = useState(false)
+  const [resetSaving, setResetSaving] = useState(false)
 
   const loadUsers = () => {
     setLoading(true)
@@ -40,6 +45,23 @@ export default function NguoiDung() {
       setMsg({ type: 'err', text: err.response?.data?.detail || 'Lỗi tạo tài khoản' })
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleResetPassword = async () => {
+    if (!resetPw || resetPw.length < 6) {
+      setMsg({ type: 'err', text: 'Mật khẩu phải từ 6 ký tự trở lên' }); return
+    }
+    setResetSaving(true)
+    try {
+      await api.put(`/auth/users/${resetTarget.id}/reset-password`, { new_password: resetPw })
+      setMsg({ type: 'ok', text: `Đã reset mật khẩu cho ${resetTarget.email}` })
+      setResetTarget(null)
+      setResetPw('')
+    } catch (err) {
+      setMsg({ type: 'err', text: err.response?.data?.detail || 'Lỗi reset mật khẩu' })
+    } finally {
+      setResetSaving(false)
     }
   }
 
@@ -118,7 +140,7 @@ export default function NguoiDung() {
               <th className="text-left px-4 py-3 text-gray-500 font-medium">Quyền</th>
               <th className="text-left px-4 py-3 text-gray-500 font-medium">Trạng thái</th>
               <th className="text-left px-4 py-3 text-gray-500 font-medium">Ngày tạo</th>
-              {isAdmin && <th className="text-center px-4 py-3 text-gray-500 font-medium">Xóa</th>}
+              {isAdmin && <th className="text-center px-4 py-3 text-gray-500 font-medium">Thao tác</th>}
             </tr>
           </thead>
           <tbody>
@@ -146,12 +168,21 @@ export default function NguoiDung() {
                       </td>
                       {isAdmin && (
                         <td className="px-4 py-3 text-center">
-                          {u.id !== currentUser?.uid && (
-                            <button onClick={() => handleDelete(u.id, u.email)}
-                              className="p-1.5 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-lg transition-colors">
-                              <Trash2 className="w-4 h-4" />
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              onClick={() => { setResetTarget(u); setResetPw(''); setShowResetPw(false) }}
+                              title="Reset mật khẩu"
+                              className="p-1.5 hover:bg-blue-50 text-gray-400 hover:text-blue-500 rounded-lg transition-colors">
+                              <KeyRound className="w-4 h-4" />
                             </button>
-                          )}
+                            {u.id !== currentUser?.uid && (
+                              <button onClick={() => handleDelete(u.id, u.email)}
+                                title="Xóa tài khoản"
+                                className="p-1.5 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-lg transition-colors">
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
                         </td>
                       )}
                     </tr>
@@ -160,6 +191,52 @@ export default function NguoiDung() {
           </tbody>
         </table>
       </div>
+
+      {/* Modal Reset mật khẩu */}
+      {resetTarget && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4"
+          onClick={e => { if (e.target === e.currentTarget) setResetTarget(null) }}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h3 className="font-bold text-gray-800 text-lg">Reset mật khẩu</h3>
+                <p className="text-sm text-gray-400 mt-0.5">{resetTarget.ten} — {resetTarget.email}</p>
+              </div>
+              <button onClick={() => setResetTarget(null)} className="p-1 hover:bg-gray-100 rounded-lg text-gray-400">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-medium text-gray-500 mb-1.5 block">Mật khẩu mới *</label>
+                <div className="relative">
+                  <input
+                    type={showResetPw ? 'text' : 'password'}
+                    value={resetPw}
+                    onChange={e => setResetPw(e.target.value)}
+                    placeholder="Tối thiểu 6 ký tự"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 pr-10 text-sm focus:outline-none focus:border-blue-400"
+                  />
+                  <button type="button" onClick={() => setShowResetPw(!showResetPw)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                    {showResetPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button onClick={() => setResetTarget(null)}
+                  className="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm hover:bg-gray-50">
+                  Hủy
+                </button>
+                <button onClick={handleResetPassword} disabled={resetSaving}
+                  className="flex-1 py-2.5 bg-blue-500 text-white rounded-xl text-sm font-medium hover:bg-blue-600 disabled:opacity-50">
+                  {resetSaving ? 'Đang reset...' : 'Reset mật khẩu'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal tao user */}
       {showForm && (
@@ -174,9 +251,9 @@ export default function NguoiDung() {
             </div>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1.5 block">Họ tên *</label>
+                <label className="text-xs font-medium text-gray-500 mb-1.5 block">Ho ten *</label>
                 <input value={form.ten} onChange={e => setForm({...form, ten: e.target.value})}
-                  placeholder="Nguyễn Văn A"
+                  placeholder="Nguyen Van A"
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400" />
               </div>
               <div>
@@ -186,11 +263,11 @@ export default function NguoiDung() {
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400" />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1.5 block">Mật khẩu *</label>
+                <label className="text-xs font-medium text-gray-500 mb-1.5 block">Mat khau *</label>
                 <div className="relative">
                   <input type={showPw ? 'text' : 'password'} value={form.password}
                     onChange={e => setForm({...form, password: e.target.value})}
-                    placeholder="Mật khẩu..."
+                    placeholder="Mat khau..."
                     className="w-full border border-gray-200 rounded-xl px-3 py-2.5 pr-10 text-sm focus:outline-none focus:border-blue-400" />
                   <button type="button" onClick={() => setShowPw(!showPw)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
@@ -199,21 +276,21 @@ export default function NguoiDung() {
                 </div>
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1.5 block">Quyền</label>
+                <label className="text-xs font-medium text-gray-500 mb-1.5 block">Quyen</label>
                 <select value={form.role} onChange={e => setForm({...form, role: e.target.value})}
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400">
-                  <option value="user">User — Xem dữ liệu</option>
-                  <option value="admin">Admin — Quản trị hệ thống</option>
+                  <option value="user">User - Xem du lieu</option>
+                  <option value="admin">Admin - Quan tri he thong</option>
                 </select>
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setShowForm(false)}
                   className="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm hover:bg-gray-50">
-                  Hủy
+                  Huy
                 </button>
                 <button type="submit" disabled={saving}
                   className="flex-1 py-2.5 bg-blue-500 text-white rounded-xl text-sm font-medium hover:bg-blue-600 disabled:opacity-50">
-                  {saving ? 'Đang tạo...' : 'Tạo tài khoản'}
+                  {saving ? 'Dang tao...' : 'Tao tai khoan'}
                 </button>
               </div>
             </form>

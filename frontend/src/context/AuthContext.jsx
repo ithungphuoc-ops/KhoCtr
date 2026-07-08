@@ -3,55 +3,70 @@ import { api } from '../api'
 
 const AuthContext = createContext(null)
 
-const TOKEN_KEY = 'hpcons_token'
-const USER_KEY  = 'hpcons_user'
+const TOKEN_KEY  = 'hpcons_token'
+const USER_KEY   = 'hpcons_user'
+const REMEMBER_KEY = 'hpcons_remember'
+
+// Helper: doc token tu localStorage hoac sessionStorage
+function getStoredToken() {
+  return localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY) || null
+}
+function getStoredUser() {
+  try {
+    const s = localStorage.getItem(USER_KEY) || sessionStorage.getItem(USER_KEY)
+    return s ? JSON.parse(s) : null
+  } catch { return null }
+}
 
 export function AuthProvider({ children }) {
-  const [user, setUser]     = useState(() => {
-    try { return JSON.parse(sessionStorage.getItem(USER_KEY)) } catch { return null }
-  })
-  const [token, setToken]   = useState(() => sessionStorage.getItem(TOKEN_KEY) || null)
+  const [user, setUser]     = useState(() => getStoredUser())
+  const [token, setToken]   = useState(() => getStoredToken())
   const [loading, setLoading] = useState(true)
 
-  // Gắn Bearer token vào mọi request
+  // Gan Bearer token vao moi request
   useEffect(() => {
     const id = api.interceptors.request.use(cfg => {
-      const t = sessionStorage.getItem(TOKEN_KEY)
+      const t = getStoredToken()
       if (t) cfg.headers = { ...cfg.headers, Authorization: `Bearer ${t}` }
       return cfg
     })
     return () => api.interceptors.request.eject(id)
   }, [])
 
-  // Verify token khi khởi động
+  // Verify token khi khoi dong
   useEffect(() => {
-    const t = sessionStorage.getItem(TOKEN_KEY)
+    const t = getStoredToken()
     if (!t) { setLoading(false); return }
     api.get('/auth/me')
       .then(res => setUser(res.data))
       .catch(() => {
-        sessionStorage.removeItem(TOKEN_KEY)
-        sessionStorage.removeItem(USER_KEY)
-        setToken(null)
-        setUser(null)
+        localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(USER_KEY)
+        sessionStorage.removeItem(TOKEN_KEY); sessionStorage.removeItem(USER_KEY)
+        setToken(null); setUser(null)
       })
       .finally(() => setLoading(false))
   }, [])
 
-  const login = async (email, password) => {
+  const login = async (email, password, rememberMe = false) => {
     const res = await api.post('/auth/login', { email, password })
     const { access_token, user: u } = res.data
-    sessionStorage.setItem(TOKEN_KEY, access_token)
-    sessionStorage.setItem(USER_KEY, JSON.stringify(u))
+    if (rememberMe) {
+      localStorage.setItem(REMEMBER_KEY, '1')
+    } else {
+      localStorage.removeItem(REMEMBER_KEY)
+    }
+    const storage = rememberMe ? localStorage : sessionStorage
+    storage.setItem(TOKEN_KEY, access_token)
+    storage.setItem(USER_KEY, JSON.stringify(u))
     setToken(access_token)
     setUser(u)
   }
 
   const logout = () => {
-    sessionStorage.removeItem(TOKEN_KEY)
-    sessionStorage.removeItem(USER_KEY)
-    setToken(null)
-    setUser(null)
+    localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(USER_KEY)
+    localStorage.removeItem(REMEMBER_KEY)
+    sessionStorage.removeItem(TOKEN_KEY); sessionStorage.removeItem(USER_KEY)
+    setToken(null); setUser(null)
   }
 
   return (
