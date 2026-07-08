@@ -297,4 +297,3 @@ def complete_ghi_chu(ghi_chu_id: int, authorization: Optional[str] = Header(None
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-                          
