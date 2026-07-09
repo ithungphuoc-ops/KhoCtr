@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useOutletContext, useParams } from 'react-router-dom'
-import { Download, Search, RefreshCw, Eye, Plus, X, Trash2, FileDown } from 'lucide-react'
-import { getPhieuList, getChiTietPhieu, createPhieu, getHangHoa } from '../../api'
+import { Download, Search, RefreshCw, Eye, Plus, X, Trash2, FileDown, Bot, Loader } from 'lucide-react'
+import { getPhieuList, getChiTietPhieu, createPhieu, getHangHoa, docPhieu, matchItems } from '../../api'
 import HangHoaInput from '../../components/HangHoaInput'
+import HangHoaMatchPopup from '../../components/HangHoaMatchPopup'
 import { exportPhieuList } from '../../utils/exportExcel'
 import { useAuth } from '../../context/AuthContext'
 
@@ -52,6 +53,70 @@ export default function CTNhapKho() {
     getHangHoa({ limit: 2000, ...(realId ? { cong_trinh_id: parseInt(realId) } : {}) })
       .then(res => setHangHoaList(res.data?.data || []))
       .catch(() => {})
+
+  // AI states
+  const [aiLoading, setAiLoading]         = useState(false)
+  const [aiProvider, setAiProvider]       = useState('gemini')
+  const [showMatchPopup, setShowMatchPopup] = useState(false)
+  const [matchResult, setMatchResult]     = useState(null)
+  const [aiMeta, setAiMeta]               = useState({})
+  const aiFileRef = useRef()
+
+  const handleAiRead = async (file) => {
+    if (!file) return
+    setAiLoading(true)
+    const t0 = Date.now()
+    try {
+      // Bước 1: AI đọc PDF
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('loai', 'NK')
+      fd.append('provider', aiProvider)
+      if (realId) fd.append('cong_trinh_id', realId)
+      const res = await docPhieu(fd)
+      const data = res.data
+      const rawItems = (data.items || data.hang_hoa || []).map(it => ({
+        ten_hang:   it.ten_hang || it.hang || '',
+        dvt:        it.dvt || 'cái',
+        so_luong:   it.so_luong || 0,
+        don_gia:    it.don_gia || 0,
+        thanh_tien: it.thanh_tien || (it.so_luong * it.don_gia) || 0,
+      }))
+
+      // Pre-fill header từ AI (sẽ hoàn thiện sau khi popup confirm)
+      setForm(f => ({
+        ...f,
+        so_phieu: data.so_phieu || f.so_phieu,
+        ngay:     data.ngay || f.ngay,
+        doi_tac:  data.doi_tac || data.nha_cung_cap || f.doi_tac,
+      }))
+
+      // Bước 2: Phân loại items qua fuzzy match
+      const processingMs = Date.now() - t0
+      const matchRes = await matchItems({
+        cong_trinh_id:     parseInt(realId),
+        loai_phieu:        'nhap',
+        file_name:         file.name,
+        items:             rawItems,
+        ai_provider:       aiProvider,
+        processing_time_ms: processingMs,
+      })
+      setMatchResult(matchRes.data)
+      setAiMeta({
+        fileName:         file.name,
+        aiProvider,
+        aiModel:          '',
+        processingTimeMs: processingMs,
+      })
+      setShowMatchPopup(true)
+      if (hangHoaList.length === 0) loadHangHoa()
+    } catch (e) {
+      alert(e.response?.data?.detail || 'Lỗi AI đọc phiếu. Vui lòng thử lại.')
+    } finally {
+      setAiLoading(false)
+      if (aiFileRef.current) aiFileRef.current.value = ''
+    }
+  }
 
   useEffect(() => {
     loadData()
@@ -163,6 +228,31 @@ export default function CTNhapKho() {
             <FileDown className={`w-4 h-4 ${exporting ? 'animate-bounce' : ''}`} />
             {exporting ? '...' : 'Excel'}
           </button>
+          {/* AI provider toggle nhỏ */}
+          <select
+            value={aiProvider}
+            onChange={e => setAiProvider(e.target.value)}
+            className="px-2 py-2 border border-gray-200 rounded-lg text-xs text-gray-600 bg-white focus:outline-none">
+            <option value="gemini">🆓 Gemini</option>
+            <option value="openai">🤖 ChatGPT</option>
+            <option value="claude">⚡ Claude</option>
+          </select>
+          <button
+            onClick={() => aiFileRef.current?.click()}
+            disabled={aiLoading}
+            className="flex items-center gap-2 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg text-sm font-medium disabled:opacity-50">
+            {aiLoading
+              ? <><Loader className="w-4 h-4 animate-spin" /> AI đang đọc...</>
+              : <><Bot className="w-4 h-4" /> AI đọc PDF</>
+            }
+          </button>
+          <input
+            ref={aiFileRef}
+            type="file"
+            accept=".jpg,.jpeg,.png,.pdf"
+            className="hidden"
+            onChange={e => handleAiRead(e.target.files?.[0])}
+          />
           <button onClick={() => { if (hangHoaList.length === 0) loadHangHoa(); setShowForm(true); setSaveMsg(null) }}
             className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium">
             <Plus className="w-4 h-4" /> Tạo phiếu NK
@@ -413,6 +503,33 @@ export default function CTNhapKho() {
           </div>
         </div>
       )}
+
+      {/* AI Fuzzy Match Popup */}
+      <HangHoaMatchPopup
+        isOpen={showMatchPopup}
+        onClose={() => setShowMatchPopup(false)}
+        matchResult={matchResult}
+        congTrinhId={parseInt(realId)}
+        loaiPhieu="nhap"
+        fileName={aiMeta.fileName || ''}
+        aiProvider={aiMeta.aiProvider || aiProvider}
+        aiModel={aiMeta.aiModel || ''}
+        processingTimeMs={aiMeta.processingTimeMs || 0}
+        onConfirm={(confirmedItems) => {
+          setShowMatchPopup(false)
+          setItems(confirmedItems.map(it => ({
+            ma_hang:    '',
+            ten_hang:   it.ten_hang,
+            dvt:        it.dvt || 'cái',
+            so_luong:   it.so_luong || '',
+            don_gia:    it.don_gia || '',
+            thanh_tien: it.thanh_tien || '',
+            selected:   false,
+          })))
+          setShowForm(true)
+          setSaveMsg(null)
+        }}
+      />
     </div>
   )
 }

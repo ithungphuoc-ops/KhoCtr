@@ -60,3 +60,7 @@ export const splitPdf = (formData) => api.post('/files/split-pdf', formData, {
   responseType: 'blob',
   timeout: 60000
 })
+
+// AI Fuzzy Match
+export const matchItems = (data) => api.post('/ai/match-items', data, { timeout: 30000 })
+export const confirmMatch = (data) => api.post('/ai/confirm-match', data, { timeout: 30000 })

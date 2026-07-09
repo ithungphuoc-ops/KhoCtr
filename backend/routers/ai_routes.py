@@ -1,13 +1,16 @@
 """
-routers/ai_routes.py — API endpoints cho AI đọc phiếu
+routers/ai_routes.py — API endpoints cho AI đọc phiếu + Fuzzy Match
 """
 import os, tempfile, shutil
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Header, Query
-from typing import Optional
+from pydantic import BaseModel
+from typing import Optional, List, Any
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 import ai_reader
+import supabase_client as db
 from config import get_settings
+from routers.auth import verify_token
 
 router = APIRouter(prefix="/api/ai", tags=["ai"])
 
@@ -253,3 +256,161 @@ async def health_gemini():
                 "error_status": status_str, "message": msg}
     except Exception as ex:
         return {"status": "error", "model": model, "message": str(ex)}
+
+
+# ── Fuzzy Match endpoints ─────────────────────────────────────
+
+class MatchItemsRequest(BaseModel):
+    cong_trinh_id:  int
+    loai_phieu:     str = "nhap"    # "nhap" | "xuat"
+    file_name:      str = ""
+    items:          List[Any]       # List items từ AI (có "ten_hang", "so_luong", "dvt", ...)
+    ai_provider:    str = ""
+    ai_model:       str = ""
+    processing_time_ms: int = 0
+
+
+class ConfirmMappingItem(BaseModel):
+    ten_ai_raw:     str
+    ten_chuan:      str
+    is_global:      bool = False    # True = lưu vào global mapping
+
+
+class ConfirmMatchRequest(BaseModel):
+    cong_trinh_id:  int
+    loai_phieu:     str = "nhap"
+    file_name:      str = ""
+    mappings:       List[ConfirmMappingItem]
+    # Thống kê từ popup để ghi vào ai_match_history
+    khop_xanh:      int = 0
+    khop_vang:      int = 0
+    hang_moi:       int = 0
+    ai_provider:    str = ""
+    ai_model:       str = ""
+    processing_time_ms: int = 0
+
+
+def _get_thresholds(cong_trinh_id: int) -> tuple[int, int]:
+    """
+    Đọc ngưỡng match từ project_ai_config của CT.
+    Fallback: green=90, yellow=70 nếu chưa cấu hình.
+    """
+    from mapping_service import DEFAULT_GREEN, DEFAULT_YELLOW
+    try:
+        cfg = db.get_ai_config_by_ct(cong_trinh_id)
+        if cfg:
+            g = cfg.get("match_green_threshold")
+            y = cfg.get("match_yellow_threshold")
+            if isinstance(g, int) and isinstance(y, int) and y < g:
+                return g, y
+    except Exception as e:
+        print(f"[ai_routes] _get_thresholds error: {e}")
+    return DEFAULT_GREEN, DEFAULT_YELLOW
+
+
+def _require_auth_routes(authorization: Optional[str]) -> dict:
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Cần đăng nhập.")
+    token = authorization.removeprefix("Bearer ").strip()
+    user = verify_token(token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Token không hợp lệ hoặc đã hết hạn.")
+    return user
+
+
+@router.post("/match-items")
+def match_items(
+    body: MatchItemsRequest,
+    authorization: Optional[str] = Header(None),
+):
+    """
+    Nhận list items từ AI đọc PDF, phân loại theo 3 tab (🟢/🟡/🔴).
+
+    Input:
+        cong_trinh_id, loai_phieu, items (từ AI JSON), file_name
+    Output:
+        { green: [...], yellow: [...], red: [...], stats: {...} }
+
+    Không ghi DB — chỉ phân loại. DB ghi sau khi popup confirm.
+    """
+    _require_auth_routes(authorization)
+
+    try:
+        from mapping_service import process_items_batch
+    except ImportError as e:
+        raise HTTPException(status_code=500, detail=f"mapping_service import error: {e}")
+
+    if not body.items:
+        return {"green": [], "yellow": [], "red": [],
+                "stats": {"tong": 0, "khop_xanh": 0, "khop_vang": 0, "hang_moi": 0}}
+
+    green_threshold, yellow_threshold = _get_thresholds(body.cong_trinh_id)
+
+    try:
+        result = process_items_batch(
+            items=body.items,
+            cong_trinh_id=body.cong_trinh_id,
+            green_threshold=green_threshold,
+            yellow_threshold=yellow_threshold,
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Lỗi phân loại hàng hóa: {str(e)}")
+
+
+@router.post("/confirm-match")
+def confirm_match(
+    body: ConfirmMatchRequest,
+    authorization: Optional[str] = Header(None),
+):
+    """
+    Sau khi người dùng bấm Xác nhận trên popup:
+      1. Lưu/cập nhật các mapping đã confirm vào ai_name_mapping
+      2. Ghi 1 bản ghi vào ai_match_history
+      3. Trả về kết quả
+
+    Không ghi phiếu nhập/xuất — bước đó do CTNhapKho/CTXuatKho tự xử lý sau.
+    """
+    user = _require_auth_routes(authorization)
+
+    from mapping_service import upsert_name_mapping, log_match_history
+
+    saved_count = 0
+    errors = []
+
+    # Lưu từng mapping người dùng đã xác nhận (chỉ lưu green + yellow được edit)
+    for m in body.mappings:
+        if not m.ten_ai_raw or not m.ten_chuan:
+            continue
+        ct_id = None if m.is_global else body.cong_trinh_id
+        try:
+            upsert_name_mapping(
+                ten_ai_raw=m.ten_ai_raw,
+                ten_chuan=m.ten_chuan,
+                cong_trinh_id=ct_id,
+            )
+            saved_count += 1
+        except Exception as e:
+            errors.append(f"{m.ten_ai_raw}: {str(e)}")
+
+    # Ghi lịch sử
+    log_match_history(
+        cong_trinh_id=body.cong_trinh_id,
+        loai_phieu=body.loai_phieu,
+        file_name=body.file_name,
+        tong_so_dong=body.khop_xanh + body.khop_vang + body.hang_moi,
+        khop_xanh=body.khop_xanh,
+        khop_vang=body.khop_vang,
+        hang_moi=body.hang_moi,
+        user_id=user.get("id"),
+        user_email=user.get("email"),
+        processing_time_ms=body.processing_time_ms or 0,
+        ai_provider=body.ai_provider,
+        ai_model=body.ai_model,
+    )
+
+    return {
+        "success": True,
+        "mappings_saved": saved_count,
+        "errors": errors,
+    }
