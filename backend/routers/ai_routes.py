@@ -402,7 +402,7 @@ def confirm_match(
         khop_xanh=body.khop_xanh,
         khop_vang=body.khop_vang,
         hang_moi=body.hang_moi,
-        user_id=user.get("id"),
+        user_id=user.get("uid"),
         user_email=user.get("email"),
         processing_time_ms=body.processing_time_ms or 0,
         ai_provider=body.ai_provider,

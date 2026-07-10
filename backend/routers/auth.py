@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 from typing import Optional
 import hashlib, hmac as hmac_lib, base64, json, time, secrets, os
+from urllib.parse import quote as _url_quote
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 import supabase_client as db
@@ -87,7 +88,8 @@ class CreateUserBody(BaseModel):
 def login(body: LoginBody):
     """Đăng nhập — trả về access_token."""
     try:
-        rows = db.select("app_users", filters=f"email=eq.{body.email}&active=eq.true")
+        email_enc = _url_quote(body.email, safe='')
+        rows = db.select("app_users", filters=f"email=eq.{email_enc}&active=eq.true")
         if not rows:
             raise HTTPException(status_code=401, detail="Email hoac mat khau khong dung")
         user = rows[0]
@@ -267,9 +269,14 @@ def create_user(body: CreateUserBody, authorization: Optional[str] = Header(None
     # Kiểm tra quyền
     existing = db.select("app_users")
     if not existing:
-        # Chunà có user nào — cho phép tạo admin đầu tiên với setup_key
+        # Chưa có user nào — cho phép tạo admin đầu tiên với setup_key
+        if not SETUP_KEY:
+            raise HTTPException(
+                status_code=503,
+                detail="Server chưa cấu hình SETUP_KEY. Liên hệ quản trị viên để thiết lập."
+            )
         if body.setup_key != SETUP_KEY:
-            raise HTTPException(status_code=403, detail=f"Can setup_key de tao admin dau tien")
+            raise HTTPException(status_code=403, detail="Cần setup_key để tạo admin đầu tiên")
         body.role = "admin"
     else:
         # Đã có user — chỉ admin mới tạo được
