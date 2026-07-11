@@ -200,17 +200,147 @@ def _call_claude_api(api_key, content_parts, max_tokens=8000):
     return ''.join(c.get('text', '') for c in result.get('content', []))
 
 
+# ── Anthropic Files API (cho file 5MB - 32MB) ────────────────
+
+CLAUDE_FILES_SIZE_THRESHOLD = 3 * 1024 * 1024  # 3 MB — tránh lỗi 413 với file lớn
+
+
+def _build_multipart(file_path):
+    """Build multipart/form-data body thu cong (urllib khong ho tro native)."""
+    import uuid
+    boundary = uuid.uuid4().hex
+    p = Path(file_path)
+    with open(file_path, 'rb') as f:
+        file_data = f.read()
+    mime = 'application/pdf' if p.suffix.lower() == '.pdf' else 'image/jpeg'
+    body = (
+        f'--{boundary}\r\n'
+        f'Content-Disposition: form-data; name="file"; filename="{p.name}"\r\n'
+        f'Content-Type: {mime}\r\n'
+        f'\r\n'
+    ).encode() + file_data + f'\r\n--{boundary}--\r\n'.encode()
+    return body, f'multipart/form-data; boundary={boundary}'
+
+
+def _upload_to_claude_files_api(file_path, api_key):
+    """
+    Upload file len Anthropic Files API. Tra ve file_id.
+    Dung cho file 5MB - 32MB de tranh loi 413 khi gui base64 inline.
+    """
+    body, content_type = _build_multipart(file_path)
+    req = urllib.request.Request(
+        'https://api.anthropic.com/v1/files',
+        data=body,
+        headers={
+            'x-api-key': api_key,
+            'anthropic-version': '2023-06-01',
+            'anthropic-beta': 'files-api-2025-04-14',
+            'Content-Type': content_type,
+        },
+        method='POST'
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=60) as r:
+            result = json.loads(r.read())
+        file_id = result.get('id') or result.get('file_id')
+        if not file_id:
+            raise RuntimeError(f"Files API khong tra ve file_id: {result}")
+        print(f"[ai_reader] Files API upload OK: {file_id}")
+        return file_id
+    except urllib.error.HTTPError as e:
+        err = e.read().decode()
+        try: msg = json.loads(err).get('error', {}).get('message', err)
+        except: msg = err
+        raise RuntimeError(f"Files API upload loi {e.code}: {msg}")
+
+
+def _delete_claude_file(file_id, api_key):
+    """Xoa file sau khi dung xong - giu sach quota."""
+    try:
+        req = urllib.request.Request(
+            f'https://api.anthropic.com/v1/files/{file_id}',
+            headers={
+                'x-api-key': api_key,
+                'anthropic-version': '2023-06-01',
+                'anthropic-beta': 'files-api-2025-04-14',
+            },
+            method='DELETE'
+        )
+        urllib.request.urlopen(req, timeout=15)
+        print(f"[ai_reader] Files API delete OK: {file_id}")
+    except Exception as e:
+        print(f"[ai_reader] Files API delete warning: {e}")
+
+
+def _call_claude_api_with_beta(api_key, content_parts, max_tokens=8000):
+    """Goi Claude API voi Files API beta header (dung khi co file_id)."""
+    body = json.dumps({
+        "model": "claude-sonnet-4-6",
+        "max_tokens": max_tokens,
+        "messages": [{"role": "user", "content": content_parts}]
+    }).encode()
+    req = urllib.request.Request("https://api.anthropic.com/v1/messages", data=body,
+        headers={
+            "Content-Type": "application/json",
+            "x-api-key": api_key,
+            "anthropic-version": "2023-06-01",
+            "anthropic-beta": "files-api-2025-04-14",
+        },
+        method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=120) as r:
+            result = json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        err = e.read().decode()
+        try: msg = json.loads(err).get('error', {}).get('message', err)
+        except: msg = err
+        raise RuntimeError(f"Claude API loi {e.code}: {msg}")
+    return ''.join(c.get('text', '') for c in result.get('content', []))
+
+
+def _build_content_parts_with_file_id(file_path, file_id, prompt):
+    """Tao content parts dung file_id tu Files API (thay the base64 inline)."""
+    p = Path(file_path)
+    if p.suffix.lower() == '.pdf':
+        doc_part = {"type": "document", "source": {"type": "file", "file_id": file_id}}
+    else:
+        doc_part = {"type": "image", "source": {"type": "file", "file_id": file_id}}
+    return [doc_part, {"type": "text", "text": prompt}]
+
+
 def _claude(file_path, loai, api_key, date_mode='auto'):
+    import os
     prompt = _build_prompt(loai, date_mode)
-    parts = _build_content_parts(file_path, prompt)
-    text = _call_claude_api(api_key, parts)
+    file_size = os.path.getsize(file_path)
+    if file_size > CLAUDE_FILES_SIZE_THRESHOLD:
+        print(f"[ai_reader] File lon ({file_size/1024/1024:.1f} MB) — dung Files API")
+        file_id = _upload_to_claude_files_api(file_path, api_key)
+        try:
+            parts = _build_content_parts_with_file_id(file_path, file_id, prompt)
+            text = _call_claude_api_with_beta(api_key, parts)
+        finally:
+            _delete_claude_file(file_id, api_key)
+    else:
+        parts = _build_content_parts(file_path, prompt)
+        text = _call_claude_api(api_key, parts)
     return _normalize(_parse_json(text))
 
 
 def _claude_multi(file_path, loai, api_key, date_mode='auto'):
+    import os
     prompt = _build_prompt_multi(loai, date_mode)
-    parts = _build_content_parts(file_path, prompt)
-    text = _call_claude_api(api_key, parts)
+    file_size = os.path.getsize(file_path)
+    if file_size > CLAUDE_FILES_SIZE_THRESHOLD:
+        print(f"[ai_reader] File lon ({file_size/1024/1024:.1f} MB) — dung Files API (multi)")
+        file_id = _upload_to_claude_files_api(file_path, api_key)
+        try:
+            parts = _build_content_parts_with_file_id(file_path, file_id, prompt)
+            text = _call_claude_api_with_beta(api_key, parts)
+        finally:
+            _delete_claude_file(file_id, api_key)
+    else:
+        parts = _build_content_parts(file_path, prompt)
+        text = _call_claude_api(api_key, parts)
     lst = _parse_json_list(text)
     return [_normalize(p) for p in lst if isinstance(p, dict)]
 
