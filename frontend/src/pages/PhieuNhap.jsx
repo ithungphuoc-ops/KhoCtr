@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Download, Search, RefreshCw, Eye, X, Plus, Trash2, Pencil, Bot, Loader, FileText, FileDown, AlertTriangle } from 'lucide-react'
 import HangHoaInput from '../components/HangHoaInput'
-import { getPhieuList, getChiTietPhieu, createPhieu, updatePhieu, deletePhieu, docPhieu, getHangHoa } from '../api'
+import { getPhieuList, getChiTietPhieu, createPhieu, updatePhieu, deletePhieu, docPhieu, docPhieuMulti, getHangHoa } from '../api'
 import { useCongTrinh } from '../context/CongTrinhContext'
 import { useAuth } from '../context/AuthContext'
 import { exportPhieuList } from '../utils/exportExcel'
@@ -71,6 +71,31 @@ export default function PhieuNhap() {
   const [aiDragging, setAiDragging] = useState(false)
   const [aiProvider, setAiProvider] = useState('gemini') // 'gemini' | 'claude'
   const aiRef = useRef()
+
+  // Batch mode (PDF nhiều phiếu)
+  const [batchList, setBatchList] = useState([])
+  const [batchIdx, setBatchIdx] = useState(-1)
+
+  const fillFormFromPhieu = (data) => {
+    setForm(f => ({
+      ...f,
+      so_phieu: data.so_phieu || '',
+      ngay:     data.ngay || todayStr(),
+      doi_tac:  data.doi_tac || data.nha_cung_cap || f.doi_tac,
+      ghi_chu:  f.ghi_chu,
+    }))
+    const aiItems = (data.items || data.hang_hoa || [])
+    if (aiItems.length > 0) {
+      setItems(aiItems.map(it => ({
+        ten_hang:   it.ten_hang || it.hang || '',
+        dvt:        it.dvt || 'cái',
+        so_luong:   it.so_luong || 0,
+        don_gia:    it.don_gia || 0,
+        thanh_tien: it.thanh_tien || (it.so_luong || 0) * (it.don_gia || 0),
+        selected:   false,
+      })))
+    }
+  }
 
   // Non-admin: luôn dùng CT được gán; Admin: dùng selectedCT (null = tất cả)
   const effectiveCTId = isAdmin ? selectedCT?.id : congTrinhs[0]?.id
@@ -235,8 +260,19 @@ export default function PhieuNhap() {
           thanh_tien: it.thanh_tien || 0,
         }))
       })
-      setShowCreate(false)
-      loadData()
+      // Batch mode: nếu còn phiếu tiếp theo thì load, không đóng modal
+      if (batchList.length > 0 && batchIdx < batchList.length - 1) {
+        const nextIdx = batchIdx + 1
+        setBatchIdx(nextIdx)
+        fillFormFromPhieu(batchList[nextIdx])
+        setCreateError('')
+        loadData()
+      } else {
+        setBatchList([])
+        setBatchIdx(-1)
+        setShowCreate(false)
+        loadData()
+      }
     } catch (e) {
       setCreateError(e.response?.data?.detail || 'Lỗi tạo phiếu. Thử lại.')
     } finally {
@@ -248,28 +284,26 @@ export default function PhieuNhap() {
     if (!aiFile) return
     setAiLoading(true)
     setAiError('')
+    setBatchList([])
+    setBatchIdx(-1)
     try {
       const fd = new FormData()
       fd.append('file', aiFile)
+      fd.append('loai', 'NK')
       fd.append('provider', aiProvider)
-      const res = await docPhieu(fd)
-      const phieuData = res.data?.phieu || res.data || {}
-      const aiItems = phieuData.items || phieuData.hang_hoa || []
-      setForm(f => ({
-        ...f,
-        so_phieu: phieuData.so_phieu || genSoPhieu(),
-        ngay: phieuData.ngay || todayStr(),
-        doi_tac: phieuData.doi_tac || phieuData.ncc || f.doi_tac,
-        ghi_chu: f.ghi_chu,
-      }))
-      if (aiItems.length > 0) {
-        setItems(aiItems.map(it => ({
-          ten_hang: it.ten_hang || it.ten || '',
-          dvt: it.dvt || 'cái',
-          so_luong: it.so_luong || 0,
-          don_gia: it.don_gia || 0,
-          thanh_tien: it.thanh_tien || (it.so_luong || 0) * (it.don_gia || 0),
-        })))
+      if (effectiveCTId) fd.append('cong_trinh_id', effectiveCTId)
+
+      const isPdf = aiFile.name.toLowerCase().endsWith('.pdf')
+      if (isPdf) {
+        const res = await docPhieuMulti(fd)
+        const list = res.data?.phieu_list || []
+        if (list.length === 0) { setAiError('AI không tìm thấy phiếu nào trong file.'); return }
+        setBatchList(list)
+        setBatchIdx(0)
+        fillFormFromPhieu(list[0])
+      } else {
+        const res = await docPhieu(fd)
+        fillFormFromPhieu(res.data?.phieu || res.data || {})
       }
       setCreateMode('manual')
     } catch (e) {
@@ -285,19 +319,19 @@ export default function PhieuNhap() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">PHIẾU NHẬP KHO</h1>
-          <p className="text-gray-500 mt-1 text-sm">
+          <h1 className="text-2xl font-bold text-hp-text">PHIẾU NHẬP KHO</h1>
+          <p className="text-hp-text-secondary mt-1 text-sm">
             {isAdminUser ? 'Tất cả phiếu nhập kho từ các công trình' : `Công trình:${selectedCT?.ten_ct || '...'}`}
           </p>
           {selectedCT
-            ? <span className="inline-block mt-1 px-2 py-0.5 bg-teal-100 text-teal-700 text-xs rounded-full">📌 {selectedCT.ten_ct}</span>
-            : <span className="inline-block mt-1 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">🏢 Tất cả CT</span>
+            ? <span className="inline-block mt-1 px-2 py-0.5 bg-hp-primary/15 text-hp-primary text-xs rounded-full">📌 {selectedCT.ten_ct}</span>
+            : <span className="inline-block mt-1 px-2 py-0.5 bg-hp-accent/15 text-hp-accent text-xs rounded-full">🏢 Tất cả CT</span>
           }
         </div>
         <div className="flex gap-2">
           {selectedCT && (
             <button onClick={openCreate}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors shadow-sm">
+              className="flex items-center gap-2 px-4 py-2 min-h-10 bg-hp-primary hover:bg-hp-primary/90 text-white rounded-hp-md text-sm font-medium transition-colors shadow-sm">
               <Plus className="w-4 h-4" />
               Tạo phiếu NK
             </button>
@@ -318,12 +352,12 @@ export default function PhieuNhap() {
               finally { setExporting(false) }
             }}
             disabled={exporting || filtered.length === 0}
-            className="flex items-center gap-2 px-4 py-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
+            className="flex items-center gap-2 px-4 py-2 min-h-10 bg-hp-primary/15 hover:bg-hp-primary/25 text-hp-primary rounded-hp-md text-sm font-medium transition-colors disabled:opacity-50">
             <FileDown className={`w-4 h-4 ${exporting ? 'animate-bounce' : ''}`} />
             {exporting ? 'Đang xuất...' : 'Xuất Excel'}
           </button>
           <button onClick={loadData} disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
+            className="flex items-center gap-2 px-4 py-2 min-h-10 bg-hp-accent/15 hover:bg-hp-accent/25 text-hp-accent rounded-hp-md text-sm font-medium transition-colors disabled:opacity-50">
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             Làm mới
           </button>
@@ -331,80 +365,80 @@ export default function PhieuNhap() {
       </div>
 
       <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl border border-gray-100 p-4 flex items-center gap-3">
-          <Download className="w-8 h-8 text-blue-500 flex-shrink-0" />
+        <div className="bg-hp-card rounded-hp-lg border border-hp-border p-4 flex items-center gap-3">
+          <Download className="w-8 h-8 text-hp-accent flex-shrink-0" />
           <div>
-            <div className="text-2xl font-bold text-gray-800">{filtered.length}</div>
-            <div className="text-sm text-gray-500">Số phiếu hiển thị</div>
+            <div className="text-2xl font-bold text-hp-text">{filtered.length}</div>
+            <div className="text-sm text-hp-text-secondary">Số phiếu hiển thị</div>
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-4 flex items-center gap-3">
-          <Download className="w-8 h-8 text-indigo-400 flex-shrink-0" />
+        <div className="bg-hp-card rounded-hp-lg border border-hp-border p-4 flex items-center gap-3">
+          <Download className="w-8 h-8 text-hp-accent/70 flex-shrink-0" />
           <div>
-            <div className="text-2xl font-bold text-gray-800">{phieuList.length}</div>
-            <div className="text-sm text-gray-500">Tổng phiếu NK</div>
+            <div className="text-2xl font-bold text-hp-text">{phieuList.length}</div>
+            <div className="text-sm text-hp-text-secondary">Tổng phiếu NK</div>
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-4 flex items-center gap-3">
-          <Download className="w-8 h-8 text-teal-500 flex-shrink-0" />
+        <div className="bg-hp-card rounded-hp-lg border border-hp-border p-4 flex items-center gap-3">
+          <Download className="w-8 h-8 text-hp-primary flex-shrink-0" />
           <div>
-            <div className="text-xl font-bold text-gray-800">{formatVND(tongTien)}</div>
-            <div className="text-sm text-gray-500">Tổng giá trị</div>
+            <div className="text-xl font-bold text-hp-text">{formatVND(tongTien)}</div>
+            <div className="text-sm text-hp-text-secondary">Tổng giá trị</div>
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex gap-3 flex-wrap items-center">
+      <div className="bg-hp-card rounded-hp-lg shadow-sm border border-hp-border p-4 flex gap-3 flex-wrap items-center">
         <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-hp-text-muted" />
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Tìm số phiếu, nhà cung cấp..."
-            className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-300" />
+            className="w-full pl-9 pr-4 py-2 min-h-10 bg-hp-surface text-hp-text border border-hp-border rounded-hp-md text-sm focus:outline-none focus:ring-2 focus:ring-hp-accent" />
         </div>
-        {isAdminUser && <span className="text-xs text-gray-400 italic">Chọn CT ở sidebar để lọc</span>}
-        <span className="text-xs text-gray-400">{filtered.length} phiếu</span>
+        {isAdminUser && <span className="text-xs text-hp-text-muted italic">Chọn CT ở sidebar để lọc</span>}
+        <span className="text-xs text-hp-text-muted">{filtered.length} phiếu</span>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-hp-card rounded-hp-lg shadow-sm border border-hp-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-100">
+            <thead className="bg-hp-surface border-b border-hp-border">
               <tr>
-                <th className="text-left px-4 py-3 text-gray-500 font-medium">#</th>
-                <th className="text-left px-4 py-3 text-gray-500 font-medium">Số phiếu</th>
-                <th className="text-left px-4 py-3 text-gray-500 font-medium">Ngày</th>
-                {isAdminUser && <th className="text-left px-4 py-3 text-gray-500 font-medium">Công trình</th>}
-                <th className="text-left px-4 py-3 text-gray-500 font-medium">Nhà cung cấp / Ghi chú</th>
-                <th className="text-right px-4 py-3 text-gray-500 font-medium">Tổng tiền</th>
-                <th className="text-center px-4 py-3 text-gray-500 font-medium">Chi tiết</th>
+                <th className="text-left px-4 py-3 text-hp-text-secondary font-medium">#</th>
+                <th className="text-left px-4 py-3 text-hp-text-secondary font-medium">Số phiếu</th>
+                <th className="text-left px-4 py-3 text-hp-text-secondary font-medium">Ngày</th>
+                {isAdminUser && <th className="text-left px-4 py-3 text-hp-text-secondary font-medium">Công trình</th>}
+                <th className="text-left px-4 py-3 text-hp-text-secondary font-medium">Nhà cung cấp / Ghi chú</th>
+                <th className="text-right px-4 py-3 text-hp-text-secondary font-medium">Tổng tiền</th>
+                <th className="text-center px-4 py-3 text-hp-text-secondary font-medium">Chi tiết</th>
               </tr>
             </thead>
             <tbody>
               {loading
-                ? <tr><td colSpan={colSpan} className="py-10 text-center text-gray-400">Đang tải dữ liệu...</td></tr>
+                ? <tr><td colSpan={colSpan} className="py-10 text-center text-hp-text-muted">Đang tải dữ liệu...</td></tr>
                 : filtered.length === 0
-                  ? <tr><td colSpan={colSpan} className="py-10 text-center text-gray-400">Không có phiếu nhập kho</td></tr>
+                  ? <tr><td colSpan={colSpan} className="py-10 text-center text-hp-text-muted">Không có phiếu nhập kho</td></tr>
                   : filtered.map((p, i) => (
-                      <tr key={p.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-3 text-gray-400 text-xs">{i + 1}</td>
-                        <td className="px-4 py-3 font-mono font-semibold text-blue-700">{p.so_phieu}</td>
-                        <td className="px-4 py-3 text-gray-600 text-xs">{p.ngay}</td>
+                      <tr key={p.id} className="border-b border-hp-border hover:bg-hp-elevated transition-colors">
+                        <td className="px-4 py-3 text-hp-text-muted text-xs">{i + 1}</td>
+                        <td className="px-4 py-3 font-mono font-semibold text-hp-accent">{p.so_phieu}</td>
+                        <td className="px-4 py-3 text-hp-text-secondary text-xs">{p.ngay}</td>
                         {isAdminUser && (
-                          <td className="px-4 py-3 text-gray-700 text-xs truncate max-w-[160px]">{ctMap[p.cong_trinh_id] || '—'}</td>
+                          <td className="px-4 py-3 text-hp-text text-xs truncate max-w-[160px]">{ctMap[p.cong_trinh_id] || '—'}</td>
                         )}
-                        <td className="px-4 py-3 text-gray-600 text-xs truncate max-w-[130px]">{p.doi_tac || '—'}</td>
-                        <td className="px-4 py-3 text-right font-semibold text-blue-700">{formatVND(p.tong_tien)}</td>
+                        <td className="px-4 py-3 text-hp-text-secondary text-xs truncate max-w-[130px]">{p.doi_tac || '—'}</td>
+                        <td className="px-4 py-3 text-right font-semibold text-hp-accent">{formatVND(p.tong_tien)}</td>
                         <td className="px-4 py-3 text-center whitespace-nowrap">
                           <button onClick={() => openChiTiet(p)} title="Xem chi tiết"
-                            className="p-1.5 hover:bg-blue-50 text-gray-400 hover:text-blue-600 rounded-lg transition-colors">
+                            className="p-1.5 hover:bg-hp-accent/10 text-hp-text-muted hover:text-hp-accent rounded-hp-md transition-colors">
                             <Eye className="w-4 h-4" />
                           </button>
                           <button onClick={() => openEdit(p)} disabled={loadingEdit} title="Sửa phiếu"
-                            className="p-1.5 hover:bg-yellow-50 text-gray-400 hover:text-yellow-600 rounded-lg transition-colors disabled:opacity-40">
+                            className="p-1.5 hover:bg-hp-warning/10 text-hp-text-muted hover:text-hp-warning rounded-hp-md transition-colors disabled:opacity-40">
                             <Pencil className="w-4 h-4" />
                           </button>
                           <button onClick={() => setConfirmDelete(p)} title="Xóa phiếu"
-                            className="p-1.5 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-lg transition-colors">
+                            className="p-1.5 hover:bg-hp-danger/10 text-hp-text-muted hover:text-hp-danger rounded-hp-md transition-colors">
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </td>
@@ -413,10 +447,10 @@ export default function PhieuNhap() {
               }
             </tbody>
             {!loading && filtered.length > 0 && (
-              <tfoot className="bg-blue-50 border-t-2 border-gray-200">
+              <tfoot className="bg-hp-accent/10 border-t-2 border-hp-border">
                 <tr>
-                  <td colSpan={colSpan - 2} className="px-4 py-3 font-bold text-gray-700 text-sm">Tổng cộng ({filtered.length} phiếu)</td>
-                  <td className="px-4 py-3 text-right font-bold text-blue-700">{formatVND(tongTien)}</td>
+                  <td colSpan={colSpan - 2} className="px-4 py-3 font-bold text-hp-text text-sm">Tổng cộng ({filtered.length} phiếu)</td>
+                  <td className="px-4 py-3 text-right font-bold text-hp-accent">{formatVND(tongTien)}</td>
                   <td></td>
                 </tr>
               </tfoot>
@@ -427,55 +461,55 @@ export default function PhieuNhap() {
 
       {/* Modal xem chi tiet */}
       {selectedPhieu && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4"
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
           onClick={e => { if (e.target === e.currentTarget) setSelectedPhieu(null) }}>
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-            <div className="flex items-center justify-between p-5 border-b">
+          <div className="bg-hp-elevated border border-hp-border rounded-hp-lg shadow-md w-full max-w-2xl max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between p-5 border-b border-hp-border">
               <div>
-                <h3 className="font-bold text-blue-700 text-lg">{selectedPhieu.so_phieu}</h3>
-                <p className="text-sm text-gray-500 mt-0.5">
+                <h3 className="font-bold text-hp-accent text-lg">{selectedPhieu.so_phieu}</h3>
+                <p className="text-sm text-hp-text-secondary mt-0.5">
                   {selectedPhieu.ngay} &nbsp;·&nbsp; {ctMap[selectedPhieu.cong_trinh_id] || ''}
                   {selectedPhieu.doi_tac && <> &nbsp;·&nbsp; {selectedPhieu.doi_tac}</>}
                 </p>
               </div>
-              <button onClick={() => setSelectedPhieu(null)} className="p-1 hover:bg-gray-100 rounded-lg text-gray-400">
+              <button onClick={() => setSelectedPhieu(null)} className="p-1 hover:bg-hp-muted/20 rounded-hp-md text-hp-text-muted">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="overflow-auto flex-1 p-5">
               {loadingChiTiet
-                ? <div className="text-center text-gray-400 py-8">Đang tải...</div>
+                ? <div className="text-center text-hp-text-muted py-8">Đang tải...</div>
                 : chiTiet.length === 0
-                  ? <div className="text-center text-gray-400 py-8">Không có chi tiết</div>
+                  ? <div className="text-center text-hp-text-muted py-8">Không có chi tiết</div>
                   : <table className="w-full text-sm">
-                      <thead className="bg-gray-50 sticky top-0">
+                      <thead className="bg-hp-surface sticky top-0">
                         <tr>
-                          <th className="text-left p-2 text-gray-500 font-medium">#</th>
-                          <th className="text-left p-2 text-gray-500 font-medium">Tên hàng</th>
-                          <th className="text-right p-2 text-gray-500 font-medium">SL</th>
-                          <th className="text-left p-2 text-gray-500 font-medium">ĐVT</th>
-                          <th className="text-right p-2 text-gray-500 font-medium">Đơn giá</th>
-                          <th className="text-right p-2 text-gray-500 font-medium">Thành tiền</th>
+                          <th className="text-left p-2 text-hp-text-secondary font-medium">#</th>
+                          <th className="text-left p-2 text-hp-text-secondary font-medium">Tên hàng</th>
+                          <th className="text-right p-2 text-hp-text-secondary font-medium">SL</th>
+                          <th className="text-left p-2 text-hp-text-secondary font-medium">ĐVT</th>
+                          <th className="text-right p-2 text-hp-text-secondary font-medium">Đơn giá</th>
+                          <th className="text-right p-2 text-hp-text-secondary font-medium">Thành tiền</th>
                         </tr>
                       </thead>
                       <tbody>
                         {chiTiet.map((item, i) => (
-                          <tr key={i} className="border-b border-gray-50">
-                            <td className="p-2 text-gray-400 text-xs">{i + 1}</td>
-                            <td className="p-2 text-gray-800">{item.ten_hang}</td>
-                            <td className="p-2 text-right text-gray-700">{fmt(item.so_luong)}</td>
-                            <td className="p-2 text-gray-500 text-xs">{item.dvt}</td>
-                            <td className="p-2 text-right text-gray-600">{formatVND(item.don_gia)}</td>
-                            <td className="p-2 text-right font-medium text-gray-800">{formatVND(item.thanh_tien)}</td>
+                          <tr key={i} className="border-b border-hp-border">
+                            <td className="p-2 text-hp-text-muted text-xs">{i + 1}</td>
+                            <td className="p-2 text-hp-text">{item.ten_hang}</td>
+                            <td className="p-2 text-right text-hp-text">{fmt(item.so_luong)}</td>
+                            <td className="p-2 text-hp-text-secondary text-xs">{item.dvt}</td>
+                            <td className="p-2 text-right text-hp-text-secondary">{formatVND(item.don_gia)}</td>
+                            <td className="p-2 text-right font-medium text-hp-text">{formatVND(item.thanh_tien)}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
               }
             </div>
-            <div className="p-4 border-t bg-gray-50 flex justify-between items-center text-sm">
-              <span className="text-gray-500">{chiTiet.length} dòng hàng</span>
-              <span className="font-bold text-blue-700 text-base">Tổng: {formatVND(selectedPhieu.tong_tien)}</span>
+            <div className="p-4 border-t border-hp-border bg-hp-surface flex justify-between items-center text-sm">
+              <span className="text-hp-text-secondary">{chiTiet.length} dòng hàng</span>
+              <span className="font-bold text-hp-accent text-base">Tổng: {formatVND(selectedPhieu.tong_tien)}</span>
             </div>
           </div>
         </div>
@@ -483,31 +517,42 @@ export default function PhieuNhap() {
 
       {/* Modal tao phieu NK */}
       {showCreate && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between p-5 border-b">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-hp-elevated border border-hp-border rounded-hp-lg shadow-md w-full max-w-3xl max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between p-5 border-b border-hp-border">
               <div>
-                <h3 className="font-bold text-gray-800 text-lg">{editingPhieu ? `Sửa Phiếu NK — ${editingPhieu.so_phieu}` : 'Tạo Phiếu Nhập Kho'}</h3>
-                <p className="text-sm text-teal-600 font-medium">📌 {editingPhieu ? ctMap[editingPhieu.cong_trinh_id] || editingPhieu.so_phieu : selectedCT?.ten_ct}
-                  <span className="ml-2 text-xs text-gray-400 font-normal">
+                <h3 className="font-bold text-hp-text text-lg">{editingPhieu ? `Sửa Phiếu NK — ${editingPhieu.so_phieu}` : 'Tạo Phiếu Nhập Kho'}</h3>
+                <p className="text-sm text-hp-primary font-medium">📌 {editingPhieu ? ctMap[editingPhieu.cong_trinh_id] || editingPhieu.so_phieu : selectedCT?.ten_ct}
+                  <span className="ml-2 text-xs text-hp-text-muted font-normal">
                     {hangHoaList.length > 0 ? `${hangHoaList.length} mặt hàng trong danh mục` : '⚠ Danh mục chưa tải'}
                   </span>
                 </p>
               </div>
-              <button onClick={() => { setShowCreate(false); setEditingPhieu(null) }} className="p-1 hover:bg-gray-100 rounded-lg text-gray-400">
+              <button onClick={() => { setShowCreate(false); setEditingPhieu(null) }} className="p-1 hover:bg-hp-muted/20 rounded-hp-md text-hp-text-muted">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="overflow-auto flex-1 p-5 space-y-4">
+              {/* Batch progress indicator */}
+              {batchList.length > 1 && createMode === 'manual' && (
+                <div className="flex items-center gap-2 p-2.5 bg-hp-primary/10 border border-hp-primary/30 rounded-hp-md text-xs">
+                  <Bot className="w-3.5 h-3.5 text-hp-primary flex-shrink-0" />
+                  <span className="text-hp-primary font-medium">AI đọc được {batchList.length} phiếu — đang xử lý phiếu {batchIdx + 1}/{batchList.length}</span>
+                  <div className="flex-1 h-1.5 bg-hp-border rounded-full overflow-hidden ml-1">
+                    <div className="h-full bg-hp-primary rounded-full transition-all" style={{ width: `${((batchIdx + 1) / batchList.length) * 100}%` }} />
+                  </div>
+                </div>
+              )}
+
               {!editingPhieu && (
-                <div className="flex gap-1 p-1 bg-gray-100 rounded-lg">
+                <div className="flex gap-1 p-1 bg-hp-surface rounded-hp-md">
                   <button onClick={() => setCreateMode('manual')}
-                    className={"flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-colors " + (createMode === 'manual' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
+                    className={"flex-1 py-1.5 px-3 rounded-hp-sm text-xs font-medium transition-colors " + (createMode === 'manual' ? 'bg-hp-elevated text-hp-text shadow-sm' : 'text-hp-text-secondary hover:text-hp-text')}>
                     Nhập tay
                   </button>
                   <button onClick={() => setCreateMode('ai')}
-                    className={"flex-1 py-1.5 px-3 rounded-md text-xs font-medium flex items-center justify-center gap-1.5 transition-colors " + (createMode === 'ai' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
+                    className={"flex-1 py-1.5 px-3 rounded-hp-sm text-xs font-medium flex items-center justify-center gap-1.5 transition-colors " + (createMode === 'ai' ? 'bg-hp-elevated text-hp-text shadow-sm' : 'text-hp-text-secondary hover:text-hp-text')}>
                     <Bot className="w-3.5 h-3.5" /> Đọc bảng AI
                   </button>
                 </div>
@@ -516,55 +561,55 @@ export default function PhieuNhap() {
               {!editingPhieu && createMode === 'ai' && (
                 <div className="space-y-3">
                   {/* Provider toggle */}
-                  <div className="flex gap-1 p-1 bg-gray-100 rounded-lg">
+                  <div className="flex gap-1 p-1 bg-hp-surface rounded-hp-md">
                     <button onClick={() => setAiProvider('gemini')}
-                      className={"flex-1 py-1.5 px-2 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1 " + (aiProvider === 'gemini' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
+                      className={"flex-1 py-1.5 px-2 rounded-hp-sm text-xs font-medium transition-colors flex items-center justify-center gap-1 " + (aiProvider === 'gemini' ? 'bg-hp-elevated text-hp-text shadow-sm' : 'text-hp-text-secondary hover:text-hp-text')}>
                       🆓 Gemini
                     </button>
                     <button onClick={() => setAiProvider('openai')}
-                      className={"flex-1 py-1.5 px-2 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1 " + (aiProvider === 'openai' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
+                      className={"flex-1 py-1.5 px-2 rounded-hp-sm text-xs font-medium transition-colors flex items-center justify-center gap-1 " + (aiProvider === 'openai' ? 'bg-hp-elevated text-hp-text shadow-sm' : 'text-hp-text-secondary hover:text-hp-text')}>
                       🤖 ChatGPT
                     </button>
                     <button onClick={() => setAiProvider('claude')}
-                      className={"flex-1 py-1.5 px-2 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1 " + (aiProvider === 'claude' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
+                      className={"flex-1 py-1.5 px-2 rounded-hp-sm text-xs font-medium transition-colors flex items-center justify-center gap-1 " + (aiProvider === 'claude' ? 'bg-hp-elevated text-hp-text shadow-sm' : 'text-hp-text-secondary hover:text-hp-text')}>
                       <Bot className="w-3.5 h-3.5" /> Claude
                     </button>
                   </div>
                   <div
-                    className={"border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors " + (aiDragging ? 'border-blue-400 bg-blue-50' : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50')}
+                    className={"border-2 border-dashed rounded-hp-lg p-6 text-center cursor-pointer transition-colors " + (aiDragging ? 'border-hp-accent bg-hp-accent/10' : 'border-hp-border hover:border-hp-accent hover:bg-hp-accent/10')}
                     onClick={() => aiRef.current && aiRef.current.click()}
                     onDragOver={e => { e.preventDefault(); setAiDragging(true) }}
                     onDragLeave={() => setAiDragging(false)}
                     onDrop={e => { e.preventDefault(); setAiDragging(false); var f = e.dataTransfer.files[0]; if (f) { setAiFile(f); setAiError(''); } }}
                   >
-                    <Download className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                    <p className="text-gray-600 text-sm font-medium">Click hoặc kéo file vào đây</p>
-                    <p className="text-gray-400 text-xs mt-1">Hỗ trợ: JPG, PNG, PDF</p>
+                    <Download className="w-8 h-8 text-hp-text-muted mx-auto mb-2" />
+                    <p className="text-hp-text-secondary text-sm font-medium">Click hoặc kéo file vào đây</p>
+                    <p className="text-hp-text-muted text-xs mt-1">Hỗ trợ: JPG, PNG, PDF</p>
                     <input ref={aiRef} type="file" className="hidden" accept=".jpg,.jpeg,.png,.pdf"
                       onChange={e => { var f = e.target.files[0]; if (f) { setAiFile(f); setAiError(''); } }} />
                   </div>
                   {aiFile && (
-                    <div className="flex items-center gap-2 p-2.5 bg-blue-50 rounded-lg">
-                      <FileText className="w-4 h-4 text-blue-500 flex-shrink-0" />
-                      <span className="text-xs text-blue-700 truncate flex-1">{aiFile.name}</span>
-                      <span className="text-xs text-blue-400">{(aiFile.size/1024).toFixed(0)} KB</span>
-                      <button onClick={() => { setAiFile(null); if (aiRef.current) aiRef.current.value = ''; }} className="text-blue-300 hover:text-blue-500">
+                    <div className="flex items-center gap-2 p-2.5 bg-hp-accent/15 rounded-hp-md">
+                      <FileText className="w-4 h-4 text-hp-accent flex-shrink-0" />
+                      <span className="text-xs text-hp-accent truncate flex-1">{aiFile.name}</span>
+                      <span className="text-xs text-hp-text-muted">{(aiFile.size/1024).toFixed(0)} KB</span>
+                      <button onClick={() => { setAiFile(null); if (aiRef.current) aiRef.current.value = ''; }} className="text-hp-text-muted hover:text-hp-accent">
                         <X className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   )}
-                  {aiError && <p className="text-red-500 text-xs bg-red-50 p-2 rounded-lg">{aiError}</p>}
+                  {aiError && <p className="text-hp-danger text-xs bg-hp-danger/10 p-2 rounded-hp-md">{aiError}</p>}
                   <button onClick={handleAiRead} disabled={!aiFile || aiLoading}
-                    className="w-full py-2.5 bg-blue-500 text-white rounded-xl font-medium text-sm hover:bg-blue-600 disabled:opacity-50 flex items-center justify-center gap-2">
+                    className="w-full py-2.5 min-h-10 bg-hp-primary text-white rounded-hp-lg font-medium text-sm hover:bg-hp-primary/90 disabled:opacity-50 flex items-center justify-center gap-2">
                     {aiLoading ? <><Loader className="w-4 h-4 animate-spin" /> AI đang đọc...</> : <><Bot className="w-4 h-4" /> Đọc và điền form tự động</>}
                   </button>
                   <div className="flex items-center justify-center gap-1.5">
-                    <span className="text-xs text-gray-400">Powered by</span>
+                    <span className="text-xs text-hp-text-muted">Powered by</span>
                     {aiProvider === 'gemini'
-                      ? <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 text-xs font-medium rounded-full border border-green-100">🆓 Gemini 1.5 Flash</span>
+                      ? <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-hp-primary/15 text-hp-primary text-xs font-medium rounded-full border border-hp-primary/30">🆓 Gemini 1.5 Flash</span>
                       : aiProvider === 'openai'
-                      ? <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 text-xs font-medium rounded-full border border-emerald-100">🤖 ChatGPT gpt-4o-mini</span>
-                      : <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-50 text-purple-600 text-xs font-medium rounded-full border border-purple-100"><Bot className="w-3 h-3" /> Claude Sonnet</span>
+                      ? <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-hp-primary/15 text-hp-primary text-xs font-medium rounded-full border border-hp-primary/30">🤖 ChatGPT gpt-4o-mini</span>
+                      : <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-hp-accent/15 text-hp-accent text-xs font-medium rounded-full border border-hp-accent/30"><Bot className="w-3 h-3" /> Claude Sonnet</span>
                     }
                   </div>
                 </div>
@@ -574,51 +619,51 @@ export default function PhieuNhap() {
                 <>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Số phiếu *</label>
+                      <label className="block text-xs font-medium text-hp-text-secondary mb-1">Số phiếu *</label>
                       <input value={form.so_phieu} onChange={e => setForm(f => ({...f, so_phieu: e.target.value}))}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400" placeholder="NK-20260702-001" />
+                        className="w-full px-3 py-2 min-h-10 bg-hp-surface text-hp-text border border-hp-border rounded-hp-md text-sm focus:outline-none focus:ring-2 focus:ring-hp-accent" placeholder="NK-20260702-001" />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Ngày *</label>
+                      <label className="block text-xs font-medium text-hp-text-secondary mb-1">Ngày *</label>
                       <input type="date" value={form.ngay} onChange={e => setForm(f => ({...f, ngay: e.target.value}))}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400" />
+                        className="w-full px-3 py-2 min-h-10 bg-hp-surface text-hp-text border border-hp-border rounded-hp-md text-sm focus:outline-none focus:ring-2 focus:ring-hp-accent" />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Nhà cung cấp</label>
+                      <label className="block text-xs font-medium text-hp-text-secondary mb-1">Nhà cung cấp</label>
                       <input value={form.doi_tac} onChange={e => setForm(f => ({...f, doi_tac: e.target.value}))}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400" placeholder="Tên nhà cung cấp..." />
+                        className="w-full px-3 py-2 min-h-10 bg-hp-surface text-hp-text border border-hp-border rounded-hp-md text-sm focus:outline-none focus:ring-2 focus:ring-hp-accent" placeholder="Tên nhà cung cấp..." />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Ghi chú</label>
+                      <label className="block text-xs font-medium text-hp-text-secondary mb-1">Ghi chú</label>
                       <input value={form.ghi_chu} onChange={e => setForm(f => ({...f, ghi_chu: e.target.value}))}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400" placeholder="Ghi chú thêm..." />
+                        className="w-full px-3 py-2 min-h-10 bg-hp-surface text-hp-text border border-hp-border rounded-hp-md text-sm focus:outline-none focus:ring-2 focus:ring-hp-accent" placeholder="Ghi chú thêm..." />
                     </div>
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <label className="text-xs font-medium text-gray-600">Danh sách hàng hóa *</label>
+                      <label className="text-xs font-medium text-hp-text-secondary">Danh sách hàng hóa *</label>
                       <button onClick={() => setItems(prev => [...prev, emptyItem()])}
-                        className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium">
+                        className="flex items-center gap-1 text-xs text-hp-accent hover:text-hp-accent/80 font-medium">
                         <Plus className="w-3 h-3" /> Thêm dòng
                       </button>
                     </div>
-                    <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="border border-hp-border rounded-hp-md overflow-hidden">
                       <table className="w-full text-xs">
-                        <thead className="bg-gray-50">
+                        <thead className="bg-hp-surface">
                           <tr>
-                            <th className="text-center px-3 py-2 text-gray-500 font-medium w-8">#</th>
-                            <th className="text-left px-3 py-2 text-gray-500 font-medium">Tên hàng *</th>
-                            <th className="text-center px-2 py-2 text-gray-500 font-medium w-16">SL</th>
-                            <th className="text-center px-2 py-2 text-gray-500 font-medium w-16">ĐVT</th>
-                            <th className="text-center px-2 py-2 text-gray-500 font-medium w-24">Đơn giá</th>
-                            <th className="text-right px-3 py-2 text-gray-500 font-medium w-24">Thành tiền</th>
+                            <th className="text-center px-3 py-2 text-hp-text-secondary font-medium w-8">#</th>
+                            <th className="text-left px-3 py-2 text-hp-text-secondary font-medium">Tên hàng *</th>
+                            <th className="text-center px-2 py-2 text-hp-text-secondary font-medium w-16">SL</th>
+                            <th className="text-center px-2 py-2 text-hp-text-secondary font-medium w-16">ĐVT</th>
+                            <th className="text-center px-2 py-2 text-hp-text-secondary font-medium w-24">Đơn giá</th>
+                            <th className="text-right px-3 py-2 text-hp-text-secondary font-medium w-24">Thành tiền</th>
                             <th className="w-8"></th>
                           </tr>
                         </thead>
                         <tbody>
                           {items.map((it, i) => (
-                            <tr key={i} className="border-t border-gray-100">
-                              <td className="px-3 py-1.5 text-gray-400 text-center">{i + 1}</td>
+                            <tr key={i} className="border-t border-hp-border">
+                              <td className="px-3 py-1.5 text-hp-text-muted text-center">{i + 1}</td>
                               <td className="px-1 py-1">
                                 <HangHoaInput
                                   value={it.ten_hang}
@@ -630,13 +675,13 @@ export default function PhieuNhap() {
                                   placeholder="Tên vật tư..."
                                 />
                               </td>
-                              <td className="px-1 py-1"><input type="number" value={it.so_luong} min="0" onChange={e => updateItem(i, 'so_luong', e.target.value)} className="w-full px-2 py-1.5 border border-gray-200 rounded text-xs text-right focus:outline-none focus:border-blue-300" /></td>
-                              <td className="px-1 py-1"><input value={it.dvt} onChange={e => updateItem(i, 'dvt', e.target.value)} readOnly={!!it.selected} className={`w-full px-2 py-1.5 border border-gray-200 rounded text-xs focus:outline-none ${it.selected ? 'bg-gray-50 text-gray-500 cursor-default' : 'focus:border-blue-300'}`} /></td>
-                              <td className="px-1 py-1"><input type="number" value={it.don_gia} min="0" onChange={e => updateItem(i, 'don_gia', e.target.value)} className="w-full px-2 py-1.5 border border-gray-200 rounded text-xs text-right focus:outline-none focus:border-blue-300" /></td>
-                              <td className="px-3 py-1.5 text-right font-semibold text-blue-600">{formatVND(it.thanh_tien)}</td>
+                              <td className="px-1 py-1"><input type="number" value={it.so_luong} min="0" onChange={e => updateItem(i, 'so_luong', e.target.value)} className="w-full px-2 py-1.5 bg-hp-surface text-hp-text border border-hp-border rounded-hp-sm text-xs text-right focus:outline-none focus:ring-2 focus:ring-hp-accent" /></td>
+                              <td className="px-1 py-1"><input value={it.dvt} onChange={e => updateItem(i, 'dvt', e.target.value)} readOnly={!!it.selected} className={`w-full px-2 py-1.5 border border-hp-border rounded-hp-sm text-xs focus:outline-none ${it.selected ? 'bg-hp-muted/10 text-hp-text-muted cursor-default' : 'bg-hp-surface text-hp-text focus:ring-2 focus:ring-hp-accent'}`} /></td>
+                              <td className="px-1 py-1"><input type="number" value={it.don_gia} min="0" onChange={e => updateItem(i, 'don_gia', e.target.value)} className="w-full px-2 py-1.5 bg-hp-surface text-hp-text border border-hp-border rounded-hp-sm text-xs text-right focus:outline-none focus:ring-2 focus:ring-hp-accent" /></td>
+                              <td className="px-3 py-1.5 text-right font-semibold text-hp-accent">{formatVND(it.thanh_tien)}</td>
                               <td className="px-1 py-1 text-center">
                                 {items.length > 1 && (
-                                  <button onClick={() => setItems(prev => prev.filter((_, j) => j !== i))} className="p-1 text-gray-300 hover:text-red-500"><Trash2 className="w-3 h-3" /></button>
+                                  <button onClick={() => setItems(prev => prev.filter((_, j) => j !== i))} className="p-1 text-hp-danger hover:bg-hp-danger/10 rounded-hp-sm"><Trash2 className="w-3 h-3" /></button>
                                 )}
                               </td>
                             </tr>
@@ -649,17 +694,17 @@ export default function PhieuNhap() {
               )}
             </div>
 
-            <div className="p-4 border-t bg-gray-50 flex items-center justify-between">
+            <div className="p-4 border-t border-hp-border bg-hp-surface flex items-center justify-between">
               <div>
-                {createError && <p className="text-red-500 text-xs mb-1">{createError}</p>}
-                {createMode === 'manual' && <p className="text-base font-bold text-blue-700">Tổng: {formatVND(tongItems)}</p>}
+                {createError && <p className="text-hp-danger text-xs mb-1">{createError}</p>}
+                {createMode === 'manual' && <p className="text-base font-bold text-hp-accent">Tổng: {formatVND(tongItems)}</p>}
               </div>
               <div className="flex gap-2">
-                <button onClick={() => { setShowCreate(false); setEditingPhieu(null) }} className="px-4 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm hover:bg-gray-50">Hủy</button>
+                <button onClick={() => { setShowCreate(false); setEditingPhieu(null) }} className="px-4 py-2 min-h-10 border border-hp-border text-hp-text-secondary rounded-hp-md text-sm hover:bg-hp-elevated">Hủy</button>
                 {(createMode === 'manual' || editingPhieu) && (
                   <button onClick={editingPhieu ? handleUpdate : handleCreate} disabled={creating}
-                    className="px-5 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium disabled:opacity-50">
-                    {creating ? 'Đang lưu...' : editingPhieu ? 'Cập nhật' : 'Lưu Phiếu NK'}
+                    className="px-5 py-2 min-h-10 bg-hp-primary hover:bg-hp-primary/90 text-white rounded-hp-md text-sm font-medium disabled:opacity-50">
+                    {creating ? 'Đang lưu...' : editingPhieu ? 'Cập nhật' : batchList.length > 1 ? `Lưu & Tiếp (${batchIdx + 1}/${batchList.length})` : 'Lưu Phiếu NK'}
                   </button>
                 )}
               </div>
@@ -669,22 +714,22 @@ export default function PhieuNhap() {
       )}
       {/* Delete confirm */}
       {confirmDelete && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-hp-elevated border border-hp-border rounded-hp-lg shadow-md w-full max-w-sm p-6">
             <div className="flex items-start gap-3 mb-4">
-              <AlertTriangle className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5" />
+              <AlertTriangle className="w-6 h-6 text-hp-danger flex-shrink-0 mt-0.5" />
               <div>
-                <h3 className="font-bold text-gray-800">Xóa phiếu nhập kho?</h3>
-                <p className="text-sm text-gray-500 mt-1">
-                  Phiếu <b className="text-red-600">{confirmDelete.so_phieu}</b> ngày {confirmDelete.ngay} và toàn bộ chi tiết sẽ bị xóa vĩnh viễn.
+                <h3 className="font-bold text-hp-text">Xóa phiếu nhập kho?</h3>
+                <p className="text-sm text-hp-text-secondary mt-1">
+                  Phiếu <b className="text-hp-danger">{confirmDelete.so_phieu}</b> ngày {confirmDelete.ngay} và toàn bộ chi tiết sẽ bị xóa vĩnh viễn.
                 </p>
               </div>
             </div>
             <div className="flex justify-end gap-2">
               <button onClick={() => setConfirmDelete(null)} disabled={deleting}
-                className="px-4 py-2 text-sm text-gray-500 hover:bg-gray-100 rounded-lg">Hủy</button>
+                className="px-4 py-2 min-h-10 text-sm text-hp-text-secondary hover:bg-hp-muted/20 rounded-hp-md">Hủy</button>
               <button onClick={handleDelete} disabled={deleting}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg disabled:opacity-50">
+                className="px-4 py-2 min-h-10 text-sm font-medium text-white bg-hp-danger hover:bg-hp-danger/90 rounded-hp-md disabled:opacity-50">
                 {deleting ? 'Đang xóa...' : 'Xóa vĩnh viễn'}
               </button>
             </div>
