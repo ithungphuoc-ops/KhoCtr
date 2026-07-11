@@ -1,6 +1,9 @@
 import base64, json, re, urllib.request, urllib.error
 from pathlib import Path
 
+MAX_IMAGES_PER_REQUEST = 6   # spec: 6 anh/request on dinh da model
+PAGE_THRESHOLD = 8            # <= 8 trang → fitz inline; > 8 trang → batch/Files API
+
 
 def _file_to_base64(path):
     p = Path(path); s = p.suffix.lower()
@@ -13,13 +16,27 @@ def _file_to_base64(path):
     return data, mt
 
 
-def _render_pages_fitz(file_path, max_pages=8, scale=3.0):
-    """Render tung trang PDF thanh anh PNG 3x bang fitz. Tra ve [] neu khong co fitz."""
+def _count_pages_fitz(file_path):
+    """Dem so trang PDF. Tra ve 0 neu khong co fitz."""
     try:
         import fitz
         doc = fitz.open(str(file_path))
+        n = len(doc)
+        doc.close()
+        return n
+    except Exception:
+        return 0
+
+
+def _render_pages_fitz(file_path, page_start=0, page_end=None, scale=2.5):
+    """Render cac trang PDF tu page_start den page_end (exclusive). Tra ve list png bytes."""
+    try:
+        import fitz
+        doc = fitz.open(str(file_path))
+        total = len(doc)
+        end = total if page_end is None else min(page_end, total)
         pages = []
-        for i in range(min(len(doc), max_pages)):
+        for i in range(page_start, end):
             page = doc[i]
             mat = fitz.Matrix(scale, scale)
             pix = page.get_pixmap(matrix=mat, alpha=False)
@@ -28,6 +45,19 @@ def _render_pages_fitz(file_path, max_pages=8, scale=3.0):
         return pages
     except Exception:
         return []
+
+
+def _call_with_retry(call_fn, max_retries=3):
+    """Retry toi da max_retries lan. Neu van loi thi tra ve None (bo qua batch)."""
+    last_err = None
+    for attempt in range(max_retries):
+        try:
+            return call_fn()
+        except Exception as e:
+            last_err = e
+            print(f"[ai_reader] Retry {attempt+1}/{max_retries}: {e}")
+    print(f"[ai_reader] Bo qua batch sau {max_retries} lan that bai: {last_err}")
+    return None
 
 
 def _build_prompt(loai, date_mode='auto'):
@@ -58,6 +88,18 @@ def _build_prompt(loai, date_mode='auto'):
         "- so_luong va don_gia la so thuc (don_gia = 0 neu khong co gia)\n"
         "- Trich xuat TAT CA hang hoa trong phieu, khong bo sot dong nao du it hay nhieu\n"
         "- Neu truong nao khong doc duoc ro, de chuoi rong (khong doan mo)"
+    )
+
+
+def _build_prompt_continuation(loai):
+    """Prompt cho batch tiep theo cua CUNG MOT PHIEU — chi doc items, khong tao header moi."""
+    loai_text = "NHAP KHO" if loai == "NK" else "XUAT KHO"
+    return (
+        f"Day la cac trang tiep theo cua CUNG MOT PHIEU {loai_text} da bat dau o trang truoc.\n"
+        "KHONG tao so phieu moi. KHONG tao NCC moi. KHONG tao ngay moi.\n"
+        "Chi doc cac dong hang hoa con lai tren cac trang nay.\n"
+        "CHI TRA VE JSON MANG items, KHONG CO BAT KY TEXT NAO KHAC, KHONG MARKDOWN:\n"
+        "[{\"ten_hang\":\"\",\"dvt\":\"\",\"so_luong\":0,\"don_gia\":0}]"
     )
 
 
@@ -153,13 +195,12 @@ def _normalize(parsed):
 
 def _build_content_parts(file_path, prompt):
     """
-    Tao content parts cho API Claude:
-    - Neu file la PDF va fitz co san: render tung trang 3x → list anh PNG (chat luong cao hon)
-    - Nguoc lai: gui PDF goc hoac anh nguyen ban
+    Tao content parts cho API Claude (dung cho anh hoac PDF <= PAGE_THRESHOLD trang).
+    PDF: render fitz → list PNG. Khac: gui file goc.
     """
     p = Path(file_path)
     if p.suffix.lower() == '.pdf':
-        pages = _render_pages_fitz(file_path, max_pages=8, scale=3.0)
+        pages = _render_pages_fitz(file_path, scale=2.5)
         if pages:
             parts = []
             for png_data in pages:
@@ -176,6 +217,79 @@ def _build_content_parts(file_path, prompt):
     else:
         cp = {"type": "image", "source": {"type": "base64", "media_type": mt, "data": b64}}
     return [cp, {"type": "text", "text": prompt}]
+
+
+def _png_list_to_parts(png_list):
+    """Chuyen list png bytes thanh content parts cho Claude API."""
+    parts = []
+    for png_data in png_list:
+        b64 = base64.b64encode(png_data).decode()
+        parts.append({"type": "image", "source": {"type": "base64", "media_type": "image/png", "data": b64}})
+    return parts
+
+
+def _claude_fitz_batched(file_path, loai, api_key, date_mode, total_pages):
+    """
+    Doc 1 phieu tu PDF nhieu trang: chia batch MAX_IMAGES_PER_REQUEST trang/lan.
+    Batch dau: full prompt → lay header + items.
+    Batch sau: continuation prompt → chi lay items.
+    Merge theo thu tu batch (da dam bao thu tu vi range() chay tuan tu).
+    Khong dedup — de nguoi dung kiem tra.
+    """
+    prompt_first = _build_prompt(loai, date_mode)
+    prompt_cont = _build_prompt_continuation(loai)
+
+    merged_header = {}
+    all_items = []
+    total_batches = (total_pages + MAX_IMAGES_PER_REQUEST - 1) // MAX_IMAGES_PER_REQUEST
+
+    for batch_idx, batch_start in enumerate(range(0, total_pages, MAX_IMAGES_PER_REQUEST)):
+        batch_end = min(batch_start + MAX_IMAGES_PER_REQUEST, total_pages)
+        batch_num = batch_idx + 1
+        print(f"[ai_reader] Batch {batch_num}/{total_batches}: trang {batch_start+1}-{batch_end}/{total_pages}")
+
+        pages = _render_pages_fitz(file_path, page_start=batch_start, page_end=batch_end, scale=2.5)
+        if not pages:
+            continue
+
+        is_first = (batch_idx == 0)
+        prompt = prompt_first if is_first else prompt_cont
+        parts = _png_list_to_parts(pages) + [{"type": "text", "text": prompt}]
+
+        text = _call_with_retry(lambda p=parts: _call_claude_api(api_key, p))
+        if text is None:
+            continue
+
+        try:
+            if is_first:
+                data = _normalize(_parse_json(text))
+                merged_header = {k: v for k, v in data.items() if k != 'items'}
+                all_items.extend(data.get('items', []))
+            else:
+                raw = re.sub(r'```json|```', '', text).strip()
+                for ch in ('[', '{'):
+                    pos = raw.find(ch)
+                    if pos >= 0:
+                        try:
+                            parsed, _ = json.JSONDecoder().raw_decode(raw, pos)
+                            if isinstance(parsed, list):
+                                items = parsed
+                            elif isinstance(parsed, dict):
+                                items = parsed.get('items', [])
+                            else:
+                                items = []
+                            for item in items:
+                                if isinstance(item, dict):
+                                    all_items.append(item)
+                            break
+                        except Exception:
+                            pass
+        except Exception as e:
+            print(f"[ai_reader] Parse loi batch {batch_num}: {e}")
+
+    result = dict(merged_header)
+    result['items'] = all_items
+    return _normalize(result)
 
 
 def _call_claude_api(api_key, content_parts, max_tokens=8000):
@@ -200,9 +314,7 @@ def _call_claude_api(api_key, content_parts, max_tokens=8000):
     return ''.join(c.get('text', '') for c in result.get('content', []))
 
 
-# ── Anthropic Files API (cho file 5MB - 32MB) ────────────────
-
-CLAUDE_FILES_SIZE_THRESHOLD = 3 * 1024 * 1024  # 3 MB — tránh lỗi 413 với file lớn
+# ── Anthropic Files API (cho PDF nhieu trang) ────────────────
 
 
 def _build_multipart(file_path):
@@ -309,40 +421,78 @@ def _build_content_parts_with_file_id(file_path, file_id, prompt):
 
 
 def _claude(file_path, loai, api_key, date_mode='auto'):
-    import os
+    """Doc 1 phieu: <= PAGE_THRESHOLD trang → fitz inline; > PAGE_THRESHOLD → fitz batch."""
+    p = Path(file_path)
     prompt = _build_prompt(loai, date_mode)
-    file_size = os.path.getsize(file_path)
-    if file_size > CLAUDE_FILES_SIZE_THRESHOLD:
-        print(f"[ai_reader] File lon ({file_size/1024/1024:.1f} MB) — dung Files API")
-        file_id = _upload_to_claude_files_api(file_path, api_key)
-        try:
-            parts = _build_content_parts_with_file_id(file_path, file_id, prompt)
-            text = _call_claude_api_with_beta(api_key, parts)
-        finally:
-            _delete_claude_file(file_id, api_key)
-    else:
-        parts = _build_content_parts(file_path, prompt)
-        text = _call_claude_api(api_key, parts)
+
+    if p.suffix.lower() == '.pdf':
+        total_pages = _count_pages_fitz(file_path)
+        print(f"[ai_reader] PDF {p.name}: {total_pages} trang")
+
+        if total_pages > PAGE_THRESHOLD:
+            print(f"[ai_reader] > {PAGE_THRESHOLD} trang → fitz batch (1 phieu)")
+            return _claude_fitz_batched(file_path, loai, api_key, date_mode, total_pages)
+
+        if total_pages > 0:
+            print(f"[ai_reader] <= {PAGE_THRESHOLD} trang → fitz inline")
+            pages = _render_pages_fitz(file_path, page_end=total_pages, scale=2.5)
+            if pages:
+                parts = _png_list_to_parts(pages) + [{"type": "text", "text": prompt}]
+                text = _call_with_retry(lambda: _call_claude_api(api_key, parts))
+                if text:
+                    return _normalize(_parse_json(text))
+
+    # Fallback: anh hoac PDF khong dem duoc trang
+    parts = _build_content_parts(file_path, prompt)
+    text = _call_with_retry(lambda: _call_claude_api(api_key, parts))
+    if not text:
+        raise RuntimeError("Khong the goi Claude API sau nhieu lan thu. Thu lai sau.")
     return _normalize(_parse_json(text))
 
 
 def _claude_multi(file_path, loai, api_key, date_mode='auto'):
-    import os
+    """
+    Doc nhieu phieu tu 1 PDF:
+    <= PAGE_THRESHOLD trang → fitz inline.
+    > PAGE_THRESHOLD trang → Files API (AI doc toan bo PDF, nhan dien tat ca phieu).
+    """
+    p = Path(file_path)
     prompt = _build_prompt_multi(loai, date_mode)
-    file_size = os.path.getsize(file_path)
-    if file_size > CLAUDE_FILES_SIZE_THRESHOLD:
-        print(f"[ai_reader] File lon ({file_size/1024/1024:.1f} MB) — dung Files API (multi)")
-        file_id = _upload_to_claude_files_api(file_path, api_key)
-        try:
-            parts = _build_content_parts_with_file_id(file_path, file_id, prompt)
-            text = _call_claude_api_with_beta(api_key, parts)
-        finally:
-            _delete_claude_file(file_id, api_key)
-    else:
-        parts = _build_content_parts(file_path, prompt)
-        text = _call_claude_api(api_key, parts)
+
+    if p.suffix.lower() == '.pdf':
+        total_pages = _count_pages_fitz(file_path)
+        print(f"[ai_reader] PDF multi {p.name}: {total_pages} trang")
+
+        if total_pages > PAGE_THRESHOLD:
+            print(f"[ai_reader] > {PAGE_THRESHOLD} trang → Files API (multi-phieu)")
+            file_id = _upload_to_claude_files_api(file_path, api_key)
+            try:
+                parts = _build_content_parts_with_file_id(file_path, file_id, prompt)
+                text = _call_with_retry(lambda: _call_claude_api_with_beta(api_key, parts))
+            finally:
+                _delete_claude_file(file_id, api_key)
+            if not text:
+                raise RuntimeError("Khong the goi Claude API sau nhieu lan thu. Thu lai sau.")
+            lst = _parse_json_list(text)
+            return [_normalize(q) for q in lst if isinstance(q, dict)]
+
+        if total_pages > 0:
+            print(f"[ai_reader] <= {PAGE_THRESHOLD} trang → fitz inline (multi-phieu)")
+            pages = _render_pages_fitz(file_path, page_end=total_pages, scale=2.5)
+            if pages:
+                parts = _png_list_to_parts(pages) + [{"type": "text", "text": prompt}]
+                text = _call_with_retry(lambda: _call_claude_api(api_key, parts))
+                if text:
+                    lst = _parse_json_list(text)
+                    return [_normalize(q) for q in lst if isinstance(q, dict)]
+
+    # Fallback
+    parts = _build_content_parts(file_path, prompt)
+    text = _call_with_retry(lambda: _call_claude_api(api_key, parts))
+    if not text:
+        raise RuntimeError("Khong the goi Claude API sau nhieu lan thu. Thu lai sau.")
     lst = _parse_json_list(text)
-    return [_normalize(p) for p in lst if isinstance(p, dict)]
+    return [_normalize(q) for q in lst if isinstance(q, dict)]
 
 
 def _gemini(file_path, loai, api_key, date_mode='auto', model='gemini-1.5-flash'):
@@ -436,7 +586,7 @@ def _openai(file_path, loai, api_key, date_mode='auto', model='gpt-4o-mini'):
     # Build content: PDF → render PNG; anh → base64 truc tiep
     content = []
     if p.suffix.lower() == '.pdf':
-        pages = _render_pages_fitz(file_path, max_pages=8, scale=3.0)
+        pages = _render_pages_fitz(file_path, page_end=PAGE_THRESHOLD, scale=2.5)
         if pages:
             for png_data in pages:
                 b64 = base64.b64encode(png_data).decode()
@@ -497,7 +647,7 @@ def _openai_multi(file_path, loai, api_key, date_mode='auto', model='gpt-4o-mini
 
     content = []
     if p.suffix.lower() == '.pdf':
-        pages = _render_pages_fitz(file_path, max_pages=16, scale=3.0)
+        pages = _render_pages_fitz(file_path, page_end=PAGE_THRESHOLD * 2, scale=2.5)
         if pages:
             for png_data in pages:
                 b64 = base64.b64encode(png_data).decode()
