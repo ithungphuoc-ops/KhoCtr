@@ -2,56 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* HPCons Design System V2.0 - Steel & Sky Theme */
-:root {
-  /* --- Brand ------------------------------------------ */
-  --hp-brand-primary: #185fa5;
-  --hp-brand-primary-hover: #1a6fbe;
-  --hp-brand-accent: #1d9e75;
-  --hp-brand-accent-light: #5dcaa5;
-
-  /* --- Nen Dark Mode ----------------------------------- */
-  --hp-background: #0a1929;
-  --hp-surface: #0d233a;
-  --hp-card: #102d48;
-  --hp-elevated: #153556;
-  --hp-nav-base: #0d3354;
-
-  /* --- Duong vien -------------------------------------- */
-  --hp-border: rgba(56, 138, 221, 0.15);
-  --hp-border-strong: rgba(56, 138, 221, 0.28);
-  --hp-divider: rgba(56, 138, 221, 0.08);
-
-  /* --- Chu --------------------------------------------- */
-  --hp-text-primary: #e6f1fb;
-  --hp-text-secondary: #9dc5e0;
-  --hp-text-muted: #5a8aad;
-  --hp-text-disabled: #3a6280;
-
-  /* --- Trang thai -------------------------------------- */
-  --hp-danger: #f05252;
-  --hp-warning: #f59e0b;
-  --hp-success: #1d9e75;
-  --hp-muted: #5a8aad;
-
-  /* --- Mau nghiep vu kho ------------------------------- */
-  --hp-nk-color: #1d9e75;
-  --hp-xk-color: #378add;
-  --hp-ton-color: #5dcaa5;
-
-  /* --- Bo goc & kich thuoc ----------------------------- */
-  --hp-radius-sm: 6px;
-  --hp-radius-md: 8px;
-  --hp-radius-lg: 12px;
-  --hp-header-height: 60px;
-  --hp-mobile-header-height: 56px;
-}
-
-/* Dark Mode la mac dinh */
 body {
-  font-family: 'Inter', Roboto, Arial, sans-serif;
-  background-color: var(--hp-background);
-  color: var(--hp-text-primary);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #F8FAFC;
 }
 
 * {
@@ -64,19 +17,14 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--hp-surface);
+  background: #f1f5f9;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--hp-elevated);
+  background: #cbd5e1;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--hp-nav-base);
-}
-
-/* O nhap ngay tren nen toi */
-input[type='date'] {
-  color-scheme: dark;
+  background: #94a3b8;
 }
