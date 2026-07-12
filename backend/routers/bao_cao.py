@@ -41,7 +41,7 @@ def bao_cao_tong_hop(
         # ── 1. Phiếu KHÔNG filter date → dùng cho KPI counts ─────────────────
         phieu_all = db.get_phieu_list(
             cong_trinh_id=cong_trinh_id,
-            limit=5000
+            limit=10000   # tăng lên 10000, có pagination trong get_phieu_list
         )
         print(f"[bao_cao] phieu_all (no date): {len(phieu_all)} bản ghi")
 
@@ -49,7 +49,7 @@ def bao_cao_tong_hop(
         if date_from or date_to:
             phieu_date = db.get_phieu_list(
                 cong_trinh_id=cong_trinh_id,
-                limit=5000,
+                limit=10000,
                 date_from=date_from,
                 date_to=date_to
             )
@@ -76,10 +76,9 @@ def bao_cao_tong_hop(
         print(f"[bao_cao] thong_ke: NK={thong_ke.get('so_phieu_nk')}, XK={thong_ke.get('so_phieu_xk')}")
 
         # ── 4. Tồn kho + cảnh báo ─────────────────────────────────────────────
-        if cong_trinh_id:
-            ton_kho = db.get_ton_kho_by_ct(cong_trinh_id=cong_trinh_id)
-        else:
-            ton_kho = db.get_ton_kho_all()
+        # Dùng compute_ton_kho() thay v_ton_kho — nhất quán với trang Tồn kho
+        # v_ton_kho có thể thiếu cột ton_cuoi hoặc sai công thức → âm kho luôn = 0
+        ton_kho = db.compute_ton_kho(cong_trinh_id=cong_trinh_id if cong_trinh_id else None)
         # Cảnh báo: tồn <= 20 (nhất quán với trang Cảnh báo)
         canh_bao = [r for r in ton_kho if (r.get("ton_cuoi") or 0) <= 20]
 

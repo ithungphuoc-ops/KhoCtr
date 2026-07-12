@@ -110,11 +110,26 @@ def get_phieu_list(cong_trinh_id: int = None, loai: str = None,
         extra += f"&ngay=gte.{date_from}"
     if date_to:
         extra += f"&ngay=lte.{date_to}"
-    page_size = min(limit, 1000)
-    rows = select("phieu", query="*",
-                  filters=f"limit={page_size}&offset={offset}{extra}",
-                  order="ngay.desc")
-    return rows
+
+    # Nếu limit <= 1000: 1 request đơn
+    # Nếu limit > 1000: phân trang để vượt giới hạn PostgREST 1000 rows/lần
+    page_size = 1000
+    if limit <= page_size:
+        return select("phieu", query="*",
+                      filters=f"limit={limit}&offset={offset}{extra}",
+                      order="ngay.desc")
+
+    all_rows: list = []
+    cur_offset = offset
+    while True:
+        rows = select("phieu", query="*",
+                      filters=f"limit={page_size}&offset={cur_offset}{extra}",
+                      order="ngay.desc")
+        all_rows.extend(rows)
+        if len(rows) < page_size or len(all_rows) >= limit:
+            break
+        cur_offset += page_size
+    return all_rows[:limit]
 
 
 def push_phieu(cong_trinh_id: int, local_id: int, loai: str, so_phieu: str,
@@ -384,13 +399,15 @@ def delete_chi_tiet_by_hang(cong_trinh_id: int, ten_hang: str) -> int:
 # ── Thống kê nhanh ────────────────────────────────────────────
 
 def get_thong_ke_tong() -> dict:
-    """Đếm nhanh số phiếu NK/XK và số công trình active"""
+    """Đếm số phiếu NK/XK và số công trình active — có pagination để vượt giới hạn 1000 rows"""
     cts = get_all_cong_trinh()
-    phieus = select("phieu", query="loai,cong_trinh_id,tong_tien,ngay")
-    nk = sum(1 for p in phieus if p["loai"] == "NK")
-    xk = sum(1 for p in phieus if p["loai"] == "XK")
-    tong_tien_nk = sum(p.get("tong_tien") or 0 for p in phieus if p["loai"] == "NK")
-    tong_tien_xk = sum(p.get("tong_tien") or 0 for p in phieus if p["loai"] == "XK")
+    # Dùng _fetch_all để lấy TẤT CẢ phiếu, không bị cắt ở 1000 rows
+    phieus = _fetch_all("phieu", query="loai,cong_trinh_id,tong_tien,ngay",
+                        order="id.asc", max_rows=100000)
+    nk = sum(1 for p in phieus if p.get("loai") == "NK")
+    xk = sum(1 for p in phieus if p.get("loai") == "XK")
+    tong_tien_nk = sum(float(p.get("tong_tien") or 0) for p in phieus if p.get("loai") == "NK")
+    tong_tien_xk = sum(float(p.get("tong_tien") or 0) for p in phieus if p.get("loai") == "XK")
     return {
         "so_cong_trinh": len(cts),
         "so_phieu_nk": nk,
