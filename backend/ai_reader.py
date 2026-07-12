@@ -420,31 +420,54 @@ def _build_content_parts_with_file_id(file_path, file_id, prompt):
     return [doc_part, {"type": "text", "text": prompt}]
 
 
+CLAUDE_FILES_MAX = 32 * 1024 * 1024   # 32MB — gioi han Files API
+
+
 def _claude(file_path, loai, api_key, date_mode='auto'):
-    """Doc 1 phieu: <= PAGE_THRESHOLD trang → fitz inline; > PAGE_THRESHOLD → fitz batch."""
+    """
+    Doc 1 phieu tu PDF hoac anh.
+    <= PAGE_THRESHOLD trang : fitz inline (gui PNG truc tiep).
+    > PAGE_THRESHOLD trang  : Files API — upload toan bo file, Claude doc 1 lan, delete.
+    > 32MB (qua lon Files API): fallback fitz batch 6 trang/lan.
+    """
+    import os
     p = Path(file_path)
     prompt = _build_prompt(loai, date_mode)
 
     if p.suffix.lower() == '.pdf':
         total_pages = _count_pages_fitz(file_path)
-        print(f"[ai_reader] PDF {p.name}: {total_pages} trang")
+        file_size   = os.path.getsize(file_path)
+        print(f"[ai_reader] PDF {p.name}: {total_pages} trang, {file_size/1024/1024:.1f} MB")
 
         if total_pages > PAGE_THRESHOLD:
-            print(f"[ai_reader] > {PAGE_THRESHOLD} trang → fitz batch (1 phieu)")
-            return _claude_fitz_batched(file_path, loai, api_key, date_mode, total_pages)
+            if file_size <= CLAUDE_FILES_MAX:
+                # Files API: Claude doc toan bo file trong 1 context → chinh xac nhat
+                print(f"[ai_reader] > {PAGE_THRESHOLD} trang, <= 32MB → Files API (1 phieu)")
+                file_id = _upload_to_claude_files_api(file_path, api_key)
+                try:
+                    parts = _build_content_parts_with_file_id(file_path, file_id, prompt)
+                    text  = _call_with_retry(lambda: _call_claude_api_with_beta(api_key, parts))
+                finally:
+                    _delete_claude_file(file_id, api_key)
+                if text:
+                    return _normalize(_parse_json(text))
+            else:
+                # > 32MB: fallback batch (hiem gap)
+                print(f"[ai_reader] > 32MB → fitz batch (1 phieu)")
+                return _claude_fitz_batched(file_path, loai, api_key, date_mode, total_pages)
 
         if total_pages > 0:
             print(f"[ai_reader] <= {PAGE_THRESHOLD} trang → fitz inline")
             pages = _render_pages_fitz(file_path, page_end=total_pages, scale=2.0)
             if pages:
                 parts = _png_list_to_parts(pages) + [{"type": "text", "text": prompt}]
-                text = _call_with_retry(lambda: _call_claude_api(api_key, parts))
+                text  = _call_with_retry(lambda: _call_claude_api(api_key, parts))
                 if text:
                     return _normalize(_parse_json(text))
 
     # Fallback: anh hoac PDF khong dem duoc trang
     parts = _build_content_parts(file_path, prompt)
-    text = _call_with_retry(lambda: _call_claude_api(api_key, parts))
+    text  = _call_with_retry(lambda: _call_claude_api(api_key, parts))
     if not text:
         raise RuntimeError("Khong the goi Claude API sau nhieu lan thu. Thu lai sau.")
     return _normalize(_parse_json(text))
