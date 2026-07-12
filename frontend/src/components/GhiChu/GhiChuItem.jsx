@@ -49,10 +49,10 @@ export default function GhiChuItem({
   const isHuy     = item.trang_thai === 'huy'
 
   const dlBadge = dlStatus === 'overdue'
-    ? 'bg-red-100 text-red-700'
+    ? 'bg-hp-danger/15 text-hp-danger'
     : dlStatus === 'soon'
-      ? 'bg-amber-100 text-amber-700'
-      : 'bg-gray-100 text-gray-500'
+      ? 'bg-hp-warning/15 text-hp-warning'
+      : 'bg-hp-surface text-hp-text-muted'
 
   const borderExtra = dlStatus === 'overdue'
     ? 'border-red-400'
@@ -62,7 +62,7 @@ export default function GhiChuItem({
 
   return (
     <div
-      className={`rounded-xl border-2 ${mau.bg} ${borderExtra} ${isDone || isHuy ? 'opacity-60' : ''} group transition-all`}
+      className={`rounded-hp-lg border-2 ${mau.bg} ${borderExtra} ${isDone || isHuy ? 'opacity-60' : ''} group transition-all`}
     >
       <div className="p-3">
         {/* Top row */}
@@ -72,16 +72,16 @@ export default function GhiChuItem({
             className="flex-1 min-w-0 cursor-pointer"
             onClick={() => onDetail && onDetail(item)}
           >
-            <p className={`text-sm font-medium text-gray-800 leading-snug hover:text-teal-700 transition-colors ${isDone ? 'line-through text-gray-400' : ''}`}>
+            <p className={`text-sm font-medium text-hp-text leading-snug hover:text-hp-accent transition-colors ${isDone ? 'line-through text-hp-text-muted' : ''}`}>
               {item.tieu_de}
             </p>
             {showCT && congTrinhMap[item.cong_trinh_id] && (
-              <p className="text-xs text-teal-600 mt-0.5 truncate">
+              <p className="text-xs text-hp-accent mt-0.5 truncate">
                 {congTrinhMap[item.cong_trinh_id]}
               </p>
             )}
             {item.noi_dung && (
-              <p className="text-xs text-gray-400 mt-0.5 line-clamp-2 leading-relaxed">
+              <p className="text-xs text-hp-text-muted mt-0.5 line-clamp-2 leading-relaxed">
                 {item.noi_dung}
               </p>
             )}
@@ -93,7 +93,7 @@ export default function GhiChuItem({
               <button
                 onClick={e => { e.stopPropagation(); onComplete && onComplete(item.id) }}
                 title="Hoàn thành"
-                className="p-1 rounded-lg hover:bg-green-100 text-gray-400 hover:text-green-600 transition-colors"
+                className="p-1 rounded-hp-sm hover:bg-hp-primary/10 text-hp-text-muted hover:text-hp-primary transition-colors"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
               </button>
@@ -101,7 +101,7 @@ export default function GhiChuItem({
             <button
               onClick={e => { e.stopPropagation(); onEdit && onEdit(item) }}
               title="Chỉnh sửa"
-              className="p-1 rounded-lg hover:bg-blue-100 text-gray-400 hover:text-blue-600 transition-colors"
+              className="p-1 rounded-hp-sm hover:bg-hp-accent/10 text-hp-text-muted hover:text-hp-accent transition-colors"
             >
               <Pencil className="w-3.5 h-3.5" />
             </button>
@@ -109,18 +109,18 @@ export default function GhiChuItem({
               ? <button
                   onClick={e => { e.stopPropagation(); setDelConfirm(true) }}
                   title="Xóa"
-                  className="p-1 rounded-lg hover:bg-red-100 text-gray-400 hover:text-red-500 transition-colors"
+                  className="p-1 rounded-hp-sm hover:bg-hp-danger/10 text-hp-text-muted hover:text-hp-danger transition-colors"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               : <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
                   <button
                     onClick={() => { onDelete && onDelete(item.id) }}
-                    className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-lg font-medium"
+                    className="px-2 py-0.5 bg-hp-danger text-white text-xs rounded-hp-sm font-medium"
                   >Xóa</button>
                   <button
                     onClick={() => setDelConfirm(false)}
-                    className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-lg"
+                    className="px-2 py-0.5 bg-hp-elevated text-hp-text-secondary text-xs rounded-hp-sm"
                   >Không</button>
                 </div>
             }

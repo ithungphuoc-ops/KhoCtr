@@ -31,8 +31,8 @@ export default function GhiChuList({
   if (items.length === 0) {
     return (
       <div className="text-center py-16">
-        <StickyNote className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-        <p className="text-gray-400 text-sm">Chưa có ghi chú nào</p>
+        <StickyNote className="w-12 h-12 text-hp-text-disabled mx-auto mb-3" />
+        <p className="text-hp-text-muted text-sm">Chưa có ghi chú nào</p>
       </div>
     )
   }
@@ -58,7 +58,7 @@ export default function GhiChuList({
                 <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${col.badge}`}>
                   {col.label}
                 </span>
-                <span className="text-xs text-gray-400 font-medium">{colItems.length}</span>
+                <span className="text-xs text-hp-text-muted font-medium">{colItems.length}</span>
               </div>
               {/* Cards */}
               <div className="space-y-2 min-h-[60px]">
@@ -75,8 +75,8 @@ export default function GhiChuList({
                   />
                 ))}
                 {colItems.length === 0 && (
-                  <div className="border-2 border-dashed border-gray-100 rounded-xl h-16 flex items-center justify-center">
-                    <span className="text-xs text-gray-300">Trống</span>
+                  <div className="border-2 border-dashed border-hp-border rounded-hp-lg h-16 flex items-center justify-center">
+                    <span className="text-xs text-hp-text-muted">Trống</span>
                   </div>
                 )}
               </div>

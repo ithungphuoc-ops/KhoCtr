@@ -86,16 +86,16 @@ export default function CTDanhMuc() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-gray-800">DANH MỤC HÀNG HÓA</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{list.length} mặt hàng đang quản lý</p>
+          <h1 className="text-xl font-bold text-hp-text">DANH MỤC HÀNG HÓA</h1>
+          <p className="text-sm text-hp-text-secondary mt-0.5">{list.length} mặt hàng đang quản lý</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={loadData} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500">
+          <button onClick={loadData} className="p-2 rounded-hp-md hover:bg-hp-elevated text-hp-text-secondary">
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
           <button
             onClick={() => { setShowForm(v => !v); setMsg(null) }}
-            className="flex items-center gap-2 px-4 py-2 bg-teal-500 text-white rounded-lg text-sm font-medium hover:bg-teal-600 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-hp-primary text-white rounded-hp-md text-sm font-medium hover:bg-hp-primary/90 transition-colors min-h-10"
           >
             <Plus className="w-4 h-4" />
             Thêm hàng hóa
@@ -105,38 +105,38 @@ export default function CTDanhMuc() {
 
       {/* Form thêm mới */}
       {showForm && (
-        <div className="bg-white rounded-xl border border-teal-100 p-5 shadow-sm">
+        <div className="bg-hp-card rounded-hp-lg border border-hp-border p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-700">Thêm hàng hóa mới</h3>
-            <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600">
+            <h3 className="font-semibold text-hp-text">Thêm hàng hóa mới</h3>
+            <button onClick={() => setShowForm(false)} className="text-hp-text-muted hover:text-hp-text">
               <X className="w-4 h-4" />
             </button>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
-              <label className="text-xs text-gray-500 mb-1 block">Tên hàng hóa *</label>
+              <label className="text-xs text-hp-text-secondary mb-1 block">Tên hàng hóa *</label>
               <input
                 value={form.ten_hang}
                 onChange={e => setForm(f => ({...f, ten_hang: e.target.value}))}
                 placeholder="Ví dụ: Xi măng PC40, Sắt phi 6mm..."
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-teal-400"
+                className="w-full bg-hp-surface border border-hp-border rounded-hp-md px-3 py-2 text-sm text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent focus:border-hp-accent min-h-10"
               />
             </div>
             <div>
-              <label className="text-xs text-gray-500 mb-1 block">Đơn vị tính</label>
+              <label className="text-xs text-hp-text-secondary mb-1 block">Đơn vị tính</label>
               <input
                 value={form.dvt}
                 onChange={e => setForm(f => ({...f, dvt: e.target.value}))}
                 placeholder="cái, kg, m, m2..."
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-teal-400"
+                className="w-full bg-hp-surface border border-hp-border rounded-hp-md px-3 py-2 text-sm text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent focus:border-hp-accent min-h-10"
               />
             </div>
             <div>
-              <label className="text-xs text-gray-500 mb-1 block">Nhóm</label>
+              <label className="text-xs text-hp-text-secondary mb-1 block">Nhóm</label>
               <select
                 value={form.nhom}
                 onChange={e => setForm(f => ({...f, nhom: e.target.value}))}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-teal-400"
+                className="w-full bg-hp-surface border border-hp-border rounded-hp-md px-3 py-2 text-sm text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent min-h-10"
               >
                 <option>Vật tư</option>
                 <option>Thiết bị</option>
@@ -148,18 +148,18 @@ export default function CTDanhMuc() {
           </div>
 
           {msg && (
-            <div className={`mt-3 text-sm px-3 py-2 rounded-lg ${msg.err ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-700'}`}>
+            <div className={`mt-3 text-sm px-3 py-2 rounded-hp-md ${msg.err ? 'bg-hp-danger/10 text-hp-danger' : 'bg-hp-primary/15 text-hp-primary'}`}>
               {msg.err ? '✗' : '✓'} {msg.text}
             </div>
           )}
 
           <div className="flex gap-2 mt-4">
             <button onClick={() => setShowForm(false)}
-              className="flex-1 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm hover:bg-gray-50">
+              className="flex-1 py-2 border border-hp-border text-hp-text-secondary rounded-hp-md text-sm hover:bg-hp-elevated min-h-10">
               Hủy
             </button>
             <button onClick={handleSubmit} disabled={saving}
-              className="flex-1 py-2 bg-teal-500 text-white rounded-lg text-sm font-medium hover:bg-teal-600 disabled:opacity-50 flex items-center justify-center gap-2">
+              className="flex-1 py-2 bg-hp-primary text-white rounded-hp-md text-sm font-medium hover:bg-hp-primary/90 disabled:opacity-50 flex items-center justify-center gap-2 min-h-10">
               {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
               Thêm vào danh mục
             </button>
@@ -169,62 +169,62 @@ export default function CTDanhMuc() {
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-hp-text-muted" />
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Tìm hàng hóa..."
-          className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-teal-400 bg-white"
+          className="w-full pl-9 pr-4 py-2 bg-hp-surface border border-hp-border rounded-hp-lg text-sm text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent focus:border-hp-accent min-h-10"
         />
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+      <div className="bg-hp-card rounded-hp-lg border border-hp-border overflow-hidden">
         {loading ? (
-          <div className="py-16 text-center text-gray-400 text-sm">Đang tải...</div>
+          <div className="py-16 text-center text-hp-text-muted text-sm">Đang tải...</div>
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center">
-            <Package className="w-10 h-10 text-gray-200 mx-auto mb-2" />
-            <p className="text-gray-400 text-sm">{search ? 'Không tìm thấy kết quả' : 'Chưa có hàng hóa nào'}</p>
+            <Package className="w-10 h-10 text-hp-border mx-auto mb-2" />
+            <p className="text-hp-text-muted text-sm">{search ? 'Không tìm thấy kết quả' : 'Chưa có hàng hóa nào'}</p>
             {!search && (
               <button onClick={() => setShowForm(true)}
-                className="mt-3 text-teal-500 text-sm hover:underline">
+                className="mt-3 text-hp-accent text-sm hover:underline">
                 + Thêm hàng hóa đầu tiên
               </button>
             )}
           </div>
         ) : (
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-100">
+            <thead className="bg-hp-surface border-b border-hp-border">
               <tr>
-                <th className="text-left px-4 py-3 text-xs text-gray-400 font-medium w-8">#</th>
-                <th className="text-left px-4 py-3 text-xs text-gray-400 font-medium">Mã hàng</th>
-                <th className="text-left px-4 py-3 text-xs text-gray-400 font-medium">Tên hàng hóa</th>
-                <th className="text-left px-4 py-3 text-xs text-gray-400 font-medium">DVT</th>
-                <th className="text-left px-4 py-3 text-xs text-gray-400 font-medium">Nhóm</th>
+                <th className="text-left px-4 py-3 text-xs text-hp-text-muted font-medium w-8">#</th>
+                <th className="text-left px-4 py-3 text-xs text-hp-text-muted font-medium">Mã hàng</th>
+                <th className="text-left px-4 py-3 text-xs text-hp-text-muted font-medium">Tên hàng hóa</th>
+                <th className="text-left px-4 py-3 text-xs text-hp-text-muted font-medium">DVT</th>
+                <th className="text-left px-4 py-3 text-xs text-hp-text-muted font-medium">Nhóm</th>
                 <th className="w-10" />
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-hp-border">
               {filtered.map((h, i) => (
-                <tr key={h.ma_hang || i} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3 text-gray-400 text-xs">{i + 1}</td>
+                <tr key={h.ma_hang || i} className="hover:bg-hp-elevated transition-colors">
+                  <td className="px-4 py-3 text-hp-text-muted text-xs">{i + 1}</td>
                   <td className="px-4 py-3">
-                    <span className="font-mono text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{h.ma_hang}</span>
+                    <span className="font-mono text-xs bg-hp-elevated text-hp-text-secondary px-2 py-0.5 rounded-hp-sm">{h.ma_hang}</span>
                   </td>
-                  <td className="px-4 py-3 font-medium text-gray-800">{h.ten_hang}</td>
-                  <td className="px-4 py-3 text-gray-500">{h.dvt}</td>
+                  <td className="px-4 py-3 font-medium text-hp-text">{h.ten_hang}</td>
+                  <td className="px-4 py-3 text-hp-text-secondary">{h.dvt}</td>
                   <td className="px-4 py-3">
-                    <span className="text-xs bg-teal-50 text-teal-600 px-2 py-0.5 rounded-full">{h.nhom || 'Vật tư'}</span>
+                    <span className="text-xs bg-hp-accent/15 text-hp-accent px-2 py-0.5 rounded-full">{h.nhom || 'Vật tư'}</span>
                   </td>
                   <td className="px-2 py-3">
                     <div className="flex gap-1">
                       <button onClick={() => openEdit(h)}
-                        className="p-1.5 text-gray-300 hover:text-teal-500 hover:bg-teal-50 rounded-lg transition-colors">
+                        className="p-1.5 text-hp-text-muted hover:text-hp-accent hover:bg-hp-accent/10 rounded-hp-md transition-colors">
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
                       <button onClick={() => handleDelete(h.ma_hang)}
-                        className="p-1.5 text-gray-300 hover:text-red-400 hover:bg-red-50 rounded-lg transition-colors">
+                        className="p-1.5 text-hp-text-muted hover:text-hp-danger hover:bg-hp-danger/10 rounded-hp-md transition-colors">
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -237,48 +237,48 @@ export default function CTDanhMuc() {
       </div>
 
       {filtered.length > 0 && (
-        <p className="text-xs text-gray-400 text-center">{filtered.length} hàng hóa</p>
+        <p className="text-xs text-hp-text-muted text-center">{filtered.length} hàng hóa</p>
       )}
 
       {/* Modal sửa */}
       {editItem && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
+        <div className="fixed inset-0 bg-hp-overlay flex items-center justify-center z-50 p-4"
           onClick={e => { if (e.target === e.currentTarget) setEditItem(null) }}>
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-            <div className="flex items-center justify-between p-5 border-b">
+          <div className="bg-hp-elevated rounded-hp-lg shadow-md w-full max-w-md">
+            <div className="flex items-center justify-between p-5 border-b border-hp-border">
               <div>
-                <h3 className="font-semibold text-gray-800">Sửa hàng hóa</h3>
-                <p className="text-xs text-gray-400 font-mono mt-0.5">{editItem.ma_hang}</p>
+                <h3 className="font-semibold text-hp-text">Sửa hàng hóa</h3>
+                <p className="text-xs text-hp-text-muted font-mono mt-0.5">{editItem.ma_hang}</p>
               </div>
-              <button onClick={() => setEditItem(null)} className="p-1 hover:bg-gray-100 rounded-lg">
-                <X className="w-4 h-4 text-gray-400" />
+              <button onClick={() => setEditItem(null)} className="p-1 hover:bg-hp-surface rounded-hp-md">
+                <X className="w-4 h-4 text-hp-text-muted" />
               </button>
             </div>
             <div className="p-5 space-y-3">
               <div>
-                <label className="text-xs text-gray-500 mb-1 block">Tên hàng hóa *</label>
+                <label className="text-xs text-hp-text-secondary mb-1 block">Tên hàng hóa *</label>
                 <input
                   value={editForm.ten_hang}
                   onChange={e => setEditForm(f => ({...f, ten_hang: e.target.value}))}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-teal-400"
+                  className="w-full bg-hp-surface border border-hp-border rounded-hp-md px-3 py-2 text-sm text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent focus:border-hp-accent min-h-10"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-gray-500 mb-1 block">Đơn vị tính</label>
+                  <label className="text-xs text-hp-text-secondary mb-1 block">Đơn vị tính</label>
                   <input
                     value={editForm.dvt}
                     onChange={e => setEditForm(f => ({...f, dvt: e.target.value}))}
                     placeholder="cái, kg, m..."
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-teal-400"
+                    className="w-full bg-hp-surface border border-hp-border rounded-hp-md px-3 py-2 text-sm text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent focus:border-hp-accent min-h-10"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500 mb-1 block">Nhóm</label>
+                  <label className="text-xs text-hp-text-secondary mb-1 block">Nhóm</label>
                   <select
                     value={editForm.nhom}
                     onChange={e => setEditForm(f => ({...f, nhom: e.target.value}))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-teal-400"
+                    className="w-full bg-hp-surface border border-hp-border rounded-hp-md px-3 py-2 text-sm text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent min-h-10"
                   >
                     <option>Vật tư</option>
                     <option>Thiết bị</option>
@@ -290,18 +290,18 @@ export default function CTDanhMuc() {
               </div>
 
               {editMsg && (
-                <div className={`text-sm px-3 py-2 rounded-lg ${editMsg.err ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-700'}`}>
+                <div className={`text-sm px-3 py-2 rounded-hp-md ${editMsg.err ? 'bg-hp-danger/10 text-hp-danger' : 'bg-hp-primary/15 text-hp-primary'}`}>
                   {editMsg.err ? '✗' : '✓'} {editMsg.text}
                 </div>
               )}
 
               <div className="flex gap-2 pt-1">
                 <button onClick={() => setEditItem(null)}
-                  className="flex-1 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm hover:bg-gray-50">
+                  className="flex-1 py-2 border border-hp-border text-hp-text-secondary rounded-hp-md text-sm hover:bg-hp-surface min-h-10">
                   Hủy
                 </button>
                 <button onClick={handleEditSave} disabled={editSaving}
-                  className="flex-1 py-2 bg-teal-500 text-white rounded-lg text-sm font-medium hover:bg-teal-600 disabled:opacity-50 flex items-center justify-center gap-2">
+                  className="flex-1 py-2 bg-hp-primary text-white rounded-hp-md text-sm font-medium hover:bg-hp-primary/90 disabled:opacity-50 flex items-center justify-center gap-2 min-h-10">
                   {editSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Pencil className="w-4 h-4" />}
                   Lưu thay đổi
                 </button>

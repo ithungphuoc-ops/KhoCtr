@@ -224,7 +224,7 @@ export default function CTNhapKho() {
         </div>
         <div className="flex gap-2">
           <button onClick={loadData} disabled={loading}
-            className="flex items-center gap-2 px-3 py-2 bg-hp-surface hover:bg-hp-elevated text-hp-text-secondary rounded-lg text-sm disabled:opacity-50">
+            className="flex items-center gap-2 px-3 min-h-10 bg-hp-surface hover:bg-hp-elevated text-hp-text-secondary rounded-lg text-sm disabled:opacity-50">
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
           <button
@@ -236,7 +236,7 @@ export default function CTNhapKho() {
               finally { setExporting(false) }
             }}
             disabled={exporting || filtered.length === 0}
-            className="flex items-center gap-2 px-3 py-2 bg-hp-primary/15 hover:bg-hp-primary/25 text-hp-primary rounded-lg text-sm disabled:opacity-50">
+            className="flex items-center gap-2 px-3 min-h-10 bg-hp-primary/15 hover:bg-hp-primary/25 text-hp-primary rounded-lg text-sm disabled:opacity-50">
             <FileDown className={`w-4 h-4 ${exporting ? 'animate-bounce' : ''}`} />
             {exporting ? '...' : 'Excel'}
           </button>
@@ -252,7 +252,7 @@ export default function CTNhapKho() {
           <button
             onClick={() => aiFileRef.current?.click()}
             disabled={aiLoading}
-            className="flex items-center gap-2 px-4 py-2 bg-hp-accent hover:bg-hp-accent/90 text-white rounded-lg text-sm font-medium disabled:opacity-50">
+            className="flex items-center gap-2 px-4 min-h-10 bg-hp-accent hover:bg-hp-accent/90 text-white rounded-lg text-sm font-medium disabled:opacity-50">
             {aiLoading
               ? <><Loader className="w-4 h-4 animate-spin" /> AI đang đọc...</>
               : <><Bot className="w-4 h-4" /> AI đọc PDF</>
@@ -266,7 +266,7 @@ export default function CTNhapKho() {
             onChange={e => handleAiRead(e.target.files?.[0])}
           />
           <button onClick={() => { if (hangHoaList.length === 0) loadHangHoa(); setShowForm(true); setSaveMsg(null) }}
-            className="flex items-center gap-2 px-4 py-2 bg-hp-primary hover:bg-hp-primary/90 text-white rounded-lg text-sm font-medium">
+            className="flex items-center gap-2 px-4 min-h-10 bg-hp-primary hover:bg-hp-primary/90 text-white rounded-lg text-sm font-medium">
             <Plus className="w-4 h-4" /> Tạo phiếu NK
           </button>
         </div>
@@ -339,7 +339,7 @@ export default function CTNhapKho() {
 
       {/* Modal chi tiet */}
       {selectedPhieu && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+        <div className="fixed inset-0 bg-hp-overlay flex items-center justify-center z-50 p-4"
           onClick={e => { if (e.target === e.currentTarget) setSelectedPhieu(null) }}>
           <div className="bg-hp-elevated rounded-xl shadow-md w-full max-w-2xl max-h-[80vh] flex flex-col">
             <div className="flex items-center justify-between p-5 border-b border-hp-border">
@@ -388,13 +388,13 @@ export default function CTNhapKho() {
 
       {/* Modal tao phieu */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 overflow-y-auto">
+        <div className="fixed inset-0 bg-hp-overlay flex items-center justify-center z-50 p-4 overflow-y-auto">
           <div className="bg-hp-elevated rounded-xl shadow-md w-full max-w-4xl my-4">
             <div className="flex items-center justify-between p-5 border-b border-hp-border bg-hp-surface rounded-t-xl">
               <div>
                 <h3 className="font-bold text-hp-text text-lg">Tạo phiếu nhập kho mới</h3>
                 <p className="text-xs text-hp-text-secondary mt-0.5">
-                  {hangHoaList.length > 0 ? `${hangHoaList.length} mặt hàng trong danh mục` : '⚠ Danh mục chưa tải'}
+                  {hangHoaList.length > 0 ? `${hangHoaList.length} mặt hàng trong danh mục` : 'Danh mục chưa tải'}
                 </p>
               </div>
               <button onClick={() => setShowForm(false)} className="p-1 hover:bg-hp-card rounded-lg"><X className="w-5 h-5 text-hp-text-muted" /></button>
@@ -503,11 +503,11 @@ export default function CTNhapKho() {
 
               <div className="flex justify-end gap-3 pt-2">
                 <button onClick={() => setShowForm(false)}
-                  className="px-5 py-2 border border-hp-border rounded-lg text-sm text-hp-text-secondary hover:bg-hp-elevated">
+                  className="px-5 min-h-10 border border-hp-border rounded-lg text-sm text-hp-text-secondary hover:bg-hp-elevated">
                   Hủy
                 </button>
                 <button onClick={handleSave} disabled={saving}
-                  className="px-6 py-2 bg-hp-primary hover:bg-hp-primary/90 text-white rounded-lg text-sm font-medium disabled:opacity-50 flex items-center gap-2">
+                  className="px-6 min-h-10 bg-hp-primary hover:bg-hp-primary/90 text-white rounded-lg text-sm font-medium disabled:opacity-50 flex items-center gap-2">
                   {saving ? <><RefreshCw className="w-4 h-4 animate-spin" /> Đang lưu...</> : 'Lưu phiếu NK'}
                 </button>
               </div>
@@ -541,7 +541,7 @@ export default function CTNhapKho() {
           setShowForm(true)
           setSaveMsg(null)
         }}
-      />
+        />
     </div>
   )
 }

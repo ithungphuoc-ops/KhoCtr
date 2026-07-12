@@ -71,10 +71,10 @@ export default function CTImportData() {
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-2xl font-bold text-gray-800">IMPORT DỮ LIỆU</h1>
-        <p className="text-gray-500 mt-1 text-sm">
+        <h1 className="text-2xl font-bold text-hp-text">IMPORT DỮ LIỆU</h1>
+        <p className="text-hp-text-secondary mt-1 text-sm">
           Import hàng loạt từ file Excel (sheet QLTK) vào công trình{' '}
-          <span className="font-semibold text-teal-600">{congTrinh?.ten_ct || `#${realId}`}</span>.
+          <span className="font-semibold text-hp-accent">{congTrinh?.ten_ct || `#${realId}`}</span>.
         </p>
       </div>
 
@@ -89,45 +89,45 @@ export default function CTImportData() {
           <React.Fragment key={s.key}>
             <div className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
               step === s.key
-                ? 'bg-teal-500 text-white'
+                ? 'bg-hp-accent text-white'
                 : STEPS.indexOf(step) > i
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-gray-100 text-gray-400'
+                  ? 'bg-hp-primary/20 text-hp-primary'
+                  : 'bg-hp-surface text-hp-text-muted'
             }`}>
               {STEPS.indexOf(step) > i ? '✓ ' : ''}{s.label}
             </div>
-            {i < arr.length - 1 && <div className="flex-1 h-px bg-gray-200" />}
+            {i < arr.length - 1 && <div className="flex-1 h-px bg-hp-border" />}
           </React.Fragment>
         ))}
       </div>
 
       {/* STEP 1: Upload */}
       {step === 'upload' && (
-        <div className="bg-white rounded-xl border border-gray-100 p-6 space-y-5">
+        <div className="bg-hp-card rounded-hp-lg border border-hp-border p-6 space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">File Excel (sheet QLTK) <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-hp-text mb-1.5">File Excel (sheet QLTK) <span className="text-hp-danger">*</span></label>
             <div
               onDragOver={e => { e.preventDefault(); setDragging(true) }}
               onDragLeave={() => setDragging(false)}
               onDrop={e => { e.preventDefault(); setDragging(false); handleFile(e.dataTransfer.files[0]) }}
               onClick={() => fileRef.current?.click()}
-              className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all ${
-                dragging ? 'border-teal-400 bg-teal-50'
-                : file   ? 'border-green-400 bg-green-50'
-                : 'border-gray-200 hover:border-teal-300 hover:bg-gray-50'
+              className={`border-2 border-dashed rounded-hp-lg p-10 text-center cursor-pointer transition-all ${
+                dragging ? 'border-hp-accent bg-hp-accent/10'
+                : file   ? 'border-hp-primary bg-hp-primary/10'
+                : 'border-hp-border hover:border-hp-accent hover:bg-hp-elevated'
               }`}
             >
               {file ? (
                 <div className="space-y-1">
-                  <FileSpreadsheet className="w-10 h-10 text-green-500 mx-auto" />
-                  <p className="font-medium text-green-700">{file.name}</p>
-                  <p className="text-xs text-gray-400">{(file.size / 1024).toFixed(0)} KB — Click để đổi file</p>
+                  <FileSpreadsheet className="w-10 h-10 text-hp-primary mx-auto" />
+                  <p className="font-medium text-hp-primary">{file.name}</p>
+                  <p className="text-xs text-hp-text-muted">{(file.size / 1024).toFixed(0)} KB — Click để đổi file</p>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <Upload className="w-10 h-10 text-gray-300 mx-auto" />
-                  <p className="text-gray-500 font-medium">Kéo thả file vào đây hoặc click để chọn</p>
-                  <p className="text-xs text-gray-400">Hỗ trợ: .xlsx, .xls — Sheet phải có tên <strong>QLTK</strong></p>
+                  <Upload className="w-10 h-10 text-hp-text-disabled mx-auto" />
+                  <p className="text-hp-text-secondary font-medium">Kéo thả file vào đây hoặc click để chọn</p>
+                  <p className="text-xs text-hp-text-muted">Hỗ trợ: .xlsx, .xls — Sheet phải có tên <strong>QLTK</strong></p>
                 </div>
               )}
             </div>
@@ -135,15 +135,15 @@ export default function CTImportData() {
               onChange={e => handleFile(e.target.files[0])} />
           </div>
 
-          <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 text-sm text-amber-700 space-y-1">
-            <p className="font-semibold">⚠ Lưu ý trước khi import:</p>
+          <div className="bg-hp-warning/10 border border-hp-warning/20 rounded-hp-lg p-4 text-sm text-hp-warning space-y-1">
+            <p className="font-semibold">Lưu ý trước khi import:</p>
             <p>• File phải có sheet tên chính xác là <strong>QLTK</strong></p>
             <p>• Cột A:B = Danh mục, Cột H:L = Nhập kho, Cột N:R = Xuất kho</p>
             <p>• Dữ liệu cũ của công trình sẽ KHÔNG bị xóa, chỉ thêm mới</p>
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 p-3 rounded-lg">
+            <div className="flex items-center gap-2 text-hp-danger text-sm bg-hp-danger/10 p-3 rounded-hp-md">
               <XCircle className="w-4 h-4 flex-shrink-0" /> {error}
             </div>
           )}
@@ -151,7 +151,7 @@ export default function CTImportData() {
           <button
             onClick={handlePreview}
             disabled={loading || !file}
-            className="w-full py-3 bg-teal-500 text-white rounded-xl font-semibold text-sm hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+            className="w-full py-3 bg-hp-primary text-white rounded-hp-lg font-semibold text-sm hover:bg-hp-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors min-h-10"
           >
             {loading
               ? <><Loader className="w-4 h-4 animate-spin" /> Đang đọc file...</>
@@ -162,50 +162,50 @@ export default function CTImportData() {
 
       {/* STEP 2: Preview */}
       {step === 'preview' && preview && (
-        <div className="bg-white rounded-xl border border-gray-100 p-6 space-y-5">
+        <div className="bg-hp-card rounded-hp-lg border border-hp-border p-6 space-y-5">
           <div>
-            <h2 className="font-semibold text-gray-800 text-lg">Kết quả đọc file</h2>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <h2 className="font-semibold text-hp-text text-lg">Kết quả đọc file</h2>
+            <p className="text-sm text-hp-text-secondary mt-0.5">
               File: <span className="font-medium">{file?.name}</span>
             </p>
           </div>
 
           <div className="grid grid-cols-3 gap-4">
-            <div className="bg-indigo-50 rounded-xl p-4 text-center">
-              <div className="text-3xl font-bold text-indigo-600">{preview.hang_hoa?.toLocaleString()}</div>
-              <div className="text-sm text-indigo-500 mt-1">Mặt hàng (danh mục)</div>
+            <div className="bg-hp-accent/15 rounded-hp-lg p-4 text-center">
+              <div className="text-3xl font-bold text-hp-accent">{preview.hang_hoa?.toLocaleString()}</div>
+              <div className="text-sm text-hp-accent mt-1">Mặt hàng (danh mục)</div>
             </div>
-            <div className="bg-green-50 rounded-xl p-4 text-center">
-              <div className="text-3xl font-bold text-green-600">{preview.phieu_nk?.toLocaleString()}</div>
-              <div className="text-sm text-green-500 mt-1">Phiếu Nhập kho</div>
-              <div className="text-xs text-gray-400 mt-0.5">{preview.dong_nk?.toLocaleString()} dòng hàng</div>
+            <div className="bg-hp-primary/15 rounded-hp-lg p-4 text-center">
+              <div className="text-3xl font-bold text-hp-primary">{preview.phieu_nk?.toLocaleString()}</div>
+              <div className="text-sm text-hp-primary mt-1">Phiếu Nhập kho</div>
+              <div className="text-xs text-hp-text-muted mt-0.5">{preview.dong_nk?.toLocaleString()} dòng hàng</div>
             </div>
-            <div className="bg-orange-50 rounded-xl p-4 text-center">
-              <div className="text-3xl font-bold text-orange-600">{preview.phieu_xk?.toLocaleString()}</div>
-              <div className="text-sm text-orange-500 mt-1">Phiếu Xuất kho</div>
-              <div className="text-xs text-gray-400 mt-0.5">{preview.dong_xk?.toLocaleString()} dòng hàng</div>
+            <div className="bg-hp-warning/15 rounded-hp-lg p-4 text-center">
+              <div className="text-3xl font-bold text-hp-warning">{preview.phieu_xk?.toLocaleString()}</div>
+              <div className="text-sm text-hp-warning mt-1">Phiếu Xuất kho</div>
+              <div className="text-xs text-hp-text-muted mt-0.5">{preview.dong_xk?.toLocaleString()} dòng hàng</div>
             </div>
           </div>
 
-          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-sm text-blue-700">
+          <div className="bg-hp-accent/15 border border-hp-accent/20 rounded-hp-lg p-4 text-sm text-hp-accent">
             <AlertTriangle className="w-4 h-4 inline mr-1.5" />
             Quá trình import có thể mất <strong>5–15 phút</strong> tùy theo kích thước file.
             Không đóng tab này trong khi import.
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 p-3 rounded-lg">
+            <div className="flex items-center gap-2 text-hp-danger text-sm bg-hp-danger/10 p-3 rounded-hp-md">
               <XCircle className="w-4 h-4 flex-shrink-0" /> {error}
             </div>
           )}
 
           <div className="flex gap-3">
             <button onClick={reset}
-              className="flex-1 py-3 border border-gray-200 text-gray-600 rounded-xl font-medium text-sm hover:bg-gray-50 flex items-center justify-center gap-2">
+              className="flex-1 py-3 border border-hp-border text-hp-text-secondary rounded-hp-lg font-medium text-sm hover:bg-hp-elevated flex items-center justify-center gap-2 min-h-10">
               <RotateCcw className="w-4 h-4" /> Chọn lại file
             </button>
             <button onClick={handleImport}
-              className="flex-1 py-3 bg-green-500 text-white rounded-xl font-semibold text-sm hover:bg-green-600 flex items-center justify-center gap-2">
+              className="flex-1 py-3 bg-hp-primary text-white rounded-hp-lg font-semibold text-sm hover:bg-hp-primary/90 flex items-center justify-center gap-2 min-h-10">
               <CheckCircle className="w-4 h-4" /> Xác nhận Import
             </button>
           </div>
@@ -214,10 +214,10 @@ export default function CTImportData() {
 
       {/* STEP 3: Importing */}
       {step === 'importing' && (
-        <div className="bg-white rounded-xl border border-gray-100 p-12 text-center space-y-4">
-          <Loader className="w-14 h-14 text-teal-500 animate-spin mx-auto" />
-          <p className="text-lg font-semibold text-gray-700">Đang import dữ liệu...</p>
-          <p className="text-sm text-gray-400">
+        <div className="bg-hp-card rounded-hp-lg border border-hp-border p-12 text-center space-y-4">
+          <Loader className="w-14 h-14 text-hp-accent animate-spin mx-auto" />
+          <p className="text-lg font-semibold text-hp-text">Đang import dữ liệu...</p>
+          <p className="text-sm text-hp-text-muted">
             Vui lòng chờ, không đóng tab này.<br />
             Có thể mất 5–15 phút.
           </p>
@@ -226,40 +226,40 @@ export default function CTImportData() {
 
       {/* STEP 4: Done */}
       {step === 'done' && result && (
-        <div className="bg-white rounded-xl border border-gray-100 p-6 space-y-5">
+        <div className="bg-hp-card rounded-hp-lg border border-hp-border p-6 space-y-5">
           <div className="text-center">
-            <CheckCircle className="w-14 h-14 text-green-500 mx-auto mb-3" />
-            <h2 className="text-xl font-bold text-gray-800">Import hoàn tất!</h2>
-            <p className="text-sm text-gray-500 mt-1">
-              Công trình: <span className="font-medium text-teal-600">{congTrinh?.ten_ct}</span>
+            <CheckCircle className="w-14 h-14 text-hp-primary mx-auto mb-3" />
+            <h2 className="text-xl font-bold text-hp-text">Import hoàn tất!</h2>
+            <p className="text-sm text-hp-text-secondary mt-1">
+              Công trình: <span className="font-medium text-hp-accent">{congTrinh?.ten_ct}</span>
             </p>
           </div>
 
           <div className="grid grid-cols-3 gap-4">
-            <div className="bg-indigo-50 rounded-xl p-4 text-center">
-              <div className="text-2xl font-bold text-indigo-600">{result.hang_hoa?.thanh_cong}</div>
-              <div className="text-xs text-indigo-500 mt-1">Mặt hàng thêm mới</div>
-              {result.hang_hoa?.loi > 0 && <div className="text-xs text-red-400">{result.hang_hoa.loi} lỗi</div>}
+            <div className="bg-hp-accent/15 rounded-hp-lg p-4 text-center">
+              <div className="text-2xl font-bold text-hp-accent">{result.hang_hoa?.thanh_cong}</div>
+              <div className="text-xs text-hp-accent mt-1">Mặt hàng thêm mới</div>
+              {result.hang_hoa?.loi > 0 && <div className="text-xs text-hp-danger">{result.hang_hoa.loi} lỗi</div>}
             </div>
-            <div className="bg-green-50 rounded-xl p-4 text-center">
-              <div className="text-2xl font-bold text-green-600">{result.nhap_kho?.thanh_cong}</div>
-              <div className="text-xs text-green-500 mt-1">Phiếu Nhập kho</div>
-              {result.nhap_kho?.loi > 0 && <div className="text-xs text-red-400">{result.nhap_kho.loi} lỗi</div>}
+            <div className="bg-hp-primary/15 rounded-hp-lg p-4 text-center">
+              <div className="text-2xl font-bold text-hp-primary">{result.nhap_kho?.thanh_cong}</div>
+              <div className="text-xs text-hp-primary mt-1">Phiếu Nhập kho</div>
+              {result.nhap_kho?.loi > 0 && <div className="text-xs text-hp-danger">{result.nhap_kho.loi} lỗi</div>}
             </div>
-            <div className="bg-orange-50 rounded-xl p-4 text-center">
-              <div className="text-2xl font-bold text-orange-600">{result.xuat_kho?.thanh_cong}</div>
-              <div className="text-xs text-orange-500 mt-1">Phiếu Xuất kho</div>
-              {result.xuat_kho?.loi > 0 && <div className="text-xs text-red-400">{result.xuat_kho.loi} lỗi</div>}
+            <div className="bg-hp-warning/15 rounded-hp-lg p-4 text-center">
+              <div className="text-2xl font-bold text-hp-warning">{result.xuat_kho?.thanh_cong}</div>
+              <div className="text-xs text-hp-warning mt-1">Phiếu Xuất kho</div>
+              {result.xuat_kho?.loi > 0 && <div className="text-xs text-hp-danger">{result.xuat_kho.loi} lỗi</div>}
             </div>
           </div>
 
           <div className="flex gap-3">
             <button onClick={reset}
-              className="flex-1 py-3 border border-gray-200 text-gray-600 rounded-xl font-medium text-sm hover:bg-gray-50 flex items-center justify-center gap-2">
+              className="flex-1 py-3 border border-hp-border text-hp-text-secondary rounded-hp-lg font-medium text-sm hover:bg-hp-elevated flex items-center justify-center gap-2 min-h-10">
               <Upload className="w-4 h-4" /> Import file khác
             </button>
             <button onClick={() => navigate(`/ct/${realId}/ton-kho`)}
-              className="flex-1 py-3 bg-teal-500 text-white rounded-xl font-semibold text-sm hover:bg-teal-600 flex items-center justify-center gap-2">
+              className="flex-1 py-3 bg-hp-primary text-white rounded-hp-lg font-semibold text-sm hover:bg-hp-primary/90 flex items-center justify-center gap-2 min-h-10">
               <Package className="w-4 h-4" /> Xem Tồn kho →
             </button>
           </div>

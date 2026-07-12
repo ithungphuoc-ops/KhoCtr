@@ -200,12 +200,12 @@ export default function CTXuatKho() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">PHIẾU XUẤT KHO</h1>
-          <p className="text-gray-500 mt-1 text-sm">{phieuList.length} phiếu xuất</p>
+          <h1 className="text-2xl font-bold text-hp-text">PHIẾU XUẤT KHO</h1>
+          <p className="text-hp-text-secondary mt-1 text-sm">{phieuList.length} phiếu xuất</p>
         </div>
         <div className="flex gap-2">
           <button onClick={loadData} disabled={loading}
-            className="flex items-center gap-2 px-3 py-2 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-lg text-sm disabled:opacity-50">
+            className="flex items-center gap-2 px-3 min-h-10 bg-hp-surface hover:bg-hp-elevated text-hp-text-secondary rounded-lg text-sm disabled:opacity-50">
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
           <button
@@ -217,14 +217,14 @@ export default function CTXuatKho() {
               finally { setExporting(false) }
             }}
             disabled={exporting || filtered.length === 0}
-            className="flex items-center gap-2 px-3 py-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg text-sm disabled:opacity-50">
+            className="flex items-center gap-2 px-3 min-h-10 bg-hp-primary/15 hover:bg-hp-primary/25 text-hp-primary rounded-lg text-sm disabled:opacity-50">
             <FileDown className={`w-4 h-4 ${exporting ? 'animate-bounce' : ''}`} />
             {exporting ? '...' : 'Excel'}
           </button>
           <select
             value={aiProvider}
             onChange={e => setAiProvider(e.target.value)}
-            className="px-2 py-2 border border-gray-200 rounded-lg text-xs text-gray-600 bg-white focus:outline-none">
+            className="px-2 py-2 border border-hp-border rounded-lg text-xs text-hp-text-secondary bg-hp-card focus:outline-none">
             <option value="gemini">🆓 Gemini</option>
             <option value="openai">🤖 ChatGPT</option>
             <option value="claude">⚡ Claude</option>
@@ -232,7 +232,7 @@ export default function CTXuatKho() {
           <button
             onClick={() => aiFileRef.current?.click()}
             disabled={aiLoading}
-            className="flex items-center gap-2 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg text-sm font-medium disabled:opacity-50">
+            className="flex items-center gap-2 px-4 min-h-10 bg-hp-accent hover:bg-hp-accent/90 text-white rounded-lg text-sm font-medium disabled:opacity-50">
             {aiLoading
               ? <><Loader className="w-4 h-4 animate-spin" /> AI đang đọc...</>
               : <><Bot className="w-4 h-4" /> AI đọc PDF</>
@@ -246,54 +246,54 @@ export default function CTXuatKho() {
             onChange={e => handleAiRead(e.target.files?.[0])}
           />
           <button onClick={() => { if (hangHoaList.length === 0) loadHangHoa(); setShowForm(true); setSaveMsg(null) }}
-            className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium">
+            className="flex items-center gap-2 px-4 min-h-10 bg-hp-warning hover:bg-hp-warning/90 text-white rounded-lg text-sm font-medium">
             <Plus className="w-4 h-4" /> Tạo phiếu XK
           </button>
         </div>
       </div>
 
       {saveMsg && (
-        <div className={`p-3 rounded-xl text-sm font-medium ${saveMsg.type === 'ok' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+        <div className={`p-3 rounded-xl text-sm font-medium ${saveMsg.type === 'ok' ? 'bg-hp-primary/15 text-hp-primary' : 'bg-hp-danger/15 text-hp-danger'}`}>
           {saveMsg.text}
         </div>
       )}
 
-      <div className="bg-white rounded-xl border border-gray-100 p-4">
+      <div className="bg-hp-card rounded-xl border border-hp-border p-4">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-hp-text-muted" />
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Tìm số phiếu, người nhận..."
-            className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-orange-300" />
+            className="w-full pl-9 pr-4 py-2 border border-hp-border rounded-lg text-sm bg-hp-card text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+      <div className="bg-hp-card rounded-xl border border-hp-border overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-100">
+          <thead className="bg-hp-surface border-b border-hp-border">
             <tr>
-              <th className="text-left px-4 py-3 text-gray-500 font-medium">#</th>
-              <th className="text-left px-4 py-3 text-gray-500 font-medium">Số phiếu</th>
-              <th className="text-left px-4 py-3 text-gray-500 font-medium">Ngày</th>
-              <th className="text-left px-4 py-3 text-gray-500 font-medium">Người nhận</th>
-              <th className="text-right px-4 py-3 text-gray-500 font-medium">Tổng tiền</th>
-              <th className="text-center px-4 py-3 text-gray-500 font-medium">CT</th>
+              <th className="text-left px-4 py-3 text-hp-text-secondary font-medium">#</th>
+              <th className="text-left px-4 py-3 text-hp-text-secondary font-medium">Số phiếu</th>
+              <th className="text-left px-4 py-3 text-hp-text-secondary font-medium">Ngày</th>
+              <th className="text-left px-4 py-3 text-hp-text-secondary font-medium">Người nhận</th>
+              <th className="text-right px-4 py-3 text-hp-text-secondary font-medium">Tổng tiền</th>
+              <th className="text-center px-4 py-3 text-hp-text-secondary font-medium">CT</th>
             </tr>
           </thead>
           <tbody>
             {loading
-              ? <tr><td colSpan={6} className="py-8 text-center text-gray-400">Đang tải...</td></tr>
+              ? <tr><td colSpan={6} className="py-8 text-center text-hp-text-muted">Đang tải...</td></tr>
               : filtered.length === 0
-                ? <tr><td colSpan={6} className="py-8 text-center text-gray-400">Chưa có phiếu xuất kho</td></tr>
+                ? <tr><td colSpan={6} className="py-8 text-center text-hp-text-muted">Chưa có phiếu xuất kho</td></tr>
                 : filtered.map((p, i) => (
-                    <tr key={p.id} className="border-b border-gray-50 hover:bg-gray-50">
-                      <td className="px-4 py-3 text-gray-400 text-xs">{i+1}</td>
-                      <td className="px-4 py-3 font-mono font-semibold text-orange-700">{p.so_phieu}</td>
-                      <td className="px-4 py-3 text-gray-500 text-xs">{p.ngay}</td>
-                      <td className="px-4 py-3 text-gray-600 text-xs truncate max-w-[120px]">{p.doi_tac || '—'}</td>
-                      <td className="px-4 py-3 text-right font-semibold text-orange-700">{formatVND(p.tong_tien)}</td>
+                    <tr key={p.id} className="border-b border-hp-border hover:bg-hp-elevated">
+                      <td className="px-4 py-3 text-hp-text-muted text-xs">{i+1}</td>
+                      <td className="px-4 py-3 font-mono font-semibold text-hp-warning">{p.so_phieu}</td>
+                      <td className="px-4 py-3 text-hp-text-secondary text-xs">{p.ngay}</td>
+                      <td className="px-4 py-3 text-hp-text-secondary text-xs truncate max-w-[120px]">{p.doi_tac || '—'}</td>
+                      <td className="px-4 py-3 text-right font-semibold text-hp-warning">{formatVND(p.tong_tien)}</td>
                       <td className="px-4 py-3 text-center">
                         <button onClick={() => openChiTiet(p)}
-                          className="p-1.5 hover:bg-orange-50 text-gray-400 hover:text-orange-600 rounded-lg">
+                          className="p-1.5 hover:bg-hp-warning/10 text-hp-text-muted hover:text-hp-warning rounded-lg">
                           <Eye className="w-4 h-4" />
                         </button>
                       </td>
@@ -302,10 +302,10 @@ export default function CTXuatKho() {
             }
           </tbody>
           {!loading && filtered.length > 0 && (
-            <tfoot className="bg-orange-50 border-t-2 border-gray-200">
+            <tfoot className="bg-hp-warning/10 border-t-2 border-hp-border">
               <tr>
-                <td colSpan={4} className="px-4 py-2 font-bold text-gray-700 text-sm">Tổng ({filtered.length} phiếu)</td>
-                <td className="px-4 py-2 text-right font-bold text-orange-700">
+                <td colSpan={4} className="px-4 py-2 font-bold text-hp-text text-sm">Tổng ({filtered.length} phiếu)</td>
+                <td className="px-4 py-2 text-right font-bold text-hp-warning">
                   {formatVND(filtered.reduce((s, p) => s + (p.tong_tien || 0), 0))}
                 </td>
                 <td></td>
@@ -317,36 +317,36 @@ export default function CTXuatKho() {
 
       {/* Modal chi tiet */}
       {selectedPhieu && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4"
+        <div className="fixed inset-0 bg-hp-overlay flex items-center justify-center z-50 p-4"
           onClick={e => { if (e.target === e.currentTarget) setSelectedPhieu(null) }}>
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-            <div className="flex items-center justify-between p-5 border-b">
+          <div className="bg-hp-elevated rounded-xl shadow-md w-full max-w-2xl max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between p-5 border-b border-hp-border">
               <div>
-                <h3 className="font-bold text-orange-700">{selectedPhieu.so_phieu}</h3>
-                <p className="text-xs text-gray-500">{selectedPhieu.ngay}{selectedPhieu.doi_tac ? ` · ${selectedPhieu.doi_tac}` : ''}</p>
+                <h3 className="font-bold text-hp-warning">{selectedPhieu.so_phieu}</h3>
+                <p className="text-xs text-hp-text-secondary">{selectedPhieu.ngay}{selectedPhieu.doi_tac ? ` · ${selectedPhieu.doi_tac}` : ''}</p>
               </div>
-              <button onClick={() => setSelectedPhieu(null)} className="p-1 hover:bg-gray-100 rounded-lg"><X className="w-5 h-5 text-gray-400" /></button>
+              <button onClick={() => setSelectedPhieu(null)} className="p-1 hover:bg-hp-elevated rounded-lg"><X className="w-5 h-5 text-hp-text-muted" /></button>
             </div>
             <div className="overflow-auto flex-1 p-5">
               {loadingCT
-                ? <div className="text-center py-8 text-gray-400">Đang tải...</div>
+                ? <div className="text-center py-8 text-hp-text-muted">Đang tải...</div>
                 : <table className="w-full text-sm">
-                    <thead className="bg-gray-50"><tr>
-                      <th className="text-left p-2 text-gray-500">#</th>
-                      <th className="text-left p-2 text-gray-500">Tên hàng</th>
-                      <th className="text-right p-2 text-gray-500">SL</th>
-                      <th className="text-left p-2 text-gray-500">ĐVT</th>
-                      <th className="text-right p-2 text-gray-500">Đơn giá</th>
-                      <th className="text-right p-2 text-gray-500">Thành tiền</th>
+                    <thead className="bg-hp-surface"><tr>
+                      <th className="text-left p-2 text-hp-text-secondary">#</th>
+                      <th className="text-left p-2 text-hp-text-secondary">Tên hàng</th>
+                      <th className="text-right p-2 text-hp-text-secondary">SL</th>
+                      <th className="text-left p-2 text-hp-text-secondary">ĐVT</th>
+                      <th className="text-right p-2 text-hp-text-secondary">Đơn giá</th>
+                      <th className="text-right p-2 text-hp-text-secondary">Thành tiền</th>
                     </tr></thead>
                     <tbody>
                       {chiTiet.map((it, i) => (
-                        <tr key={i} className="border-b border-gray-50">
-                          <td className="p-2 text-gray-400">{i+1}</td>
-                          <td className="p-2 text-gray-800">{it.ten_hang}</td>
+                        <tr key={i} className="border-b border-hp-border">
+                          <td className="p-2 text-hp-text-muted">{i+1}</td>
+                          <td className="p-2 text-hp-text">{it.ten_hang}</td>
                           <td className="p-2 text-right">{fmt(it.so_luong)}</td>
-                          <td className="p-2 text-gray-500 text-xs">{it.dvt}</td>
-                          <td className="p-2 text-right text-gray-600">{formatVND(it.don_gia)}</td>
+                          <td className="p-2 text-hp-text-secondary text-xs">{it.dvt}</td>
+                          <td className="p-2 text-right text-hp-text-secondary">{formatVND(it.don_gia)}</td>
                           <td className="p-2 text-right font-medium">{formatVND(it.thanh_tien)}</td>
                         </tr>
                       ))}
@@ -354,9 +354,9 @@ export default function CTXuatKho() {
                   </table>
               }
             </div>
-            <div className="p-4 border-t bg-gray-50 flex justify-between text-sm">
-              <span className="text-gray-500">{chiTiet.length} dòng</span>
-              <span className="font-bold text-orange-700">Tổng: {formatVND(selectedPhieu.tong_tien)}</span>
+            <div className="p-4 border-t border-hp-border bg-hp-surface flex justify-between text-sm">
+              <span className="text-hp-text-secondary">{chiTiet.length} dòng</span>
+              <span className="font-bold text-hp-warning">Tổng: {formatVND(selectedPhieu.tong_tien)}</span>
             </div>
           </div>
         </div>
@@ -364,60 +364,60 @@ export default function CTXuatKho() {
 
       {/* Modal tao phieu */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl my-4">
-            <div className="flex items-center justify-between p-5 border-b bg-orange-50 rounded-t-xl">
+        <div className="fixed inset-0 bg-hp-overlay flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-hp-elevated rounded-xl shadow-md w-full max-w-4xl my-4">
+            <div className="flex items-center justify-between p-5 border-b border-hp-border bg-hp-surface rounded-t-xl">
               <div>
-                <h3 className="font-bold text-gray-800 text-lg">Tạo phiếu xuất kho mới</h3>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  {hangHoaList.length > 0 ? `${hangHoaList.length} mặt hàng đang có trong kho` : '⚠ Chưa có hàng trong kho'}
+                <h3 className="font-bold text-hp-text text-lg">Tạo phiếu xuất kho mới</h3>
+                <p className="text-xs text-hp-text-secondary mt-0.5">
+                  {hangHoaList.length > 0 ? `${hangHoaList.length} mặt hàng đang có trong kho` : 'Chưa có hàng trong kho'}
                 </p>
               </div>
-              <button onClick={() => setShowForm(false)} className="p-1 hover:bg-white rounded-lg"><X className="w-5 h-5 text-gray-400" /></button>
+              <button onClick={() => setShowForm(false)} className="p-1 hover:bg-hp-card rounded-lg"><X className="w-5 h-5 text-hp-text-muted" /></button>
             </div>
             <div className="p-5 space-y-4">
               <div className="grid grid-cols-4 gap-3">
                 <div>
-                  <label className="text-xs text-gray-500 font-medium">Số phiếu *</label>
+                  <label className="text-xs text-hp-text-secondary font-medium">Số phiếu *</label>
                   <input value={form.so_phieu} onChange={e => setForm({...form, so_phieu: e.target.value})}
                     placeholder="VD: XK-001"
-                    className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400" />
+                    className="mt-1 w-full border border-hp-border rounded-lg px-3 py-2 text-sm bg-hp-card text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500 font-medium">Ngày *</label>
+                  <label className="text-xs text-hp-text-secondary font-medium">Ngày *</label>
                   <input type="date" value={form.ngay} onChange={e => setForm({...form, ngay: e.target.value})}
-                    className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400" />
+                    className="mt-1 w-full border border-hp-border rounded-lg px-3 py-2 text-sm bg-hp-card text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500 font-medium">Người nhận / Đối tác</label>
+                  <label className="text-xs text-hp-text-secondary font-medium">Người nhận / Đối tác</label>
                   <input value={form.doi_tac} onChange={e => setForm({...form, doi_tac: e.target.value})}
                     placeholder="Tên người nhận"
-                    className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400" />
+                    className="mt-1 w-full border border-hp-border rounded-lg px-3 py-2 text-sm bg-hp-card text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500 font-medium">Ghi chú</label>
+                  <label className="text-xs text-hp-text-secondary font-medium">Ghi chú</label>
                   <input value={form.ghi_chu} onChange={e => setForm({...form, ghi_chu: e.target.value})}
-                    className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400" />
+                    className="mt-1 w-full border border-hp-border rounded-lg px-3 py-2 text-sm bg-hp-card text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
                 </div>
               </div>
 
-              <div className="border border-gray-200 rounded-xl overflow-hidden">
+              <div className="border border-hp-border rounded-xl overflow-hidden">
                 <table className="w-full text-sm">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-hp-surface">
                     <tr>
-                      <th className="text-left px-3 py-2 text-gray-500 font-medium w-8">#</th>
-                      <th className="text-left px-3 py-2 text-gray-500 font-medium">Tên hàng hóa</th>
-                      <th className="text-left px-3 py-2 text-gray-500 font-medium w-20">ĐVT</th>
-                      <th className="text-right px-3 py-2 text-gray-500 font-medium w-24">Số lượng</th>
-                      <th className="text-right px-3 py-2 text-gray-500 font-medium w-28">Đơn giá</th>
-                      <th className="text-right px-3 py-2 text-gray-500 font-medium w-28">Thành tiền</th>
+                      <th className="text-left px-3 py-2 text-hp-text-secondary font-medium w-8">#</th>
+                      <th className="text-left px-3 py-2 text-hp-text-secondary font-medium">Tên hàng hóa</th>
+                      <th className="text-left px-3 py-2 text-hp-text-secondary font-medium w-20">ĐVT</th>
+                      <th className="text-right px-3 py-2 text-hp-text-secondary font-medium w-24">Số lượng</th>
+                      <th className="text-right px-3 py-2 text-hp-text-secondary font-medium w-28">Đơn giá</th>
+                      <th className="text-right px-3 py-2 text-hp-text-secondary font-medium w-28">Thành tiền</th>
                       <th className="w-8"></th>
                     </tr>
                   </thead>
                   <tbody>
                     {items.map((it, i) => (
-                      <tr key={i} className="border-t border-gray-100">
-                        <td className="px-3 py-1.5 text-gray-400 text-xs">{i+1}</td>
+                      <tr key={i} className="border-t border-hp-border hover:bg-hp-elevated">
+                        <td className="px-3 py-1.5 text-hp-text-muted text-xs">{i+1}</td>
                         <td className="px-3 py-1.5">
                           <HangHoaInput
                             value={it.ten_hang}
@@ -436,24 +436,24 @@ export default function CTXuatKho() {
                         <td className="px-3 py-1.5">
                           <input value={it.dvt} onChange={e => updateItem(i, 'dvt', e.target.value)}
                             readOnly={!!it.selected}
-                            className={`w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none ${it.selected ? 'bg-gray-50 text-gray-500 cursor-default' : 'focus:border-orange-300'}`} />
+                            className={`w-full border border-hp-border rounded px-2 py-1 text-xs bg-hp-card text-hp-text focus:outline-none ${it.selected ? 'bg-hp-surface text-hp-text-secondary cursor-default' : 'focus:ring-2 focus:ring-hp-accent'}`} />
                         </td>
                         <td className="px-3 py-1.5">
                           <input type="number" value={it.so_luong} onChange={e => updateItem(i, 'so_luong', e.target.value)}
                             placeholder="0"
-                            className="w-full border border-gray-200 rounded px-2 py-1 text-xs text-right focus:outline-none focus:border-orange-300" />
+                            className="w-full border border-hp-border rounded px-2 py-1 text-xs text-right bg-hp-card text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
                         </td>
                         <td className="px-3 py-1.5">
                           <input type="number" value={it.don_gia} onChange={e => updateItem(i, 'don_gia', e.target.value)}
                             placeholder="0"
-                            className="w-full border border-gray-200 rounded px-2 py-1 text-xs text-right focus:outline-none focus:border-orange-300" />
+                            className="w-full border border-hp-border rounded px-2 py-1 text-xs text-right bg-hp-card text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
                         </td>
-                        <td className="px-3 py-1.5 text-right text-xs font-medium text-gray-700">
+                        <td className="px-3 py-1.5 text-right text-xs font-medium text-hp-text">
                           {it.thanh_tien ? formatVND(parseFloat(it.thanh_tien)) : '—'}
                         </td>
                         <td className="px-2">
                           <button onClick={() => setItems(items.filter((_, idx) => idx !== i))} disabled={items.length === 1}
-                            className="p-1 hover:bg-red-50 text-gray-300 hover:text-red-500 rounded disabled:opacity-30">
+                            className="p-1 hover:bg-hp-danger/10 text-hp-text-disabled hover:text-hp-danger rounded disabled:opacity-30">
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </td>
@@ -461,27 +461,27 @@ export default function CTXuatKho() {
                     ))}
                   </tbody>
                 </table>
-                <div className="px-3 py-2 border-t border-gray-100 flex justify-between items-center bg-gray-50">
-                  <button onClick={() => setItems([...items, emptyItem()])} className="text-xs text-teal-600 hover:underline flex items-center gap-1">
+                <div className="px-3 py-2 border-t border-hp-border flex justify-between items-center bg-hp-surface">
+                  <button onClick={() => setItems([...items, emptyItem()])} className="text-xs text-hp-accent hover:underline flex items-center gap-1">
                     <Plus className="w-3 h-3" /> Thêm dòng
                   </button>
-                  <span className="text-sm font-bold text-gray-700">Tổng: {formatVND(tongTien)}</span>
+                  <span className="text-sm font-bold text-hp-text">Tổng: {formatVND(tongTien)}</span>
                 </div>
               </div>
 
               {saveMsg && (
-                <div className={`p-3 rounded-xl text-sm ${saveMsg.type === 'ok' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                <div className={`p-3 rounded-xl text-sm ${saveMsg.type === 'ok' ? 'bg-hp-primary/15 text-hp-primary' : 'bg-hp-danger/15 text-hp-danger'}`}>
                   {saveMsg.text}
                 </div>
               )}
 
               <div className="flex justify-end gap-3 pt-2">
                 <button onClick={() => setShowForm(false)}
-                  className="px-5 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">
+                  className="px-5 min-h-10 border border-hp-border rounded-lg text-sm text-hp-text-secondary hover:bg-hp-elevated">
                   Hủy
                 </button>
                 <button onClick={handleSave} disabled={saving}
-                  className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 flex items-center gap-2">
+                  className="px-6 min-h-10 bg-hp-warning hover:bg-hp-warning/90 text-white rounded-lg text-sm font-medium disabled:opacity-50 flex items-center gap-2">
                   {saving ? <><RefreshCw className="w-4 h-4 animate-spin" /> Đang lưu...</> : 'Lưu Phiếu XK'}
                 </button>
               </div>
@@ -515,7 +515,7 @@ export default function CTXuatKho() {
           setShowForm(true)
           setSaveMsg(null)
         }}
-      />
+        />
     </div>
   )
 }

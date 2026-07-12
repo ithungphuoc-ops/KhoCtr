@@ -58,14 +58,14 @@ export default function GhiChuForm({ congTrinhId, congTrinhList = [], initial, o
   const mauStyle = MAU_MAP[form.mau]
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-hp-overlay flex items-center justify-center z-50 p-4">
+      <div className="bg-hp-elevated rounded-hp-xl shadow-md w-full max-w-lg max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="font-semibold text-gray-800">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-hp-border">
+          <h2 className="font-semibold text-hp-text">
             {isEdit ? 'Chỉnh sửa ghi chú' : 'Thêm ghi chú mới'}
           </h2>
-          <button onClick={onCancel} className="p-1 hover:bg-gray-100 rounded-lg text-gray-400">
+          <button onClick={onCancel} className="p-1 hover:bg-hp-surface rounded-hp-sm text-hp-text-muted">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -76,9 +76,9 @@ export default function GhiChuForm({ congTrinhId, congTrinhList = [], initial, o
           {/* Công trình (chỉ hiển thị nếu có list + không fix) */}
           {congTrinhList.length > 0 && !congTrinhId && (
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Công trình *</label>
+              <label className="block text-xs font-medium text-hp-text-secondary mb-1">Công trình *</label>
               <select value={form.cong_trinh_id} onChange={e => set('cong_trinh_id', e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-teal-400">
+                className="w-full border border-hp-border rounded-hp-md px-3 py-2 min-h-10 text-sm bg-hp-surface text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent">
                 <option value="">-- Chọn công trình --</option>
                 {congTrinhList.map(ct => (
                   <option key={ct.id} value={ct.id}>{ct.ten_ct}</option>
@@ -89,45 +89,45 @@ export default function GhiChuForm({ congTrinhId, congTrinhList = [], initial, o
 
           {/* Tiêu đề */}
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Tiêu đề *</label>
+            <label className="block text-xs font-medium text-hp-text-secondary mb-1">Tiêu đề *</label>
             <input value={form.tieu_de} onChange={e => set('tieu_de', e.target.value)}
               placeholder="Nhập tiêu đề ghi chú..."
-              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-teal-400" />
+              className="w-full border border-hp-border rounded-hp-md px-3 py-2 min-h-10 text-sm bg-hp-surface text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
           </div>
 
           {/* Nội dung */}
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Nội dung</label>
+            <label className="block text-xs font-medium text-hp-text-secondary mb-1">Nội dung</label>
             <textarea value={form.noi_dung} onChange={e => set('noi_dung', e.target.value)}
               placeholder="Mô tả chi tiết..."
               rows={4}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-teal-400 resize-none" />
+              className="w-full border border-hp-border rounded-hp-md px-3 py-2 text-sm bg-hp-surface text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent resize-none" />
           </div>
 
           {/* Màu + Ưu tiên + Trạng thái */}
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Màu</label>
+              <label className="block text-xs font-medium text-hp-text-secondary mb-1">Màu</label>
               <select value={form.mau} onChange={e => set('mau', e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-2 py-2 text-xs focus:outline-none focus:border-teal-400">
+                className="w-full border border-hp-border rounded-hp-md px-2 py-2 min-h-10 text-xs bg-hp-surface text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent">
                 {MAU_OPTIONS.map(o => (
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Ưu tiên</label>
+              <label className="block text-xs font-medium text-hp-text-secondary mb-1">Ưu tiên</label>
               <select value={form.uu_tien} onChange={e => set('uu_tien', e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-2 py-2 text-xs focus:outline-none focus:border-teal-400">
+                className="w-full border border-hp-border rounded-hp-md px-2 py-2 min-h-10 text-xs bg-hp-surface text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent">
                 {UU_TIEN_OPTIONS.map(o => (
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Trạng thái</label>
+              <label className="block text-xs font-medium text-hp-text-secondary mb-1">Trạng thái</label>
               <select value={form.trang_thai} onChange={e => set('trang_thai', e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-2 py-2 text-xs focus:outline-none focus:border-teal-400">
+                className="w-full border border-hp-border rounded-hp-md px-2 py-2 min-h-10 text-xs bg-hp-surface text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent">
                 {TRANG_THAI_OPTIONS.map(o => (
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
@@ -137,13 +137,13 @@ export default function GhiChuForm({ congTrinhId, congTrinhList = [], initial, o
 
           {/* Deadline */}
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Deadline</label>
+            <label className="block text-xs font-medium text-hp-text-secondary mb-1">Deadline</label>
             <div className="flex items-center gap-2">
               <input type="date" value={form.deadline} onChange={e => set('deadline', e.target.value)}
-                className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-teal-400" />
+                className="flex-1 border border-hp-border rounded-hp-md px-3 py-2 min-h-10 text-sm bg-hp-surface text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
               {form.deadline && (
                 <button type="button" onClick={() => set('deadline', '')}
-                  className="text-gray-300 hover:text-gray-500">
+                  className="text-hp-text-muted hover:text-hp-text-secondary">
                   <X className="w-4 h-4" />
                 </button>
               )}
@@ -151,23 +151,23 @@ export default function GhiChuForm({ congTrinhId, congTrinhList = [], initial, o
           </div>
 
           {/* Preview màu */}
-          <div className={`rounded-xl border-2 p-3 ${mauStyle.bg} ${mauStyle.border}`}>
-            <p className="text-xs text-gray-400 mb-1">Preview:</p>
-            <p className="text-sm font-medium text-gray-800">{form.tieu_de || '(tiêu đề)'}</p>
-            {form.noi_dung && <p className="text-xs text-gray-500 mt-1 line-clamp-2">{form.noi_dung}</p>}
+          <div className={`rounded-hp-md border-2 p-3 ${mauStyle.bg} ${mauStyle.border}`}>
+            <p className="text-xs text-hp-text-muted mb-1">Preview:</p>
+            <p className="text-sm font-medium text-hp-text">{form.tieu_de || '(tiêu đề)'}</p>
+            {form.noi_dung && <p className="text-xs text-hp-text-secondary mt-1 line-clamp-2">{form.noi_dung}</p>}
           </div>
 
-          {err && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{err}</p>}
+          {err && <p className="text-sm text-hp-danger bg-hp-danger/10 rounded-hp-sm px-3 py-2">{err}</p>}
         </form>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-hp-border">
           <button type="button" onClick={onCancel}
-            className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-colors">
+            className="px-4 py-2 min-h-10 text-sm text-hp-text-secondary hover:text-hp-text hover:bg-hp-surface rounded-hp-md transition-colors">
             Hủy
           </button>
           <button onClick={handleSubmit} disabled={saving}
-            className="flex items-center gap-2 px-5 py-2 bg-teal-500 hover:bg-teal-600 text-white text-sm font-medium rounded-xl disabled:opacity-50 transition-colors">
+            className="flex items-center gap-2 px-5 py-2 min-h-10 bg-hp-primary hover:bg-hp-primary/90 text-white text-sm font-medium rounded-hp-md disabled:opacity-50 transition-colors">
             <Save className="w-4 h-4" />
             {saving ? 'Đang lưu...' : (isEdit ? 'Cập nhật' : 'Thêm ghi chú')}
           </button>

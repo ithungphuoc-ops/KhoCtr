@@ -2,29 +2,110 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── HPCons Design System V1.1 — Design Tokens ─────────────────────────── */
+
+/* Dark Mode (mặc định) */
+:root,
+[data-theme="dark"] {
+  /* Brand — cố định cả 2 mode (space-separated RGB cho Tailwind opacity) */
+  --color-primary:         96 187 70;      /* #60BB46  Success/CTA */
+  --color-accent:          9 106 167;      /* #096AA7  Primary blue */
+  --color-nav:             75 79 85;       /* #4B4F55  Sidebar */
+  --color-danger:          229 57 53;      /* #E53935 */
+  --color-warning:         255 167 38;     /* #FFA726 */
+  --color-muted:           158 158 158;    /* #9E9E9E */
+
+  /* Nền dark */
+  --color-bg:              15 25 35;       /* #0F1923 */
+  --color-surface:         18 28 38;       /* #121C26 */
+  --color-card:            24 37 49;       /* #182531 */
+  --color-elevated:        30 43 54;       /* #1E2B36 */
+
+  /* Viền dark (rgba — không dùng alpha-value) */
+  --color-border:          rgba(255, 255, 255, 0.08);
+  --color-divider:         rgba(255, 255, 255, 0.06);
+
+  /* Chữ dark */
+  --color-text:            245 247 250;    /* #F5F7FA */
+  --color-text-secondary:  184 192 200;    /* #B8C0C8 */
+  --color-text-muted:      143 154 165;    /* #8F9AA5 */
+  --color-text-disabled:   102 113 124;    /* #66717C */
+
+  /* Sidebar text — luôn sáng (sidebar bg tối cả 2 mode) */
+  --color-sidebar-text:    245 247 250;
+  --color-sidebar-muted:   143 154 165;
+
+  /* Overlay */
+  --hp-overlay:         rgba(0, 0, 0, 0.6);
+
+  /* CSS var thuần (dùng cho JS / Chart.js / non-Tailwind) */
+  --hp-brand-primary:   #60BB46;
+  --hp-brand-accent:    #096AA7;
+  --hp-nav-base:        #4B4F55;
+  --hp-background:      #0F1923;
+  --hp-surface:         #121C26;
+  --hp-card:            #182531;
+  --hp-elevated:        #1E2B36;
+  --hp-border:          rgba(255, 255, 255, 0.08);
+  --hp-divider:         rgba(255, 255, 255, 0.06);
+  --hp-text-primary:    #F5F7FA;
+  --hp-text-secondary:  #B8C0C8;
+  --hp-text-muted:      #8F9AA5;
+  --hp-text-disabled:   #66717C;
+  --hp-danger:          #E53935;
+  --hp-warning:         #FFA726;
+  --hp-muted:           #9E9E9E;
+  --hp-radius-sm:       6px;
+  --hp-radius-md:       8px;
+  --hp-radius-lg:       12px;
+}
+
+/* Light Mode */
+[data-theme="light"] {
+  --color-bg:              240 244 248;    /* #F0F4F8 */
+  --color-surface:         255 255 255;    /* #FFFFFF */
+  --color-card:            255 255 255;    /* #FFFFFF */
+  --color-elevated:        255 255 255;    /* #FFFFFF — fix UI-01: modal nổi rõ trên nền F0F4F8 */
+  --color-border:          rgba(0, 0, 0, 0.14);
+  --color-divider:         rgba(0, 0, 0, 0.08);
+  --color-text:            17 24 39;       /* #111827 */
+  --color-text-secondary:  55 65 81;       /* #374151 */
+  --color-text-muted:      107 114 128;    /* #6B7280 */
+  --color-text-disabled:   156 163 175;    /* #9CA3AF */
+
+  --hp-background:      #F0F4F8;
+  --hp-surface:         #FFFFFF;
+  --hp-card:            #FFFFFF;
+  --hp-elevated:        #FFFFFF;
+  --hp-border:          rgba(0, 0, 0, 0.14);
+  --hp-divider:         rgba(0, 0, 0, 0.08);
+  --hp-text-primary:    #111827;
+  --hp-text-secondary:  #374151;
+  --hp-text-muted:      #6B7280;
+  --hp-text-disabled:   #9CA3AF;
+  --hp-overlay:         rgba(0, 0, 0, 0.6);
+}
+
+/* ─── Base ───────────────────────────────────────────────────────────────── */
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: #F8FAFC;
+  font-family: 'Inter', Roboto, Arial, sans-serif;
+  background-color: rgb(var(--color-bg));
+  color: rgb(var(--color-text));
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
+/* ─── Scrollbar ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: rgb(var(--color-surface)); }
+::-webkit-scrollbar-thumb { background: rgb(var(--color-elevated)); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgb(var(--color-nav)); }
 
-::-webkit-scrollbar-track {
-  background: #f1f5f9;
-}
+/* ─── Date input ─────────────────────────────────────────────────────────── */
+input[type='date'] { color-scheme: dark; }
+[data-theme="light"] input[type='date'] { color-scheme: light; }
 
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+/* ─── Light mode: modal / elevated surface nổi rõ ───────────────────────── */
+[data-theme="light"] .shadow-md {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.08);
 }

@@ -83,17 +83,17 @@ export default function BaoCao() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">BÁO CÁO CHI TIẾT</h1>
+          <h1 className="text-2xl font-bold text-hp-text">BÁO CÁO CHI TIẾT</h1>
           <div className="flex items-center gap-2 mt-1">
-            <p className="text-gray-500 text-sm">Tra cứu phiếu NK / XK theo thời gian và công trình</p>
+            <p className="text-hp-text-secondary text-sm">Tra cứu phiếu NK / XK theo thời gian và công trình</p>
             {selectedCT
-              ? <span className="bg-teal-100 text-teal-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">📌 {selectedCT.ten_ct}</span>
-              : <span className="bg-blue-100 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">🏢 Tất cả CT</span>
+              ? <span className="bg-hp-accent/15 text-hp-accent text-xs font-semibold px-2.5 py-0.5 rounded-full">{selectedCT.ten_ct}</span>
+              : <span className="bg-hp-accent/15 text-hp-accent text-xs font-semibold px-2.5 py-0.5 rounded-full">Tất cả CT</span>
             }
           </div>
         </div>
         <button onClick={loadData} disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
+          className="flex items-center gap-2 px-4 py-2 bg-hp-accent/15 hover:bg-hp-accent/25 text-hp-accent rounded-hp-md text-sm font-medium transition-colors disabled:opacity-50">
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           Làm mới
         </button>
@@ -101,98 +101,98 @@ export default function BaoCao() {
 
       {/* KPI nhanh */}
       <div className="grid grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl border border-gray-100 p-4">
-          <div className="text-xs text-gray-400 mb-1">Phiếu Nhập Kho</div>
-          <div className="text-2xl font-bold text-green-600">{nkList.length}</div>
-          <div className="text-xs text-gray-400 mt-0.5">phiếu trong kỳ</div>
+        <div className="bg-hp-card rounded-hp-lg border border-hp-border p-4">
+          <div className="text-xs text-hp-text-muted mb-1">Phiếu Nhập Kho</div>
+          <div className="text-2xl font-bold text-hp-primary">{nkList.length}</div>
+          <div className="text-xs text-hp-text-muted mt-0.5">phiếu trong kỳ</div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-4">
-          <div className="text-xs text-gray-400 mb-1">Tổng Tiền NK</div>
-          <div className="text-xl font-bold text-green-700">{formatVND(tongNK)}</div>
-          <div className="text-xs text-gray-400 mt-0.5">giá trị nhập kho</div>
+        <div className="bg-hp-card rounded-hp-lg border border-hp-border p-4">
+          <div className="text-xs text-hp-text-muted mb-1">Tổng Tiền NK</div>
+          <div className="text-xl font-bold text-hp-primary">{formatVND(tongNK)}</div>
+          <div className="text-xs text-hp-text-muted mt-0.5">giá trị nhập kho</div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-4">
-          <div className="text-xs text-gray-400 mb-1">Phiếu Xuất Kho</div>
-          <div className="text-2xl font-bold text-orange-500">{xkList.length}</div>
-          <div className="text-xs text-gray-400 mt-0.5">phiếu trong kỳ</div>
+        <div className="bg-hp-card rounded-hp-lg border border-hp-border p-4">
+          <div className="text-xs text-hp-text-muted mb-1">Phiếu Xuất Kho</div>
+          <div className="text-2xl font-bold text-hp-warning">{xkList.length}</div>
+          <div className="text-xs text-hp-text-muted mt-0.5">phiếu trong kỳ</div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-4">
-          <div className="text-xs text-gray-400 mb-1">Tổng Tiền XK</div>
-          <div className="text-xl font-bold text-orange-600">{formatVND(tongXK)}</div>
-          <div className="text-xs text-gray-400 mt-0.5">giá trị xuất kho</div>
+        <div className="bg-hp-card rounded-hp-lg border border-hp-border p-4">
+          <div className="text-xs text-hp-text-muted mb-1">Tổng Tiền XK</div>
+          <div className="text-xl font-bold text-hp-warning">{formatVND(tongXK)}</div>
+          <div className="text-xs text-hp-text-muted mt-0.5">giá trị xuất kho</div>
         </div>
       </div>
 
       {/* Filter */}
-      <div className="bg-white rounded-xl border border-gray-100 p-4 flex gap-3 flex-wrap items-center">
+      <div className="bg-hp-card rounded-hp-lg border border-hp-border p-4 flex gap-3 flex-wrap items-center">
         <select value={loaiFilter} onChange={e => setLoaiFilter(e.target.value)}
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-300 text-gray-600">
+          className="border border-hp-border rounded-hp-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-hp-accent text-hp-text bg-hp-elevated">
           <option value="ALL">Tất cả loại</option>
           <option value="NK">Nhập kho</option>
           <option value="XK">Xuất kho</option>
         </select>
         <div className="flex items-center gap-2">
-          <label className="text-xs text-gray-400 whitespace-nowrap">Từ ngày:</label>
+          <label className="text-xs text-hp-text-muted whitespace-nowrap">Từ ngày:</label>
           <input type="date" value={tuNgay} onChange={e => setTuNgay(e.target.value)}
-            className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-300" />
+            className="border border-hp-border rounded-hp-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-hp-accent bg-hp-elevated text-hp-text" />
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-xs text-gray-400 whitespace-nowrap">Đến ngày:</label>
+          <label className="text-xs text-hp-text-muted whitespace-nowrap">Đến ngày:</label>
           <input type="date" value={denNgay} onChange={e => setDenNgay(e.target.value)}
-            className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-300" />
+            className="border border-hp-border rounded-hp-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-hp-accent bg-hp-elevated text-hp-text" />
         </div>
         <div className="relative flex-1 min-w-[180px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-hp-text-muted" />
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Tìm số phiếu, đối tác / NCC..."
-            className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-300" />
+            className="w-full pl-9 pr-4 py-2 border border-hp-border rounded-hp-md text-sm focus:outline-none focus:ring-2 focus:ring-hp-accent bg-hp-elevated text-hp-text" />
         </div>
-        <span className="text-xs text-gray-400 bg-gray-100 px-3 py-2 rounded-lg font-medium">{filtered.length} kết quả</span>
+        <span className="text-xs text-hp-text-muted bg-hp-elevated px-3 py-2 rounded-hp-md font-medium">{filtered.length} kết quả</span>
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+      <div className="bg-hp-card rounded-hp-lg border border-hp-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-100">
+            <thead className="bg-hp-surface border-b border-hp-border">
               <tr>
-                <th className="text-left px-4 py-3 text-gray-500 font-medium">#</th>
-                <th className="text-left px-4 py-3 text-gray-500 font-medium">Số phiếu</th>
-                <th className="text-left px-4 py-3 text-gray-500 font-medium">Ngày</th>
-                <th className="text-left px-4 py-3 text-gray-500 font-medium">Loại</th>
-                <th className="text-left px-4 py-3 text-gray-500 font-medium">Công trình</th>
-                <th className="text-left px-4 py-3 text-gray-500 font-medium">Đối tác / NCC</th>
-                <th className="text-right px-4 py-3 text-gray-500 font-medium">Tổng tiền</th>
-                <th className="text-center px-4 py-3 text-gray-500 font-medium">Chi tiết</th>
+                <th className="text-left px-4 py-3 text-hp-text-secondary font-medium">#</th>
+                <th className="text-left px-4 py-3 text-hp-text-secondary font-medium">Số phiếu</th>
+                <th className="text-left px-4 py-3 text-hp-text-secondary font-medium">Ngày</th>
+                <th className="text-left px-4 py-3 text-hp-text-secondary font-medium">Loại</th>
+                <th className="text-left px-4 py-3 text-hp-text-secondary font-medium">Công trình</th>
+                <th className="text-left px-4 py-3 text-hp-text-secondary font-medium">Đối tác / NCC</th>
+                <th className="text-right px-4 py-3 text-hp-text-secondary font-medium">Tổng tiền</th>
+                <th className="text-center px-4 py-3 text-hp-text-secondary font-medium">Chi tiết</th>
               </tr>
             </thead>
             <tbody>
               {loading
-                ? <tr><td colSpan={8} className="py-12 text-center text-gray-400">Đang tải dữ liệu...</td></tr>
+                ? <tr><td colSpan={8} className="py-12 text-center text-hp-text-muted">Đang tải dữ liệu...</td></tr>
                 : filtered.length === 0
-                  ? <tr><td colSpan={8} className="py-12 text-center text-gray-400">Không có dữ liệu trong khoảng thời gian này</td></tr>
+                  ? <tr><td colSpan={8} className="py-12 text-center text-hp-text-muted">Không có dữ liệu trong khoảng thời gian này</td></tr>
                   : filtered.map((p, i) => (
-                      <tr key={p.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-3 text-gray-400 text-xs">{i + 1}</td>
-                        <td className="px-4 py-3 font-mono font-semibold text-blue-700">{p.so_phieu}</td>
-                        <td className="px-4 py-3 text-gray-600 text-xs">{p.ngay}</td>
+                      <tr key={p.id} className="border-b border-hp-border hover:bg-hp-elevated transition-colors">
+                        <td className="px-4 py-3 text-hp-text-muted text-xs">{i + 1}</td>
+                        <td className="px-4 py-3 font-mono font-semibold text-hp-accent">{p.so_phieu}</td>
+                        <td className="px-4 py-3 text-hp-text-secondary text-xs">{p.ngay}</td>
                         <td className="px-4 py-3">
                           <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                            p.loai === 'NK' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+                            p.loai === 'NK' ? 'bg-hp-primary/15 text-hp-primary' : 'bg-hp-warning/15 text-hp-warning'
                           }`}>{p.loai === 'NK' ? 'Nhập kho' : 'Xuất kho'}</span>
                         </td>
-                        <td className="px-4 py-3 text-gray-600 text-xs truncate max-w-[150px]" title={ctMap[p.cong_trinh_id]}>
+                        <td className="px-4 py-3 text-hp-text-secondary text-xs truncate max-w-[150px]" title={ctMap[p.cong_trinh_id]}>
                           {ctMap[p.cong_trinh_id] || '—'}
                         </td>
-                        <td className="px-4 py-3 text-gray-600 text-xs truncate max-w-[120px]" title={p.doi_tac}>
+                        <td className="px-4 py-3 text-hp-text-secondary text-xs truncate max-w-[120px]" title={p.doi_tac}>
                           {p.doi_tac || '—'}
                         </td>
-                        <td className={`px-4 py-3 text-right font-semibold ${p.loai === 'NK' ? 'text-green-700' : 'text-orange-600'}`}>
+                        <td className={`px-4 py-3 text-right font-semibold ${p.loai === 'NK' ? 'text-hp-primary' : 'text-hp-warning'}`}>
                           {formatVND(p.tong_tien)}
                         </td>
                         <td className="px-4 py-3 text-center">
                           <button onClick={() => openChiTiet(p)}
-                            className="p-1.5 hover:bg-blue-50 text-gray-400 hover:text-blue-600 rounded-lg transition-colors">
+                            className="p-1.5 hover:bg-hp-elevated text-hp-text-muted hover:text-hp-accent rounded-hp-md transition-colors">
                             <Eye className="w-4 h-4" />
                           </button>
                         </td>
@@ -201,14 +201,14 @@ export default function BaoCao() {
               }
             </tbody>
             {!loading && filtered.length > 0 && (
-              <tfoot className="bg-gray-50 border-t-2 border-gray-200">
+              <tfoot className="bg-hp-surface border-t-2 border-hp-border">
                 <tr>
-                  <td colSpan={6} className="px-4 py-3 font-bold text-gray-700 text-sm">
+                  <td colSpan={6} className="px-4 py-3 font-bold text-hp-text text-sm">
                     Tổng cộng ({filtered.length} phiếu)
                   </td>
-                  <td className="px-4 py-3 text-right text-xs font-bold text-gray-700 space-y-0.5">
-                    <div className="text-green-700">NK: {formatVND(tongNK)}</div>
-                    <div className="text-orange-600">XK: {formatVND(tongXK)}</div>
+                  <td className="px-4 py-3 text-right text-xs font-bold text-hp-text space-y-0.5">
+                    <div className="text-hp-primary">NK: {formatVND(tongNK)}</div>
+                    <div className="text-hp-warning">XK: {formatVND(tongXK)}</div>
                   </td>
                   <td></td>
                 </tr>
@@ -220,64 +220,64 @@ export default function BaoCao() {
 
       {/* Modal chi tiết */}
       {selectedPhieu && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4"
+        <div className="fixed inset-0 bg-hp-overlay flex items-center justify-center z-50 p-4"
           onClick={e => { if (e.target === e.currentTarget) setSelectedPhieu(null) }}>
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-            <div className="flex items-center justify-between p-5 border-b">
+          <div className="bg-hp-elevated rounded-hp-lg shadow-md w-full max-w-2xl max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between p-5 border-b border-hp-border">
               <div>
-                <h3 className="font-bold text-gray-800 text-lg flex items-center gap-2">
-                  <span className={selectedPhieu.loai === 'NK' ? 'text-green-600' : 'text-orange-600'}>
+                <h3 className="font-bold text-hp-text text-lg flex items-center gap-2">
+                  <span className={selectedPhieu.loai === 'NK' ? 'text-hp-primary' : 'text-hp-warning'}>
                     {selectedPhieu.so_phieu}
                   </span>
                   <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                    selectedPhieu.loai === 'NK' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+                    selectedPhieu.loai === 'NK' ? 'bg-hp-primary/15 text-hp-primary' : 'bg-hp-warning/15 text-hp-warning'
                   }`}>{selectedPhieu.loai === 'NK' ? 'Nhập kho' : 'Xuất kho'}</span>
                 </h3>
-                <p className="text-sm text-gray-500 mt-0.5">
+                <p className="text-sm text-hp-text-secondary mt-0.5">
                   {selectedPhieu.ngay}
                   {ctMap[selectedPhieu.cong_trinh_id] && <> · {ctMap[selectedPhieu.cong_trinh_id]}</>}
                   {selectedPhieu.doi_tac && <> · {selectedPhieu.doi_tac}</>}
                 </p>
               </div>
               <button onClick={() => setSelectedPhieu(null)}
-                className="p-1 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-gray-600">
+                className="p-1 hover:bg-hp-surface rounded-hp-md text-hp-text-muted hover:text-hp-text">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="overflow-auto flex-1 p-5">
               {loadingChiTiet
-                ? <div className="text-center text-gray-400 py-8">Đang tải...</div>
+                ? <div className="text-center text-hp-text-muted py-8">Đang tải...</div>
                 : chiTiet.length === 0
-                  ? <div className="text-center text-gray-400 py-8">Không có chi tiết</div>
+                  ? <div className="text-center text-hp-text-muted py-8">Không có chi tiết</div>
                   : <table className="w-full text-sm">
-                      <thead className="bg-gray-50 sticky top-0">
+                      <thead className="bg-hp-surface sticky top-0">
                         <tr>
-                          <th className="text-left p-2 text-gray-500 font-medium">#</th>
-                          <th className="text-left p-2 text-gray-500 font-medium">Tên hàng</th>
-                          <th className="text-right p-2 text-gray-500 font-medium">SL</th>
-                          <th className="text-left p-2 text-gray-500 font-medium">DVT</th>
-                          <th className="text-right p-2 text-gray-500 font-medium">Đơn giá</th>
-                          <th className="text-right p-2 text-gray-500 font-medium">Thành tiền</th>
+                          <th className="text-left p-2 text-hp-text-secondary font-medium">#</th>
+                          <th className="text-left p-2 text-hp-text-secondary font-medium">Tên hàng</th>
+                          <th className="text-right p-2 text-hp-text-secondary font-medium">SL</th>
+                          <th className="text-left p-2 text-hp-text-secondary font-medium">DVT</th>
+                          <th className="text-right p-2 text-hp-text-secondary font-medium">Đơn giá</th>
+                          <th className="text-right p-2 text-hp-text-secondary font-medium">Thành tiền</th>
                         </tr>
                       </thead>
                       <tbody>
                         {chiTiet.map((item, i) => (
-                          <tr key={i} className="border-b border-gray-50 hover:bg-gray-50">
-                            <td className="p-2 text-gray-400 text-xs">{i + 1}</td>
-                            <td className="p-2 text-gray-800">{item.ten_hang}</td>
-                            <td className="p-2 text-right text-gray-700">{fmt(item.so_luong)}</td>
-                            <td className="p-2 text-gray-500 text-xs">{item.dvt}</td>
-                            <td className="p-2 text-right text-gray-600">{formatVND(item.don_gia)}</td>
-                            <td className="p-2 text-right font-medium text-gray-800">{formatVND(item.thanh_tien)}</td>
+                          <tr key={i} className="border-b border-hp-border hover:bg-hp-surface">
+                            <td className="p-2 text-hp-text-muted text-xs">{i + 1}</td>
+                            <td className="p-2 text-hp-text">{item.ten_hang}</td>
+                            <td className="p-2 text-right text-hp-text">{fmt(item.so_luong)}</td>
+                            <td className="p-2 text-hp-text-secondary text-xs">{item.dvt}</td>
+                            <td className="p-2 text-right text-hp-text-secondary">{formatVND(item.don_gia)}</td>
+                            <td className="p-2 text-right font-medium text-hp-text">{formatVND(item.thanh_tien)}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
               }
             </div>
-            <div className="p-4 border-t bg-gray-50 flex justify-between items-center">
-              <span className="text-sm text-gray-500">{chiTiet.length} dòng hàng</span>
-              <span className={`font-bold text-base ${selectedPhieu.loai === 'NK' ? 'text-green-700' : 'text-orange-600'}`}>
+            <div className="p-4 border-t border-hp-border bg-hp-surface flex justify-between items-center">
+              <span className="text-sm text-hp-text-secondary">{chiTiet.length} dòng hàng</span>
+              <span className={`font-bold text-base ${selectedPhieu.loai === 'NK' ? 'text-hp-primary' : 'text-hp-warning'}`}>
                 Tổng: {formatVND(selectedPhieu.tong_tien)}
               </span>
             </div>

@@ -74,12 +74,12 @@ export default function PhanQuyen() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">PHÂN QUYỀN</h1>
-          <p className="text-gray-500 mt-1 text-sm">Quản lý quyền truy cập của từng tài khoản</p>
+          <h1 className="text-2xl font-bold text-hp-text">PHÂN QUYỀN</h1>
+          <p className="text-hp-text-secondary mt-1 text-sm">Quản lý quyền truy cập của từng tài khoản</p>
         </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-16 text-center">
-          <Shield className="w-16 h-16 text-gray-200 mx-auto mb-4" />
-          <div className="text-gray-500 font-medium">Chỉ admin mới truy cập được trang này</div>
+        <div className="bg-hp-card rounded-hp-md border border-hp-border p-16 text-center">
+          <Shield className="w-16 h-16 text-hp-text-disabled mx-auto mb-4" />
+          <div className="text-hp-text-secondary font-medium">Chỉ admin mới truy cập được trang này</div>
         </div>
       </div>
     )
@@ -89,16 +89,16 @@ export default function PhanQuyen() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">PHÂN QUYỀN CÔNG TRÌNH</h1>
-          <p className="text-gray-500 mt-1 text-sm">Chọn công trình mà từng người dùng được truy cập</p>
+          <h1 className="text-2xl font-bold text-hp-text">PHÂN QUYỀN CÔNG TRÌNH</h1>
+          <p className="text-hp-text-secondary mt-1 text-sm">Chọn công trình mà từng người dùng được truy cập</p>
         </div>
         <div className="flex gap-2">
           <button onClick={loadData} disabled={loading}
-            className="p-2 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
+            className="min-h-10 p-2 border border-hp-border text-hp-text-secondary rounded-hp-md hover:bg-hp-elevated transition-colors">
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
           <button onClick={handleSave} disabled={saving || loading}
-            className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 disabled:opacity-50 transition-colors">
+            className="flex items-center gap-2 min-h-10 px-4 py-2 bg-hp-primary text-white rounded-hp-md text-sm font-medium hover:bg-hp-primary/90 disabled:opacity-50 transition-colors">
             <Save className="w-4 h-4" />
             {saving ? 'Đang lưu...' : 'Lưu phân quyền'}
           </button>
@@ -106,8 +106,8 @@ export default function PhanQuyen() {
       </div>
 
       {msg && (
-        <div className={`flex items-center gap-3 p-4 rounded-xl border text-sm ${
-          msg.type === 'ok' ? 'bg-green-50 border-green-100 text-green-700' : 'bg-red-50 border-red-100 text-red-700'
+        <div className={`flex items-center gap-3 p-4 rounded-hp-md border text-sm ${
+          msg.type === 'ok' ? 'bg-hp-primary/15 border-hp-primary/30 text-hp-primary' : 'bg-hp-danger/15 border-hp-danger/30 text-hp-danger'
         }`}>
           {msg.type === 'ok' ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
           {msg.text}
@@ -116,42 +116,42 @@ export default function PhanQuyen() {
       )}
 
       {/* Hướng dẫn */}
-      <div className="bg-blue-50 rounded-xl p-4 border border-blue-100 text-sm text-blue-700">
+      <div className="bg-hp-accent/15 rounded-hp-md p-4 border border-hp-accent/30 text-sm text-hp-accent">
         <strong>Cách dùng:</strong> Tick ô tích tương ứng giữa Người dùng và Công trình để cấp quyền xem.
         Admin luôn có quyền xem tất cả. Nhấn "Lưu phân quyền" để lưu thay đổi.
       </div>
 
       {loading ? (
-        <div className="bg-white rounded-xl border border-gray-100 p-16 text-center text-gray-400">Đang tải...</div>
+        <div className="bg-hp-card rounded-hp-md border border-hp-border p-16 text-center text-hp-text-muted">Đang tải...</div>
       ) : users.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-100 p-16 text-center text-gray-400">
+        <div className="bg-hp-card rounded-hp-md border border-hp-border p-16 text-center text-hp-text-muted">
           Chưa có tài khoản nào. Tạo tài khoản trước trong trang Người dùng.
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-100 overflow-x-auto">
+        <div className="bg-hp-card rounded-hp-md border border-hp-border overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-100">
+            <thead className="bg-hp-surface border-b border-hp-border">
               <tr>
-                <th className="text-left px-4 py-3 text-gray-500 font-medium w-48">Người dùng</th>
+                <th className="text-left px-4 py-3 text-hp-text-secondary font-medium w-48">Người dùng</th>
                 {congTrinhs.map(ct => (
-                  <th key={ct.id} className="text-center px-3 py-3 text-gray-500 font-medium text-xs max-w-[120px]">
+                  <th key={ct.id} className="text-center px-3 py-3 text-hp-text-secondary font-medium text-xs max-w-[120px]">
                     <div className="truncate" title={ct.ten_ct}>{ct.ten_ct}</div>
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-hp-border">
               {users.map(u => {
                 const userPerms = perms[u.id] || new Set()
                 const isCurrentAdmin = u.role === 'admin'
 
                 return (
-                  <tr key={u.id} className="border-b border-gray-50 hover:bg-gray-50">
+                  <tr key={u.id} className="hover:bg-hp-elevated">
                     <td className="px-4 py-3">
-                      <div className="font-medium text-gray-800 text-sm">{u.ten}</div>
-                      <div className="text-xs text-gray-400">{u.email}</div>
+                      <div className="font-medium text-hp-text text-sm">{u.ten}</div>
+                      <div className="text-xs text-hp-text-muted">{u.email}</div>
                       {isCurrentAdmin && (
-                        <span className="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-semibold">ADMIN</span>
+                        <span className="text-xs bg-hp-primary/15 text-hp-primary px-1.5 py-0.5 rounded font-semibold">ADMIN</span>
                       )}
                     </td>
                     {congTrinhs.map(ct => (
@@ -160,7 +160,7 @@ export default function PhanQuyen() {
                           checked={isCurrentAdmin || userPerms.has(ct.id)}
                           disabled={isCurrentAdmin}
                           onChange={() => togglePerm(u.id, ct.id)}
-                          className="w-4 h-4 accent-teal-500 cursor-pointer disabled:cursor-default"
+                          className="w-4 h-4 accent-hp-primary cursor-pointer disabled:cursor-default"
                         />
                       </td>
                     ))}

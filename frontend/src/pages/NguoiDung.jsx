@@ -82,17 +82,17 @@ export default function NguoiDung() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">QUẢN LÝ NGƯỜI DÙNG</h1>
-          <p className="text-gray-500 mt-1 text-sm">Tạo và quản lý tài khoản đăng nhập vào hệ thống</p>
+          <h1 className="text-2xl font-bold text-hp-text">QUẢN LÝ NGƯỜI DÙNG</h1>
+          <p className="text-hp-text-secondary mt-1 text-sm">Tạo và quản lý tài khoản đăng nhập vào hệ thống</p>
         </div>
         <div className="flex gap-2">
           <button onClick={loadUsers} disabled={loading}
-            className="flex items-center gap-2 px-3 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm hover:bg-gray-50 transition-colors">
+            className="flex items-center gap-2 min-h-10 px-3 py-2 border border-hp-border text-hp-text-secondary rounded-hp-md text-sm hover:bg-hp-elevated transition-colors">
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
           {isAdmin && (
             <button onClick={() => setShowForm(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors">
+              className="flex items-center gap-2 min-h-10 px-4 py-2 bg-hp-primary text-white rounded-hp-md text-sm font-medium hover:bg-hp-primary/90 transition-colors">
               <Plus className="w-4 h-4" />
               Tạo tài khoản
             </button>
@@ -102,10 +102,10 @@ export default function NguoiDung() {
 
       {/* Message */}
       {msg && (
-        <div className={`flex items-center gap-3 p-4 rounded-xl border text-sm ${
+        <div className={`flex items-center gap-3 p-4 rounded-hp-md border text-sm ${
           msg.type === 'ok'
-            ? 'bg-green-50 border-green-100 text-green-700'
-            : 'bg-red-50 border-red-100 text-red-700'
+            ? 'bg-hp-primary/15 border-hp-primary/30 text-hp-primary'
+            : 'bg-hp-danger/15 border-hp-danger/30 text-hp-danger'
         }`}>
           {msg.type === 'ok' ? <CheckCircle className="w-4 h-4 flex-shrink-0" /> : <XCircle className="w-4 h-4 flex-shrink-0" />}
           {msg.text}
@@ -115,55 +115,55 @@ export default function NguoiDung() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl border border-gray-100 p-4">
-          <div className="text-xs text-gray-400 mb-1">Tổng tài khoản</div>
-          <div className="text-2xl font-bold text-gray-800">{users.length}</div>
+        <div className="bg-hp-card rounded-hp-md border border-hp-border p-4">
+          <div className="text-xs text-hp-text-muted mb-1">Tổng tài khoản</div>
+          <div className="text-2xl font-bold text-hp-text">{users.length}</div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-4">
-          <div className="text-xs text-gray-400 mb-1">Đang hoạt động</div>
-          <div className="text-2xl font-bold text-green-600">{users.filter(u => u.active).length}</div>
+        <div className="bg-hp-card rounded-hp-md border border-hp-border p-4">
+          <div className="text-xs text-hp-text-muted mb-1">Đang hoạt động</div>
+          <div className="text-2xl font-bold text-hp-primary">{users.filter(u => u.active).length}</div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-4">
-          <div className="text-xs text-gray-400 mb-1">Admin</div>
-          <div className="text-2xl font-bold text-blue-600">{users.filter(u => u.role === 'admin').length}</div>
+        <div className="bg-hp-card rounded-hp-md border border-hp-border p-4">
+          <div className="text-xs text-hp-text-muted mb-1">Admin</div>
+          <div className="text-2xl font-bold text-hp-accent">{users.filter(u => u.role === 'admin').length}</div>
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+      <div className="bg-hp-card rounded-hp-md border border-hp-border overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-100">
+          <thead className="bg-hp-surface border-b border-hp-border">
             <tr>
-              <th className="text-left px-4 py-3 text-gray-500 font-medium">#</th>
-              <th className="text-left px-4 py-3 text-gray-500 font-medium">Tên</th>
-              <th className="text-left px-4 py-3 text-gray-500 font-medium">Email</th>
-              <th className="text-left px-4 py-3 text-gray-500 font-medium">Quyền</th>
-              <th className="text-left px-4 py-3 text-gray-500 font-medium">Trạng thái</th>
-              <th className="text-left px-4 py-3 text-gray-500 font-medium">Ngày tạo</th>
-              {isAdmin && <th className="text-center px-4 py-3 text-gray-500 font-medium">Thao tác</th>}
+              <th className="text-left px-4 py-3 text-hp-text-secondary font-medium">#</th>
+              <th className="text-left px-4 py-3 text-hp-text-secondary font-medium">Tên</th>
+              <th className="text-left px-4 py-3 text-hp-text-secondary font-medium">Email</th>
+              <th className="text-left px-4 py-3 text-hp-text-secondary font-medium">Quyền</th>
+              <th className="text-left px-4 py-3 text-hp-text-secondary font-medium">Trạng thái</th>
+              <th className="text-left px-4 py-3 text-hp-text-secondary font-medium">Ngày tạo</th>
+              {isAdmin && <th className="text-center px-4 py-3 text-hp-text-secondary font-medium">Thao tác</th>}
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-hp-border">
             {loading
-              ? <tr><td colSpan={7} className="py-10 text-center text-gray-400">Đang tải...</td></tr>
+              ? <tr><td colSpan={7} className="py-10 text-center text-hp-text-muted">Đang tải...</td></tr>
               : users.length === 0
-                ? <tr><td colSpan={7} className="py-10 text-center text-gray-400">Chưa có tài khoản nào</td></tr>
+                ? <tr><td colSpan={7} className="py-10 text-center text-hp-text-muted">Chưa có tài khoản nào</td></tr>
                 : users.map((u, i) => (
-                    <tr key={u.id} className="border-b border-gray-50 hover:bg-gray-50">
-                      <td className="px-4 py-3 text-gray-400 text-xs">{i + 1}</td>
-                      <td className="px-4 py-3 font-medium text-gray-800">{u.ten}</td>
-                      <td className="px-4 py-3 text-gray-600 text-xs">{u.email}</td>
+                    <tr key={u.id} className="hover:bg-hp-elevated">
+                      <td className="px-4 py-3 text-hp-text-muted text-xs">{i + 1}</td>
+                      <td className="px-4 py-3 font-medium text-hp-text">{u.ten}</td>
+                      <td className="px-4 py-3 text-hp-text-secondary text-xs">{u.email}</td>
                       <td className="px-4 py-3">
                         <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                          u.role === 'admin' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
+                          u.role === 'admin' ? 'bg-hp-primary/15 text-hp-primary' : 'bg-hp-muted/20 text-hp-text-secondary'
                         }`}>{u.role === 'admin' ? 'Admin' : 'User'}</span>
                       </td>
                       <td className="px-4 py-3">
                         <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                          u.active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'
+                          u.active ? 'bg-hp-primary/15 text-hp-primary' : 'bg-hp-danger/15 text-hp-danger'
                         }`}>{u.active ? 'Hoạt động' : 'Khóa'}</span>
                       </td>
-                      <td className="px-4 py-3 text-gray-400 text-xs">
+                      <td className="px-4 py-3 text-hp-text-muted text-xs">
                         {u.created_at ? new Date(u.created_at).toLocaleDateString('vi-VN') : '—'}
                       </td>
                       {isAdmin && (
@@ -172,13 +172,13 @@ export default function NguoiDung() {
                             <button
                               onClick={() => { setResetTarget(u); setResetPw(''); setShowResetPw(false) }}
                               title="Reset mật khẩu"
-                              className="p-1.5 hover:bg-blue-50 text-gray-400 hover:text-blue-500 rounded-lg transition-colors">
+                              className="p-1.5 hover:bg-hp-accent/15 text-hp-text-muted hover:text-hp-accent rounded-hp-sm transition-colors">
                               <KeyRound className="w-4 h-4" />
                             </button>
                             {u.id !== currentUser?.uid && (
                               <button onClick={() => handleDelete(u.id, u.email)}
                                 title="Xóa tài khoản"
-                                className="p-1.5 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-lg transition-colors">
+                                className="p-1.5 hover:bg-hp-danger/15 text-hp-text-muted hover:text-hp-danger rounded-hp-sm transition-colors">
                                 <Trash2 className="w-4 h-4" />
                               </button>
                             )}
@@ -194,42 +194,42 @@ export default function NguoiDung() {
 
       {/* Modal Reset mật khẩu */}
       {resetTarget && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4"
+        <div className="fixed inset-0 bg-hp-overlay flex items-center justify-center z-50 p-4"
           onClick={e => { if (e.target === e.currentTarget) setResetTarget(null) }}>
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+          <div className="bg-hp-elevated border border-hp-border rounded-hp-lg shadow-xl w-full max-w-md p-6">
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h3 className="font-bold text-gray-800 text-lg">Reset mật khẩu</h3>
-                <p className="text-sm text-gray-400 mt-0.5">{resetTarget.ten} — {resetTarget.email}</p>
+                <h3 className="font-bold text-hp-text text-lg">Reset mật khẩu</h3>
+                <p className="text-sm text-hp-text-muted mt-0.5">{resetTarget.ten} — {resetTarget.email}</p>
               </div>
-              <button onClick={() => setResetTarget(null)} className="p-1 hover:bg-gray-100 rounded-lg text-gray-400">
+              <button onClick={() => setResetTarget(null)} className="p-1 hover:bg-hp-card rounded-hp-sm text-hp-text-muted">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1.5 block">Mật khẩu mới *</label>
+                <label className="text-xs font-medium text-hp-text-secondary mb-1.5 block">Mật khẩu mới *</label>
                 <div className="relative">
                   <input
                     type={showResetPw ? 'text' : 'password'}
                     value={resetPw}
                     onChange={e => setResetPw(e.target.value)}
                     placeholder="Tối thiểu 6 ký tự"
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 pr-10 text-sm focus:outline-none focus:border-blue-400"
+                    className="w-full min-h-10 bg-hp-surface text-hp-text placeholder:text-hp-text-muted border border-hp-border rounded-hp-md px-3 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-hp-accent"
                   />
                   <button type="button" onClick={() => setShowResetPw(!showResetPw)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-hp-text-muted">
                     {showResetPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
               <div className="flex gap-3">
                 <button onClick={() => setResetTarget(null)}
-                  className="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm hover:bg-gray-50">
+                  className="flex-1 min-h-10 py-2.5 border border-hp-border text-hp-text-secondary rounded-hp-md text-sm hover:bg-hp-card">
                   Hủy
                 </button>
                 <button onClick={handleResetPassword} disabled={resetSaving}
-                  className="flex-1 py-2.5 bg-blue-500 text-white rounded-xl text-sm font-medium hover:bg-blue-600 disabled:opacity-50">
+                  className="flex-1 min-h-10 py-2.5 bg-hp-primary text-white rounded-hp-md text-sm font-medium hover:bg-hp-primary/90 disabled:opacity-50">
                   {resetSaving ? 'Đang reset...' : 'Reset mật khẩu'}
                 </button>
               </div>
@@ -240,56 +240,56 @@ export default function NguoiDung() {
 
       {/* Modal tao user */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4"
+        <div className="fixed inset-0 bg-hp-overlay flex items-center justify-center z-50 p-4"
           onClick={e => { if (e.target === e.currentTarget) setShowForm(false) }}>
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+          <div className="bg-hp-elevated border border-hp-border rounded-hp-lg shadow-xl w-full max-w-md p-6">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="font-bold text-gray-800 text-lg">Tạo tài khoản mới</h3>
-              <button onClick={() => setShowForm(false)} className="p-1 hover:bg-gray-100 rounded-lg text-gray-400">
+              <h3 className="font-bold text-hp-text text-lg">Tạo tài khoản mới</h3>
+              <button onClick={() => setShowForm(false)} className="p-1 hover:bg-hp-card rounded-hp-sm text-hp-text-muted">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1.5 block">Ho ten *</label>
+                <label className="text-xs font-medium text-hp-text-secondary mb-1.5 block">Ho ten *</label>
                 <input value={form.ten} onChange={e => setForm({...form, ten: e.target.value})}
                   placeholder="Nguyen Van A"
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400" />
+                  className="w-full min-h-10 bg-hp-surface text-hp-text placeholder:text-hp-text-muted border border-hp-border rounded-hp-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-hp-accent" />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1.5 block">Email *</label>
+                <label className="text-xs font-medium text-hp-text-secondary mb-1.5 block">Email *</label>
                 <input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})}
                   placeholder="email@hpcons.com.vn"
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400" />
+                  className="w-full min-h-10 bg-hp-surface text-hp-text placeholder:text-hp-text-muted border border-hp-border rounded-hp-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-hp-accent" />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1.5 block">Mat khau *</label>
+                <label className="text-xs font-medium text-hp-text-secondary mb-1.5 block">Mat khau *</label>
                 <div className="relative">
                   <input type={showPw ? 'text' : 'password'} value={form.password}
                     onChange={e => setForm({...form, password: e.target.value})}
                     placeholder="Mat khau..."
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 pr-10 text-sm focus:outline-none focus:border-blue-400" />
+                    className="w-full min-h-10 bg-hp-surface text-hp-text placeholder:text-hp-text-muted border border-hp-border rounded-hp-md px-3 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-hp-accent" />
                   <button type="button" onClick={() => setShowPw(!showPw)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-hp-text-muted">
                     {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1.5 block">Quyen</label>
+                <label className="text-xs font-medium text-hp-text-secondary mb-1.5 block">Quyen</label>
                 <select value={form.role} onChange={e => setForm({...form, role: e.target.value})}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400">
+                  className="w-full min-h-10 bg-hp-surface text-hp-text border border-hp-border rounded-hp-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-hp-accent">
                   <option value="user">User - Xem du lieu</option>
                   <option value="admin">Admin - Quan tri he thong</option>
                 </select>
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setShowForm(false)}
-                  className="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm hover:bg-gray-50">
+                  className="flex-1 min-h-10 py-2.5 border border-hp-border text-hp-text-secondary rounded-hp-md text-sm hover:bg-hp-card">
                   Huy
                 </button>
                 <button type="submit" disabled={saving}
-                  className="flex-1 py-2.5 bg-blue-500 text-white rounded-xl text-sm font-medium hover:bg-blue-600 disabled:opacity-50">
+                  className="flex-1 min-h-10 py-2.5 bg-hp-primary text-white rounded-hp-md text-sm font-medium hover:bg-hp-primary/90 disabled:opacity-50">
                   {saving ? 'Dang tao...' : 'Tao tai khoan'}
                 </button>
               </div>

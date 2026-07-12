@@ -99,9 +99,9 @@ export default function CongTrinh() {
 
   const getTrangThaiInfo = (trang_thai) => {
     if (!trang_thai || trang_thai === 'hoat_dong') {
-      return { label: 'Hoạt động', className: 'bg-green-100 text-green-700' }
+      return { label: 'Hoạt động', className: 'bg-hp-primary/20 text-hp-primary' }
     }
-    return { label: 'Hoàn thành', className: 'bg-gray-100 text-gray-500' }
+    return { label: 'Hoàn thành', className: 'bg-hp-elevated text-hp-text-muted' }
   }
 
   const dang_hoat_dong = data.filter(c => !c.trang_thai || c.trang_thai === 'hoat_dong').length
@@ -111,19 +111,19 @@ export default function CongTrinh() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">DANH SÁCH CÔNG TRÌNH</h1>
-          <p className="text-gray-500 mt-1 text-sm">
-            {data.length} công trình — <span className="text-green-600">{dang_hoat_dong} hoạt động</span>
-            {hoan_thanh > 0 && <span className="text-gray-400"> · {hoan_thanh} hoàn thành</span>}
+          <h1 className="text-2xl font-bold text-hp-text">DANH SÁCH CÔNG TRÌNH</h1>
+          <p className="text-hp-text-secondary mt-1 text-sm">
+            {data.length} công trình — <span className="text-hp-primary">{dang_hoat_dong} hoạt động</span>
+            {hoan_thanh > 0 && <span className="text-hp-text-muted"> · {hoan_thanh} hoàn thành</span>}
           </p>
         </div>
         <div className="flex gap-2">
           <button onClick={loadData} disabled={loading}
-            className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600">
+            className="p-2 border border-hp-border rounded-lg hover:bg-hp-elevated text-hp-text-secondary">
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
           <button onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg text-sm font-medium transition-colors">
+            className="flex items-center gap-2 px-4 py-2 bg-hp-primary hover:bg-hp-primary/90 text-white rounded-lg text-sm font-medium transition-colors">
             <Plus className="w-4 h-4" />
             Thêm công trình
           </button>
@@ -132,7 +132,9 @@ export default function CongTrinh() {
 
       {msg && (
         <div className={`flex items-center gap-3 p-4 rounded-xl border text-sm ${
-          msg.type === 'ok' ? 'bg-green-50 border-green-100 text-green-700' : 'bg-red-50 border-red-100 text-red-700'
+          msg.type === 'ok'
+            ? 'bg-hp-primary/10 border-hp-primary/30 text-hp-primary'
+            : 'bg-hp-danger/10 border-hp-danger/30 text-hp-danger'
         }`}>
           {msg.type === 'ok' ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
           {msg.text}
@@ -141,21 +143,21 @@ export default function CongTrinh() {
       )}
 
       {/* Search */}
-      <div className="bg-white rounded-xl border border-gray-100 p-4">
+      <div className="bg-hp-card rounded-xl border border-hp-border p-4">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-hp-text-muted" />
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Tìm theo tên, mã, địa chỉ..."
-            className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-300" />
+            className="w-full pl-9 pr-4 py-2 border border-hp-border rounded-lg text-sm bg-hp-elevated text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
         </div>
       </div>
 
       {/* List */}
       {loading
-        ? <div className="text-center text-gray-400 py-12">Đang tải...</div>
+        ? <div className="text-center text-hp-text-muted py-12">Đang tải...</div>
         : filtered.length === 0
-          ? <div className="text-center text-gray-400 py-12">
-              <Building2 className="w-12 h-12 mx-auto mb-3 text-gray-200" />
+          ? <div className="text-center text-hp-text-muted py-12">
+              <Building2 className="w-12 h-12 mx-auto mb-3 text-hp-border" />
               <div className="font-medium">
                 {search ? 'Không tìm thấy kết quả' : 'Chưa có công trình nào'}
               </div>
@@ -167,23 +169,23 @@ export default function CongTrinh() {
                 const isHoanThanh = ct.trang_thai === 'hoan_thanh'
                 const isUpdating = updating === ct.id
                 return (
-                  <div key={ct.id} className={`bg-white rounded-xl border p-5 flex items-start gap-4 hover:shadow-sm transition-all ${
-                    isHoanThanh ? 'border-gray-100 opacity-70' : 'border-gray-100'
+                  <div key={ct.id} className={`bg-hp-card rounded-xl border p-5 flex items-start gap-4 hover:shadow-sm transition-all ${
+                    isHoanThanh ? 'border-hp-border opacity-70' : 'border-hp-border'
                   }`}>
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-sm ${
-                      isHoanThanh ? 'bg-gray-100 text-gray-400' : 'bg-teal-100 text-teal-600'
+                      isHoanThanh ? 'bg-hp-elevated text-hp-text-muted' : 'bg-hp-primary/20 text-hp-primary'
                     }`}>
                       {i + 1}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <div className={`font-bold ${isHoanThanh ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
+                          <div className={`font-bold ${isHoanThanh ? 'text-hp-text-muted line-through' : 'text-hp-text'}`}>
                             {ct.ten_ct}
                           </div>
                           <div className="flex items-center gap-1 mt-0.5">
-                            <Hash className="w-3 h-3 text-gray-400" />
-                            <span className="text-xs font-mono text-gray-500">{ct.ma_ct}</span>
+                            <Hash className="w-3 h-3 text-hp-text-muted" />
+                            <span className="text-xs font-mono text-hp-text-secondary">{ct.ma_ct}</span>
                           </div>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
@@ -199,8 +201,8 @@ export default function CongTrinh() {
                             title={isHoanThanh ? 'Hoạt động lại' : 'Đánh dấu Hoàn thành'}
                             className={`p-1.5 rounded-lg transition-colors disabled:opacity-50 ${
                               isHoanThanh
-                                ? 'hover:bg-green-50 text-gray-400 hover:text-green-600'
-                                : 'hover:bg-amber-50 text-gray-400 hover:text-amber-600'
+                                ? 'text-hp-text-muted hover:text-hp-primary hover:bg-hp-primary/10'
+                                : 'text-hp-text-muted hover:text-hp-warning hover:bg-hp-warning/10'
                             }`}
                           >
                             {isUpdating
@@ -215,7 +217,7 @@ export default function CongTrinh() {
                           <button
                             onClick={() => handleDeleteClick(ct)}
                             title="Xóa công trình"
-                            className="p-1.5 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-lg transition-colors"
+                            className="p-1.5 text-hp-text-muted hover:text-hp-danger hover:bg-hp-danger/10 rounded-lg transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -223,14 +225,14 @@ export default function CongTrinh() {
                       </div>
                       {ct.dia_chi && (
                         <div className="flex items-center gap-1.5 mt-1.5">
-                          <MapPin className="w-3.5 h-3.5 text-gray-400" />
-                          <span className="text-sm text-gray-500">{ct.dia_chi}</span>
+                          <MapPin className="w-3.5 h-3.5 text-hp-text-muted" />
+                          <span className="text-sm text-hp-text-secondary">{ct.dia_chi}</span>
                         </div>
                       )}
                       {ct.ghi_chu && (
                         <div className="flex items-center gap-1.5 mt-1">
-                          <FileText className="w-3.5 h-3.5 text-gray-400" />
-                          <span className="text-xs text-gray-400 italic">{ct.ghi_chu}</span>
+                          <FileText className="w-3.5 h-3.5 text-hp-text-muted" />
+                          <span className="text-xs text-hp-text-muted italic">{ct.ghi_chu}</span>
                         </div>
                       )}
                     </div>
@@ -242,45 +244,45 @@ export default function CongTrinh() {
 
       {/* Modal xác nhận xóa CT */}
       {deleteModal.show && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+        <div className="fixed inset-0 bg-hp-overlay flex items-center justify-center z-50 p-4">
+          <div className="bg-hp-elevated rounded-xl shadow-md w-full max-w-md p-6">
             <div className="flex items-start gap-4 mb-5">
-              <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                <AlertTriangle className="w-5 h-5 text-red-600" />
+              <div className="w-10 h-10 bg-hp-danger/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-5 h-5 text-hp-danger" />
               </div>
               <div>
-                <h3 className="font-bold text-gray-800 text-lg">Xóa công trình</h3>
-                <p className="text-sm text-gray-500 mt-0.5 font-mono">{deleteModal.ct?.ma_ct} — {deleteModal.ct?.ten_ct}</p>
+                <h3 className="font-bold text-hp-text text-lg">Xóa công trình</h3>
+                <p className="text-sm text-hp-text-secondary mt-0.5 font-mono">{deleteModal.ct?.ma_ct} — {deleteModal.ct?.ten_ct}</p>
               </div>
             </div>
 
-            <div className="bg-red-50 border border-red-100 rounded-xl p-4 mb-4">
-              <p className="text-sm font-semibold text-red-700">
-                ⚠️ Bạn có chắc chắn muốn xóa công trình này?
+            <div className="bg-hp-danger/10 border border-hp-danger/30 rounded-xl p-4 mb-4">
+              <p className="text-sm font-semibold text-hp-danger">
+                Bạn có chắc chắn muốn xóa công trình này?
               </p>
-              <p className="text-sm text-red-600 mt-1">
+              <p className="text-sm text-hp-danger mt-1">
                 Toàn bộ dữ liệu sẽ bị xóa vĩnh viễn và không thể khôi phục.
               </p>
             </div>
 
             {deleteModal.loading && !deleteModal.counts && (
-              <p className="text-sm text-gray-400 text-center py-3">Đang kiểm tra dữ liệu...</p>
+              <p className="text-sm text-hp-text-muted text-center py-3">Đang kiểm tra dữ liệu...</p>
             )}
 
             {deleteModal.counts && (
-              <div className="bg-gray-50 rounded-xl p-4 mb-4 space-y-2">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Dữ liệu sẽ bị xóa:</p>
+              <div className="bg-hp-surface rounded-xl p-4 mb-4 space-y-2">
+                <p className="text-xs font-semibold text-hp-text-secondary uppercase tracking-wide mb-1">Dữ liệu sẽ bị xóa:</p>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Phiếu nhập / xuất</span>
-                  <span className="font-bold text-gray-800">{deleteModal.counts.phieu_count} phiếu</span>
+                  <span className="text-hp-text-secondary">Phiếu nhập / xuất</span>
+                  <span className="font-bold text-hp-text">{deleteModal.counts.phieu_count} phiếu</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Chi tiết phiếu</span>
-                  <span className="font-bold text-gray-800">{deleteModal.counts.chi_tiet_count} dòng</span>
+                  <span className="text-hp-text-secondary">Chi tiết phiếu</span>
+                  <span className="font-bold text-hp-text">{deleteModal.counts.chi_tiet_count} dòng</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Danh mục hàng hóa</span>
-                  <span className="font-bold text-gray-800">{deleteModal.counts.hang_hoa_count} mặt hàng</span>
+                  <span className="text-hp-text-secondary">Danh mục hàng hóa</span>
+                  <span className="font-bold text-hp-text">{deleteModal.counts.hang_hoa_count} mặt hàng</span>
                 </div>
               </div>
             )}
@@ -289,14 +291,14 @@ export default function CongTrinh() {
               <button
                 onClick={() => setDeleteModal({ show: false, ct: null, loading: false, counts: null })}
                 disabled={deleteModal.loading && !!deleteModal.counts}
-                className="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm hover:bg-gray-50 disabled:opacity-50"
+                className="flex-1 py-2.5 border border-hp-border text-hp-text-secondary rounded-xl text-sm hover:bg-hp-elevated disabled:opacity-50"
               >
                 Hủy
               </button>
               <button
                 onClick={handleDeleteConfirm}
                 disabled={deleteModal.loading}
-                className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-semibold hover:bg-red-600 disabled:opacity-50 transition-colors"
+                className="flex-1 py-2.5 bg-hp-danger text-white rounded-xl text-sm font-semibold hover:bg-hp-danger/90 disabled:opacity-50 transition-colors"
               >
                 {deleteModal.loading && deleteModal.counts ? 'Đang xóa...' : 'Xóa vĩnh viễn'}
               </button>
@@ -307,47 +309,47 @@ export default function CongTrinh() {
 
       {/* Modal tạo CT */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4"
+        <div className="fixed inset-0 bg-hp-overlay flex items-center justify-center z-50 p-4"
           onClick={e => { if (e.target === e.currentTarget) setShowForm(false) }}>
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+          <div className="bg-hp-elevated rounded-xl shadow-md w-full max-w-md p-6">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="font-bold text-gray-800 text-lg">Thêm công trình mới</h3>
-              <button onClick={() => setShowForm(false)} className="p-1 hover:bg-gray-100 rounded-lg text-gray-400">
+              <h3 className="font-bold text-hp-text text-lg">Thêm công trình mới</h3>
+              <button onClick={() => setShowForm(false)} className="p-1 hover:bg-hp-surface rounded-lg text-hp-text-muted">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1.5 block">Tên công trình *</label>
+                <label className="text-xs font-medium text-hp-text-secondary mb-1.5 block">Tên công trình *</label>
                 <input value={form.ten_ct} onChange={e => setForm({...form, ten_ct: e.target.value})}
                   placeholder="VD: Nhà xưởng Bình Dương"
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-teal-400" />
+                  className="w-full border border-hp-border rounded-xl px-3 py-2.5 text-sm bg-hp-surface text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1.5 block">Mã công trình *</label>
+                <label className="text-xs font-medium text-hp-text-secondary mb-1.5 block">Mã công trình *</label>
                 <input value={form.ma_ct} onChange={e => setForm({...form, ma_ct: e.target.value.toUpperCase()})}
                   placeholder="VD: CT001"
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-mono focus:outline-none focus:border-teal-400" />
+                  className="w-full border border-hp-border rounded-xl px-3 py-2.5 text-sm font-mono bg-hp-surface text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1.5 block">Địa chỉ</label>
+                <label className="text-xs font-medium text-hp-text-secondary mb-1.5 block">Địa chỉ</label>
                 <input value={form.dia_chi} onChange={e => setForm({...form, dia_chi: e.target.value})}
                   placeholder="Địa chỉ công trình..."
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-teal-400" />
+                  className="w-full border border-hp-border rounded-xl px-3 py-2.5 text-sm bg-hp-surface text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1.5 block">Ghi chú</label>
+                <label className="text-xs font-medium text-hp-text-secondary mb-1.5 block">Ghi chú</label>
                 <input value={form.ghi_chu} onChange={e => setForm({...form, ghi_chu: e.target.value})}
                   placeholder="Ghi chú thêm..."
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-teal-400" />
+                  className="w-full border border-hp-border rounded-xl px-3 py-2.5 text-sm bg-hp-surface text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setShowForm(false)}
-                  className="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm hover:bg-gray-50">
+                  className="flex-1 py-2.5 border border-hp-border text-hp-text-secondary rounded-xl text-sm hover:bg-hp-elevated">
                   Hủy
                 </button>
                 <button type="submit" disabled={saving}
-                  className="flex-1 py-2.5 bg-teal-500 text-white rounded-xl text-sm font-medium hover:bg-teal-600 disabled:opacity-50">
+                  className="flex-1 py-2.5 bg-hp-primary text-white rounded-xl text-sm font-medium hover:bg-hp-primary/90 disabled:opacity-50">
                   {saving ? 'Đang lưu...' : 'Tạo công trình'}
                 </button>
               </div>

@@ -1,7 +1,9 @@
+// HPCons Design System V1.0: Header 60px, chỉ chứa thông tin phụ (08-navigation/header.md)
 import React, { useState, useRef, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Bell, HelpCircle, Calendar, Download, ChevronRight, Home, LogOut, Loader } from 'lucide-react'
+import { Bell, HelpCircle, Calendar, Download, ChevronRight, Home, LogOut, Loader, Sun, Moon } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
+import { useTheme } from '../../context/ThemeContext'
 import { useCongTrinh } from '../../context/CongTrinhContext'
 import { getPhieuList, getTonKho } from '../../api'
 import { exportBaoCaoTongHop, exportPhieuList } from '../../utils/exportExcel'
@@ -39,6 +41,7 @@ export default function Header() {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   const { dateFrom, dateTo, setDateFrom, setDateTo, selectedCT, congTrinhs, ctLoading } = useCongTrinh()
   const [showMenu, setShowMenu]     = useState(false)
   const [showPicker, setShowPicker] = useState(false)
@@ -165,13 +168,13 @@ export default function Header() {
     .split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
 
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between" style={{ minHeight: 64 }}>
+    <header className="bg-hp-surface border-b border-hp-border px-6 flex items-center justify-between h-hp-header flex-shrink-0">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm">
-        <Home className="w-4 h-4 text-gray-400" />
-        <span className="text-gray-400">Trang chủ</span>
-        <ChevronRight className="w-3 h-3 text-gray-300" />
-        <span className="text-gray-700 font-medium">{pageName}</span>
+        <Home className="w-4 h-4 text-hp-text-muted" />
+        <span className="text-hp-text-muted">Trang chủ</span>
+        <ChevronRight className="w-3 h-3 text-hp-text-disabled" />
+        <span className="text-hp-text font-medium">{pageName}</span>
       </div>
 
       {/* Right side */}
@@ -181,56 +184,54 @@ export default function Header() {
         <div className="relative" ref={pickerRef}>
           <button
             onClick={openPicker}
-            className={`flex items-center gap-2 px-3 py-1.5 border rounded-lg text-sm transition-colors bg-white
+            className={`flex items-center gap-2 px-3 min-h-10 border rounded-hp-md text-sm transition-colors bg-hp-card
+              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent
               ${showPicker
-                ? 'border-blue-400 text-blue-600'
-                : 'border-gray-200 text-gray-600 hover:border-blue-300 hover:text-blue-600'
+                ? 'border-hp-accent text-hp-accent'
+                : 'border-hp-border text-hp-text-secondary hover:border-hp-accent hover:text-hp-accent'
               }`}
           >
-            <Calendar className="w-4 h-4 text-blue-400" />
+            <Calendar className="w-4 h-4 text-hp-accent" />
             <span className="font-medium">{formatVN(dateFrom)}</span>
-            <span className="text-gray-400 mx-0.5">–</span>
+            <span className="text-hp-text-muted mx-0.5">–</span>
             <span className="font-medium">{formatVN(dateTo)}</span>
           </button>
 
           {showPicker && (
-            <div
-              className="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50"
-              style={{ width: 280 }}
-            >
-              <div className="px-4 pt-3 pb-2 border-b border-gray-100">
-                <span className="text-sm font-semibold text-gray-700">Chọn khoảng thời gian</span>
+            <div className="absolute right-0 top-full mt-2 w-72 bg-hp-elevated border border-hp-border rounded-hp-lg shadow-md z-50">
+              <div className="px-4 pt-3 pb-2 border-b border-hp-divider">
+                <span className="text-sm font-semibold text-hp-text">Chọn khoảng thời gian</span>
               </div>
 
               <div className="p-4 space-y-3">
                 <div>
-                  <label className="text-xs text-gray-500 mb-1 block">Từ ngày</label>
+                  <label className="text-xs text-hp-text-secondary mb-1 block">Từ ngày</label>
                   <input
                     type="date"
                     value={tempFrom}
                     onChange={e => setTempFrom(e.target.value)}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:border-blue-400"
+                    className="w-full bg-hp-card border border-hp-border rounded-hp-md px-3 min-h-10 text-sm text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500 mb-1 block">Đến ngày</label>
+                  <label className="text-xs text-hp-text-secondary mb-1 block">Đến ngày</label>
                   <input
                     type="date"
                     value={tempTo}
                     onChange={e => setTempTo(e.target.value)}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:border-blue-400"
+                    className="w-full bg-hp-card border border-hp-border rounded-hp-md px-3 min-h-10 text-sm text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent"
                   />
                 </div>
 
                 {/* Quick presets */}
                 <div>
-                  <div className="text-xs text-gray-400 mb-1.5">Chọn nhanh</div>
+                  <div className="text-xs text-hp-text-muted mb-1.5">Chọn nhanh</div>
                   <div className="flex flex-wrap gap-1.5">
                     {PRESETS.map(p => (
                       <button
                         key={p.label}
                         onClick={() => { setTempFrom(p.from); setTempTo(p.to) }}
-                        className="text-xs px-2.5 py-1 bg-gray-100 text-gray-600 rounded-full hover:bg-blue-100 hover:text-blue-600 transition-colors"
+                        className="text-xs px-2.5 py-1 bg-hp-card text-hp-text-secondary rounded-full hover:bg-hp-accent/15 hover:text-hp-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent"
                       >
                         {p.label}
                       </button>
@@ -241,13 +242,13 @@ export default function Header() {
                 <div className="flex gap-2 pt-1">
                   <button
                     onClick={applyDate}
-                    className="flex-1 bg-blue-500 text-white text-sm py-2 rounded-lg hover:bg-blue-600 transition-colors font-semibold"
+                    className="flex-1 bg-hp-primary text-white text-sm min-h-10 rounded-hp-md hover:bg-hp-primary/90 transition-colors font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent"
                   >
                     Áp dụng
                   </button>
                   <button
                     onClick={() => setShowPicker(false)}
-                    className="flex-1 border border-gray-200 text-gray-600 text-sm py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="flex-1 border border-hp-border text-hp-text-secondary text-sm min-h-10 rounded-hp-md hover:bg-hp-card transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent"
                   >
                     Hủy
                   </button>
@@ -260,28 +261,37 @@ export default function Header() {
         <button
           onClick={handleExport}
           disabled={exporting}
-          className="flex items-center gap-2 px-4 py-1.5 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors disabled:opacity-60">
+          className="flex items-center gap-2 px-4 min-h-10 bg-hp-primary text-white rounded-hp-md text-sm font-medium hover:bg-hp-primary/90 transition-colors disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent">
           {exporting
             ? <Loader className="w-4 h-4 animate-spin" />
             : <Download className="w-4 h-4" />}
           <span>{exporting ? 'Đang xuất...' : exportLabel}</span>
         </button>
 
-        <div className="w-px h-6 bg-gray-200" />
+        <div className="w-px h-6 bg-hp-border" />
 
         <button
           onClick={handleBellClick}
           title="Cảnh báo tồn kho thấp"
-          className="relative p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
+          className="relative p-2.5 rounded-hp-md hover:bg-hp-elevated text-hp-text-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent">
           <Bell className="w-5 h-5" />
           {unreadCount > 0 && (
-            <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center leading-none animate-pulse">
+            <span className="absolute top-1 right-1 w-4 h-4 bg-hp-danger text-white text-xs rounded-full flex items-center justify-center leading-none animate-pulse">
               {unreadCount > 99 ? '99+' : unreadCount}
             </span>
           )}
         </button>
 
-        <button className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
+        <button
+          onClick={toggleTheme}
+          title={theme === 'dark' ? 'Chuyển sang Light Mode' : 'Chuyển sang Dark Mode'}
+          className="p-2.5 rounded-hp-md hover:bg-hp-elevated text-hp-text-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent">
+          {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+        </button>
+
+        <button
+          title="Trợ giúp"
+          className="p-2.5 rounded-hp-md hover:bg-hp-elevated text-hp-text-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent">
           <HelpCircle className="w-5 h-5" />
         </button>
 
@@ -289,28 +299,28 @@ export default function Header() {
         <div className="relative">
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="flex items-center gap-2 pl-2 hover:bg-gray-50 rounded-lg px-2 py-1 transition-colors"
+            className="flex items-center gap-2 pl-2 hover:bg-hp-elevated rounded-hp-md px-2 py-1 min-h-10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent"
           >
-            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+            <div className="w-8 h-8 bg-hp-accent rounded-full flex items-center justify-center text-white text-sm font-bold">
               {initials}
             </div>
             <div className="text-left">
-              <div className="text-sm font-medium text-gray-700 leading-tight">{user?.ten || 'Admin'}</div>
-              <div className="text-xs text-gray-400 leading-tight capitalize">{user?.role || 'admin'}</div>
+              <div className="text-sm font-medium text-hp-text leading-tight">{user?.ten || 'Admin'}</div>
+              <div className="text-xs text-hp-text-muted leading-tight capitalize">{user?.role || 'admin'}</div>
             </div>
           </button>
 
           {showMenu && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
-              <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-1">
-                <div className="px-4 py-2.5 border-b border-gray-50">
-                  <div className="text-sm font-semibold text-gray-700">{user?.ten}</div>
-                  <div className="text-xs text-gray-400 truncate">{user?.email}</div>
+              <div className="absolute right-0 top-full mt-1 w-48 bg-hp-elevated rounded-hp-lg shadow-md border border-hp-border z-50 py-1">
+                <div className="px-4 py-2.5 border-b border-hp-divider">
+                  <div className="text-sm font-semibold text-hp-text">{user?.ten}</div>
+                  <div className="text-xs text-hp-text-muted truncate">{user?.email}</div>
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                  className="w-full flex items-center gap-2 px-4 py-2.5 min-h-11 text-sm text-hp-danger hover:bg-hp-danger/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent"
                 >
                   <LogOut className="w-4 h-4" />
                   Đăng xuất

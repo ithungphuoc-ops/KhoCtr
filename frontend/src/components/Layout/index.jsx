@@ -7,14 +7,14 @@ export default function Layout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50">
+    <div className="flex h-screen overflow-hidden bg-hp-bg">
       <Sidebar
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
       <div className="flex flex-col flex-1 overflow-hidden">
-        <Header notificationCount={5} />
-        <main className="flex-1 overflow-y-auto p-6" style={{ background: '#F8FAFC' }}>
+        <Header />
+        <main className="flex-1 overflow-y-auto p-6 bg-hp-bg">
           <Outlet />
         </main>
       </div>

@@ -18,11 +18,11 @@ import { TRANG_THAI_MAP } from '../components/GhiChu/ghiChuConfig'
 /* ── Stats mini-card ──────────────────────────────────────── */
 function StatCard({ label, value, color }) {
   return (
-    <div className={`bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3 flex items-center gap-3`}>
+    <div className={`bg-hp-card rounded-hp-lg border border-hp-border shadow-sm px-4 py-3 flex items-center gap-3`}>
       <div className={`w-2 h-8 rounded-full ${color}`} />
       <div>
-        <p className="text-xs text-gray-400">{label}</p>
-        <p className="text-xl font-bold text-gray-800">{value}</p>
+        <p className="text-xs text-hp-text-muted">{label}</p>
+        <p className="text-xl font-bold text-hp-text">{value}</p>
       </div>
     </div>
   )
@@ -43,34 +43,34 @@ function CTGroup({ ct, items, onExpand, isOpen }) {
   items.forEach(x => { if (byStatus[x.trang_thai] !== undefined) byStatus[x.trang_thai]++ })
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+    <div className="bg-hp-card rounded-hp-lg border border-hp-border shadow-sm overflow-hidden">
       {/* Header row */}
       <button
         onClick={onExpand}
-        className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors"
+        className="w-full flex items-center justify-between px-5 py-4 min-h-10 hover:bg-hp-elevated transition-colors"
       >
         <div className="flex items-center gap-3">
           {isOpen
-            ? <ChevronDown className="w-4 h-4 text-teal-500" />
-            : <ChevronRight className="w-4 h-4 text-gray-400" />
+            ? <ChevronDown className="w-4 h-4 text-hp-primary" />
+            : <ChevronRight className="w-4 h-4 text-hp-text-muted" />
           }
           <div className="text-left">
-            <p className="font-semibold text-gray-800">{ct.ten_ct}</p>
-            <p className="text-xs text-gray-400 font-mono">{ct.ma_ct}</p>
+            <p className="font-semibold text-hp-text">{ct.ten_ct}</p>
+            <p className="text-xs text-hp-text-muted font-mono">{ct.ma_ct}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           {overdue > 0 && (
-            <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs font-bold rounded-full animate-pulse">
+            <span className="px-2 py-0.5 bg-hp-danger/15 text-hp-danger text-xs font-bold rounded-full animate-pulse">
               {overdue} quá hạn
             </span>
           )}
           {done > 0 && (
-            <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">
+            <span className="px-2 py-0.5 bg-hp-primary/15 text-hp-primary text-xs rounded-full">
               {done} xong
             </span>
           )}
-          <span className="text-sm font-medium text-gray-500">{items.length} ghi chú</span>
+          <span className="text-sm font-medium text-hp-text-secondary">{items.length} ghi chú</span>
         </div>
       </button>
 
@@ -87,7 +87,7 @@ function CTGroup({ ct, items, onExpand, isOpen }) {
 
       {/* Expanded: GhiChuModule cho CT này */}
       {isOpen && (
-        <div className="border-t border-gray-100 p-5">
+        <div className="border-t border-hp-border p-5">
           <GhiChuModule
             congTrinhId={ct.id}
             congTrinhList={[]}
@@ -159,7 +159,7 @@ export default function GhiChu() {
     // Đợi context load xong trước khi render — tránh selectedCT=null thoáng qua
     if (ctLoading) {
       return (
-        <div className="text-center py-16 text-gray-300">
+        <div className="text-center py-16 text-hp-text-muted">
           <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-3" />
           <p className="text-sm">Đang tải...</p>
         </div>
@@ -168,8 +168,8 @@ export default function GhiChu() {
     if (!selectedCT) {
       return (
         <div className="text-center py-16">
-          <StickyNote className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-          <p className="text-gray-400 text-sm">Vui lòng chọn công trình để xem ghi chú.</p>
+          <StickyNote className="w-12 h-12 text-hp-text-disabled mx-auto mb-3" />
+          <p className="text-hp-text-muted text-sm">Vui lòng chọn công trình để xem ghi chú.</p>
         </div>
       )
     }
@@ -189,19 +189,19 @@ export default function GhiChu() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-bold text-gray-800">GHI CHÚ CÔNG VIỆC</h1>
-          <p className="text-gray-400 text-sm mt-0.5">Quản lý ghi chú toàn bộ công trình</p>
+          <h1 className="text-xl font-bold text-hp-text">GHI CHÚ CÔNG VIỆC</h1>
+          <p className="text-hp-text-secondary text-sm mt-0.5">Quản lý ghi chú toàn bộ công trình</p>
         </div>
         {/* Mode toggle */}
-        <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+        <div className="flex rounded-hp-md border border-hp-border overflow-hidden">
           <button onClick={() => setMode('all')}
-            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors
-              ${mode === 'all' ? 'bg-teal-500 text-white' : 'text-gray-500 hover:bg-gray-50'}`}>
+            className={`flex items-center gap-1.5 px-4 py-2 min-h-10 text-sm font-medium transition-colors
+              ${mode === 'all' ? 'bg-hp-primary text-white' : 'text-hp-text-secondary hover:bg-hp-elevated'}`}>
             <LayoutGrid className="w-4 h-4" /> Tất cả
           </button>
           <button onClick={() => setMode('by_ct')}
-            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors
-              ${mode === 'by_ct' ? 'bg-teal-500 text-white' : 'text-gray-500 hover:bg-gray-50'}`}>
+            className={`flex items-center gap-1.5 px-4 py-2 min-h-10 text-sm font-medium transition-colors
+              ${mode === 'by_ct' ? 'bg-hp-primary text-white' : 'text-hp-text-secondary hover:bg-hp-elevated'}`}>
             <List className="w-4 h-4" /> Theo CT
           </button>
         </div>
@@ -221,21 +221,21 @@ export default function GhiChu() {
         <div className="space-y-4">
           {!loading && allItems.length > 0 && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <StatCard label="Tổng ghi chú"  value={globalStats.total}      color="bg-teal-400" />
-              <StatCard label="Đang mở"        value={globalStats.mo}         color="bg-blue-400" />
-              <StatCard label="Hoàn thành"     value={globalStats.hoan_thanh} color="bg-green-400" />
-              <StatCard label="Quá hạn"        value={globalStats.overdue}    color="bg-red-400" />
+              <StatCard label="Tổng ghi chú"  value={globalStats.total}      color="bg-hp-nav" />
+              <StatCard label="Đang mở"        value={globalStats.mo}         color="bg-hp-accent" />
+              <StatCard label="Hoàn thành"     value={globalStats.hoan_thanh} color="bg-hp-primary" />
+              <StatCard label="Quá hạn"        value={globalStats.overdue}    color="bg-hp-danger" />
             </div>
           )}
           {loading ? (
-            <div className="text-center py-16 text-gray-300">
+            <div className="text-center py-16 text-hp-text-muted">
               <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-3" />
               <p className="text-sm">Đang tải...</p>
             </div>
           ) : congTrinhs.length === 0 ? (
             <div className="text-center py-16">
-              <StickyNote className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-              <p className="text-gray-400 text-sm">Không có công trình nào</p>
+              <StickyNote className="w-12 h-12 text-hp-text-disabled mx-auto mb-3" />
+              <p className="text-hp-text-muted text-sm">Không có công trình nào</p>
             </div>
           ) : (
             <div className="space-y-3">

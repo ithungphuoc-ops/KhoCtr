@@ -19,9 +19,9 @@ const normalize = (s) =>
     .toLowerCase()
 
 const THEMES = {
-  blue:   { focus: 'focus:border-blue-400',   highlight: 'bg-blue-50 text-blue-800' },
-  green:  { focus: 'focus:border-green-400',  highlight: 'bg-green-50 text-green-800' },
-  orange: { focus: 'focus:border-orange-400', highlight: 'bg-orange-50 text-orange-800' },
+  blue:   { focus: 'focus:ring-2 focus:ring-hp-accent',  highlight: 'bg-hp-accent/15 text-hp-accent' },
+  green:  { focus: 'focus:ring-2 focus:ring-hp-primary', highlight: 'bg-hp-primary/15 text-hp-primary' },
+  orange: { focus: 'focus:ring-2 focus:ring-hp-warning', highlight: 'bg-hp-warning/15 text-hp-warning' },
 }
 
 export default function HangHoaInput({
@@ -146,34 +146,34 @@ export default function HangHoaInput({
       <div
         ref={listRef}
         style={{ position: 'fixed', top: dropRect.top, left: dropRect.left, width: dropRect.width, zIndex: 99999 }}
-        className="bg-white border border-gray-200 rounded-lg shadow-xl max-h-52 overflow-y-auto"
+        className="bg-hp-elevated border border-hp-border rounded-hp-md shadow-md max-h-52 overflow-y-auto"
       >
         {matches.map((hh, j) => (
           <div
             key={hh.ma_hang || j}
             data-idx={j}
             onMouseDown={() => doSelect(hh)}
-            className={`px-3 py-2 cursor-pointer text-xs flex items-center gap-2 border-b border-gray-50 last:border-0 ${
-              j === highlight ? t.highlight : 'hover:bg-gray-50'
+            className={`px-3 py-2 cursor-pointer text-xs flex items-center gap-2 border-b border-hp-divider last:border-0 ${
+              j === highlight ? t.highlight : 'hover:bg-hp-accent/10'
             }`}
           >
-            <span className="font-mono text-gray-400 shrink-0 w-[72px] truncate">{hh.ma_hang}</span>
-            <span className="text-gray-800 flex-1 truncate font-medium">{hh.ten_hang}</span>
-            <span className="text-gray-400 shrink-0 text-[10px]">{hh.dvt}</span>
+            <span className="font-mono text-hp-text-muted shrink-0 w-[72px] truncate">{hh.ma_hang}</span>
+            <span className="text-hp-text flex-1 truncate font-medium">{hh.ten_hang}</span>
+            <span className="text-hp-text-muted shrink-0 text-xs">{hh.dvt}</span>
           </div>
         ))}
-        <div className="px-3 py-1.5 text-[10px] text-gray-300 italic border-t">
+        <div className="px-3 py-1.5 text-xs text-hp-text-muted italic border-t border-hp-divider">
           ↑↓ di chuyển · Enter chọn · Esc đóng
         </div>
       </div>
     ) : inputVal.length >= 2 ? (
       <div
         style={{ position: 'fixed', top: dropRect.top, left: dropRect.left, width: dropRect.width, zIndex: 99999 }}
-        className="bg-white border border-gray-200 rounded-lg shadow p-2.5"
+        className="bg-hp-elevated border border-hp-border rounded-hp-md shadow-md p-2.5"
       >
         {hangHoaList.length === 0
-          ? <p className="text-xs text-orange-500">⏳ Đang tải danh mục...</p>
-          : <p className="text-xs text-gray-400 italic">Không tìm thấy — thử gõ không dấu</p>
+          ? <p className="text-xs text-hp-warning">⏳ Đang tải danh mục...</p>
+          : <p className="text-xs text-hp-text-muted italic">Không tìm thấy — thử gõ không dấu</p>
         }
       </div>
     ) : null
@@ -190,15 +190,15 @@ export default function HangHoaInput({
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         autoComplete="off"
-        className={`w-full border rounded px-2 py-1.5 text-xs focus:outline-none transition-colors ${
+        className={`w-full min-h-10 border rounded-hp-sm px-2 py-1.5 text-xs text-hp-text placeholder:text-hp-text-muted focus:outline-none transition-colors ${
           error
-            ? 'border-red-400 bg-red-50 focus:border-red-400'
-            : `border-gray-200 ${t.focus}`
+            ? 'border-hp-danger bg-hp-danger/10 focus:ring-2 focus:ring-hp-danger'
+            : `bg-hp-card border-hp-border ${t.focus}`
         } ${inputCls}`}
       />
       {error && (
-        <p className="absolute text-red-500 text-[10px] mt-0.5 leading-tight whitespace-nowrap z-10">
-          {isAdmin ? '⚠ Không có trong danh mục' : '✗ Vui lòng chọn từ danh mục'}
+        <p className="absolute text-hp-danger text-xs mt-0.5 leading-tight whitespace-nowrap z-10">
+          {isAdmin ? 'Không có trong danh mục' : 'Vui lòng chọn từ danh mục'}
         </p>
       )}
       {dropdownContent && createPortal(dropdownContent, document.body)}

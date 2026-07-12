@@ -474,7 +474,7 @@ export default function PhieuXuat() {
 
       {/* Modal xem chi tiết */}
       {selectedPhieu && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+        <div className="fixed inset-0 bg-hp-overlay flex items-center justify-center z-50 p-4"
           onClick={e => { if (e.target === e.currentTarget) setSelectedPhieu(null) }}>
           <div className="bg-hp-elevated border border-hp-border rounded-hp-lg shadow-md w-full max-w-2xl max-h-[80vh] flex flex-col">
             <div className="flex items-center justify-between p-5 border-b border-hp-border">
@@ -530,14 +530,14 @@ export default function PhieuXuat() {
 
       {/* Modal tạo phiếu XK */}
       {showCreate && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-hp-overlay flex items-center justify-center z-50 p-4">
           <div className="bg-hp-elevated border border-hp-border rounded-hp-lg shadow-md w-full max-w-3xl max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between p-5 border-b border-hp-border">
               <div>
                 <h3 className="font-bold text-hp-text text-lg">{editingPhieu ? `Sửa Phiếu XK — ${editingPhieu.so_phieu}` : 'Tạo Phiếu Xuất Kho'}</h3>
                 <p className="text-sm text-hp-primary font-medium">📌 {editingPhieu ? ctMap[editingPhieu.cong_trinh_id] || editingPhieu.so_phieu : selectedCT?.ten_ct}
                   <span className="ml-2 text-xs text-hp-text-muted font-normal">
-                    {hangHoaList.length > 0 ? `${hangHoaList.length} mặt hàng đang có trong kho` : '⚠ Chưa có hàng trong kho'}
+                    {hangHoaList.length > 0 ? `${hangHoaList.length} mặt hàng đang có trong kho` : 'Chưa có hàng trong kho'}
                   </span>
                 </p>
               </div>
@@ -728,7 +728,7 @@ export default function PhieuXuat() {
 
       {/* Delete confirm */}
       {confirmDelete && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-hp-overlay flex items-center justify-center z-50 p-4">
           <div className="bg-hp-elevated border border-hp-border rounded-hp-lg shadow-md w-full max-w-sm p-6">
             <div className="flex items-start gap-3 mb-4">
               <AlertTriangle className="w-6 h-6 text-hp-danger flex-shrink-0 mt-0.5" />

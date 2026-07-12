@@ -1,4 +1,5 @@
 // Sidebar v2.1 - non-admin chi thay QUAN LY DU LIEU
+// HPCons Design System V1.0: nav-base #4B4F55, mở 260px / thu gọn 72px, menu cấp 1 cao 44px
 import React, { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import {
@@ -6,7 +7,7 @@ import {
   Download, Upload, Package, Box, Building2,
   Users, Shield, ChevronLeft, ChevronRight,
   Database, CheckCircle, Cpu,
-  ChevronDown, ChevronUp, Layers, FileUp, ClipboardList, History
+  ChevronDown, ChevronUp, Layers, ClipboardList, History
 } from 'lucide-react'
 import { useCongTrinh } from '../../context/CongTrinhContext'
 import { useAuth } from '../../context/AuthContext'
@@ -46,11 +47,6 @@ const groupHeThong = {
   ]
 }
 
-const CT_COLORS = [
-  'bg-teal-500', 'bg-blue-500', 'bg-purple-500', 'bg-orange-500',
-  'bg-pink-500', 'bg-green-600', 'bg-indigo-500', 'bg-red-500',
-]
-
 export default function Sidebar({ collapsed, onToggle }) {
   const location = useLocation()
   const { congTrinhs, selectedCT, setSelectedCT, isAdmin } = useCongTrinh()
@@ -67,10 +63,10 @@ export default function Sidebar({ collapsed, onToggle }) {
     <div key={group.label} className="mb-1">
       {!collapsed && (
         <div className="px-4 pt-3 pb-1">
-          <span className="text-[10px] font-bold text-gray-400 tracking-widest uppercase">{group.label}</span>
+          <span className="text-xs font-bold text-hp-sidebar-muted tracking-widest uppercase">{group.label}</span>
         </div>
       )}
-      {collapsed && <div className="border-t border-gray-100 mx-2 my-2" />}
+      {collapsed && <div className="border-t border-hp-divider mx-2 my-2" />}
       {group.items.filter(item => (!item.adminOnly || isAdminUser) && (!item.userOnly || !isAdminUser)).map((item) => {
         const Icon = item.icon
         const active = isActive(item.path)
@@ -79,19 +75,20 @@ export default function Sidebar({ collapsed, onToggle }) {
             key={item.path}
             to={item.path}
             title={collapsed ? item.label : undefined}
-            className={`flex items-center gap-3 mx-2 px-3 py-2 rounded-lg text-sm transition-all duration-150 relative group
+            className={`flex items-center gap-3 mx-2 px-3 min-h-11 rounded-hp-md text-sm transition-all duration-150 relative group
+              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent
               ${active
-                ? 'bg-blue-50 text-blue-600 font-semibold border-l-[3px] border-blue-500'
-                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800 border-l-[3px] border-transparent'
+                ? 'bg-hp-primary/15 text-hp-primary font-semibold border-l-[3px] border-hp-primary'
+                : 'text-hp-sidebar-muted hover:bg-white/5 hover:text-hp-sidebar-text border-l-[3px] border-transparent'
               }`}
           >
-            <Icon className={`w-4 h-4 flex-shrink-0 ${active ? 'text-blue-500' : 'text-gray-400'}`} />
+            <Icon className={`w-4 h-4 flex-shrink-0 ${active ? 'text-hp-primary' : 'text-hp-sidebar-muted'}`} />
             {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
             {collapsed && item.badge && (
-              <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-red-500 rounded-full" />
+              <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-hp-danger rounded-full" />
             )}
             {collapsed && (
-              <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-50 transition-opacity">
+              <div className="absolute left-full ml-2 px-2 py-1 bg-hp-elevated border border-hp-border text-hp-text text-xs rounded-hp-sm whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-50 transition-opacity">
                 {item.label}
               </div>
             )}
@@ -103,19 +100,19 @@ export default function Sidebar({ collapsed, onToggle }) {
 
   return (
     <aside
-      className="flex flex-col h-screen bg-white border-r border-gray-200 transition-all duration-300 overflow-hidden"
-      style={{ width: collapsed ? 64 : 260, minWidth: collapsed ? 64 : 260 }}
+      className={`flex flex-col h-screen bg-hp-nav border-r border-hp-border transition-all duration-300 overflow-hidden flex-shrink-0
+        ${collapsed ? 'w-hp-sidebar-collapsed' : 'w-hp-sidebar'}`}
     >
       {/* Logo */}
-      <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100" style={{ minHeight: 64 }}>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-hp-divider min-h-16">
         {!collapsed && (
           <div className="flex items-center gap-2">
             <img src="/logo-hpcons.png" alt="HP Cons" className="h-9 w-auto object-contain flex-shrink-0" />
             <div>
-              <div className="font-bold text-gray-800 text-sm leading-tight">
+              <div className="font-bold text-hp-sidebar-text text-sm leading-tight">
                 {isAdminUser ? 'HPCons App Tổng' : `HPCons - ${selectedCT?.ten_ct || ''}`}
               </div>
-              <div className="text-xs text-gray-400 leading-tight">Quản lý kho v2.0</div>
+              <div className="text-xs text-hp-sidebar-muted leading-tight">Quản lý kho v2.0</div>
             </div>
           </div>
         )}
@@ -124,19 +121,24 @@ export default function Sidebar({ collapsed, onToggle }) {
         )}
         <button
           onClick={onToggle}
-          className={`p-1 rounded-md hover:bg-gray-100 text-gray-500 transition-colors ${collapsed ? 'hidden' : ''}`}
+          aria-label="Thu gọn menu"
+          className={`p-2 rounded-hp-sm hover:bg-white/10 text-hp-sidebar-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent ${collapsed ? 'hidden' : ''}`}
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
         {collapsed && (
-          <button onClick={onToggle} className="absolute top-5 -right-3 w-6 h-6 bg-white border border-gray-200 rounded-full flex items-center justify-center shadow-sm hover:bg-gray-50 z-10">
-            <ChevronRight className="w-3 h-3 text-gray-500" />
+          <button
+            onClick={onToggle}
+            aria-label="Mở rộng menu"
+            className="absolute top-5 -right-3 w-6 h-6 bg-hp-elevated border border-hp-border rounded-full flex items-center justify-center hover:bg-hp-card z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent"
+          >
+            <ChevronRight className="w-3 h-3 text-hp-sidebar-muted" />
           </button>
         )}
       </div>
 
       {/* Menu */}
-      <div className="flex-1 overflow-y-auto py-1 scrollbar-thin">
+      <div className="flex-1 overflow-y-auto py-1">
 
         {/* Admin: TONG QUAN */}
         {isAdminUser && renderGroup(groupTongQuan)}
@@ -147,34 +149,34 @@ export default function Sidebar({ collapsed, onToggle }) {
             {!collapsed && (
               <button
                 onClick={() => setCtCollapsed(!ctCollapsed)}
-                className="w-full flex items-center justify-between px-4 pt-3 pb-1 group"
+                className="w-full flex items-center justify-between px-4 pt-3 pb-1 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent rounded-hp-sm"
               >
-                <span className="text-[10px] font-bold text-gray-400 tracking-widest uppercase">Danh sách công trình</span>
+                <span className="text-xs font-bold text-hp-sidebar-muted tracking-widest uppercase">Danh sách công trình</span>
                 {ctCollapsed
-                  ? <ChevronDown className="w-3 h-3 text-gray-400" />
-                  : <ChevronUp className="w-3 h-3 text-gray-400" />
+                  ? <ChevronDown className="w-3 h-3 text-hp-sidebar-muted" />
+                  : <ChevronUp className="w-3 h-3 text-hp-sidebar-muted" />
                 }
               </button>
             )}
-            {collapsed && <div className="border-t border-gray-100 mx-2 my-2" />}
+            {collapsed && <div className="border-t border-hp-divider mx-2 my-2" />}
 
             {!ctCollapsed && (
               <button
                 onClick={() => setSelectedCT(null)}
                 title={collapsed ? 'Tất cả công trình' : undefined}
-                className={`w-full flex items-center gap-3 mx-2 px-3 py-2 rounded-lg text-sm transition-all duration-150 relative group
+                className={`flex items-center gap-3 mx-2 px-3 min-h-11 rounded-hp-md text-sm transition-all duration-150 relative group w-[calc(100%-16px)]
+                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent
                   ${selectedCT === null
-                    ? 'bg-blue-50 text-blue-700 font-semibold border-l-[3px] border-blue-500'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800 border-l-[3px] border-transparent'
+                    ? 'bg-hp-primary/15 text-hp-primary font-semibold border-l-[3px] border-hp-primary'
+                    : 'text-hp-sidebar-muted hover:bg-white/5 hover:text-hp-sidebar-text border-l-[3px] border-transparent'
                   }`}
-                style={{ width: 'calc(100% - 16px)' }}
               >
-                <div className="w-5 h-5 bg-gray-400 rounded flex items-center justify-center flex-shrink-0">
+                <div className="w-5 h-5 bg-hp-accent rounded-hp-sm flex items-center justify-center flex-shrink-0">
                   <Layers className="w-3 h-3 text-white" />
                 </div>
                 {!collapsed && <span className="flex-1 truncate text-left font-medium">Tất cả công trình</span>}
                 {collapsed && (
-                  <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-50">
+                  <div className="absolute left-full ml-2 px-2 py-1 bg-hp-elevated border border-hp-border text-hp-text text-xs rounded-hp-sm whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-50">
                     Tất cả công trình
                   </div>
                 )}
@@ -182,26 +184,25 @@ export default function Sidebar({ collapsed, onToggle }) {
             )}
 
             {!ctCollapsed && congTrinhs.map((ct, i) => {
-              const colorClass = CT_COLORS[i % CT_COLORS.length]
               const active = selectedCT?.id === ct.id
               return (
                 <button
                   key={ct.id}
                   onClick={() => setSelectedCT(ct)}
                   title={collapsed ? ct.ten_ct : undefined}
-                  className={`w-full flex items-center gap-3 mx-2 px-3 py-2 rounded-lg text-sm transition-all duration-150 relative group
+                  className={`flex items-center gap-3 mx-2 px-3 min-h-11 rounded-hp-md text-sm transition-all duration-150 relative group w-[calc(100%-16px)]
+                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent
                     ${active
-                      ? 'bg-teal-50 text-teal-700 font-semibold border-l-[3px] border-teal-500'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800 border-l-[3px] border-transparent'
+                      ? 'bg-hp-primary/15 text-hp-primary font-semibold border-l-[3px] border-hp-primary'
+                      : 'text-hp-sidebar-muted hover:bg-white/5 hover:text-hp-sidebar-text border-l-[3px] border-transparent'
                     }`}
-                  style={{ width: 'calc(100% - 16px)' }}
                 >
-                  <div className={`w-5 h-5 ${colorClass} rounded flex items-center justify-center flex-shrink-0`}>
-                    <span className="text-white text-[9px] font-bold">{i + 1}</span>
+                  <div className="w-5 h-5 bg-hp-accent rounded-hp-sm flex items-center justify-center flex-shrink-0">
+                    <span className="text-white text-xs font-bold">{i + 1}</span>
                   </div>
                   {!collapsed && <span className="flex-1 truncate text-left">{ct.ten_ct}</span>}
                   {collapsed && (
-                    <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-50 transition-opacity">
+                    <div className="absolute left-full ml-2 px-2 py-1 bg-hp-elevated border border-hp-border text-hp-text text-xs rounded-hp-sm whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-50 transition-opacity">
                       {ct.ten_ct}
                     </div>
                   )}
@@ -210,7 +211,7 @@ export default function Sidebar({ collapsed, onToggle }) {
             })}
 
             {!ctCollapsed && congTrinhs.length === 0 && !collapsed && (
-              <div className="mx-2 px-3 py-2 text-xs text-gray-400 italic">Chưa có công trình</div>
+              <div className="mx-2 px-3 py-2 text-xs text-hp-sidebar-muted italic">Chưa có công trình</div>
             )}
           </div>
         )}
@@ -225,41 +226,42 @@ export default function Sidebar({ collapsed, onToggle }) {
 
       {/* Connection Status */}
       {!collapsed && (
-        <div className="mx-3 mb-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
-          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Kết nối hệ thống</div>
+        <div className="mx-3 mb-3 p-3 bg-white/5 rounded-hp-lg border border-hp-border">
+          <div className="text-xs font-bold text-hp-sidebar-muted uppercase tracking-widest mb-2">Kết nối hệ thống</div>
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
-                <Database className="w-3 h-3 text-gray-400" />
-                <span className="text-xs text-gray-600">Database tổng</span>
+                <Database className="w-3 h-3 text-hp-sidebar-muted" />
+                <span className="text-xs text-hp-sidebar-muted">Database tổng</span>
               </div>
               <div className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
-                <span className="text-xs text-green-600 font-medium">Online</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-hp-primary inline-block" />
+                <span className="text-xs text-hp-primary font-medium">Online</span>
               </div>
             </div>
             {isAdminUser ? (
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <Building2 className="w-3 h-3 text-gray-400" />
-                  <span className="text-xs text-gray-600">App con</span>
+                  <Building2 className="w-3 h-3 text-hp-sidebar-muted" />
+                  <span className="text-xs text-hp-sidebar-muted">App con</span>
                 </div>
-                <span className="text-xs text-teal-600 font-medium">{congTrinhs.length} công trình</span>
+                <span className="text-xs text-hp-accent font-medium">{congTrinhs.length} công trình</span>
               </div>
             ) : selectedCT ? (
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <Building2 className="w-3 h-3 text-gray-400" />
-                  <span className="text-xs text-gray-600">Công trình</span>
+                  <Building2 className="w-3 h-3 text-hp-sidebar-muted" />
+                  <span className="text-xs text-hp-sidebar-muted">Công trình</span>
                 </div>
-                <span className="text-xs text-teal-600 font-medium truncate max-w-[110px]">{selectedCT.ten_ct}</span>
+                <span className="text-xs text-hp-accent font-medium truncate max-w-28">{selectedCT.ten_ct}</span>
               </div>
             ) : null}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
-                <CheckCircle className="w-3 h-3 text-gray-400" />                <span className="text-xs text-gray-600">Đồng bộ</span>
+                <CheckCircle className="w-3 h-3 text-hp-sidebar-muted" />
+                <span className="text-xs text-hp-sidebar-muted">Đồng bộ</span>
               </div>
-              <span className="text-xs text-green-600 font-medium">Thành công</span>
+              <span className="text-xs text-hp-primary font-medium">Thành công</span>
             </div>
           </div>
         </div>
@@ -267,9 +269,9 @@ export default function Sidebar({ collapsed, onToggle }) {
 
       {/* Footer */}
       {!collapsed && (
-        <div className="px-4 py-3 border-t border-gray-100">
-          <p className="text-xs text-gray-400 text-center">© 2026 {isAdminUser ? 'HPCons App Tổng' : `HPCons - ${selectedCT?.ten_ct || ''}`}</p>
-          <p className="text-xs text-gray-400 text-center">Phiên bản2.0.0</p>
+        <div className="px-4 py-3 border-t border-hp-divider">
+          <p className="text-xs text-hp-sidebar-muted text-center">© 2026 {isAdminUser ? 'HPCons App Tổng' : `HPCons - ${selectedCT?.ten_ct || ''}`}</p>
+          <p className="text-xs text-hp-sidebar-muted text-center">Phiên bản 2.0.0</p>
         </div>
       )}
     </aside>
