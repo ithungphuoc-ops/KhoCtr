@@ -2,7 +2,7 @@ import base64, json, re, urllib.request, urllib.error
 from pathlib import Path
 
 MAX_IMAGES_PER_REQUEST = 6   # spec: 6 anh/request on dinh da model
-PAGE_THRESHOLD = 8            # <= 8 trang → fitz inline; > 8 trang → batch/Files API
+PAGE_THRESHOLD = 5            # <= 5 trang → fitz inline; > 5 trang → batch (tranh request qua lon)
 
 
 def _file_to_base64(path):
@@ -200,7 +200,7 @@ def _build_content_parts(file_path, prompt):
     """
     p = Path(file_path)
     if p.suffix.lower() == '.pdf':
-        pages = _render_pages_fitz(file_path, scale=2.5)
+        pages = _render_pages_fitz(file_path, scale=2.0)
         if pages:
             parts = []
             for png_data in pages:
@@ -248,7 +248,7 @@ def _claude_fitz_batched(file_path, loai, api_key, date_mode, total_pages):
         batch_num = batch_idx + 1
         print(f"[ai_reader] Batch {batch_num}/{total_batches}: trang {batch_start+1}-{batch_end}/{total_pages}")
 
-        pages = _render_pages_fitz(file_path, page_start=batch_start, page_end=batch_end, scale=2.5)
+        pages = _render_pages_fitz(file_path, page_start=batch_start, page_end=batch_end, scale=2.0)
         if not pages:
             continue
 
@@ -292,7 +292,7 @@ def _claude_fitz_batched(file_path, loai, api_key, date_mode, total_pages):
     return _normalize(result)
 
 
-def _call_claude_api(api_key, content_parts, max_tokens=8000):
+def _call_claude_api(api_key, content_parts, max_tokens=16000):
     """Goi Claude API voi content parts da chuan bi san."""
     body = json.dumps({
         "model": "claude-sonnet-4-6",
@@ -384,7 +384,7 @@ def _delete_claude_file(file_id, api_key):
         print(f"[ai_reader] Files API delete warning: {e}")
 
 
-def _call_claude_api_with_beta(api_key, content_parts, max_tokens=8000):
+def _call_claude_api_with_beta(api_key, content_parts, max_tokens=16000):
     """Goi Claude API voi Files API beta header (dung khi co file_id)."""
     body = json.dumps({
         "model": "claude-sonnet-4-6",
@@ -435,7 +435,7 @@ def _claude(file_path, loai, api_key, date_mode='auto'):
 
         if total_pages > 0:
             print(f"[ai_reader] <= {PAGE_THRESHOLD} trang → fitz inline")
-            pages = _render_pages_fitz(file_path, page_end=total_pages, scale=2.5)
+            pages = _render_pages_fitz(file_path, page_end=total_pages, scale=2.0)
             if pages:
                 parts = _png_list_to_parts(pages) + [{"type": "text", "text": prompt}]
                 text = _call_with_retry(lambda: _call_claude_api(api_key, parts))
@@ -478,7 +478,7 @@ def _claude_multi(file_path, loai, api_key, date_mode='auto'):
 
         if total_pages > 0:
             print(f"[ai_reader] <= {PAGE_THRESHOLD} trang → fitz inline (multi-phieu)")
-            pages = _render_pages_fitz(file_path, page_end=total_pages, scale=2.5)
+            pages = _render_pages_fitz(file_path, page_end=total_pages, scale=2.0)
             if pages:
                 parts = _png_list_to_parts(pages) + [{"type": "text", "text": prompt}]
                 text = _call_with_retry(lambda: _call_claude_api(api_key, parts))
