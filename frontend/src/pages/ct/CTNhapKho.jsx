@@ -3,7 +3,7 @@ import { useOutletContext, useParams } from 'react-router-dom'
 import { Download, Search, RefreshCw, Eye, Plus, X, Trash2, FileDown, Bot, Loader } from 'lucide-react'
 import { getPhieuList, getChiTietPhieu, createPhieu, getHangHoa, docPhieu, docPhieuMulti, matchItems } from '../../api'
 import HangHoaInput from '../../components/HangHoaInput'
-import HangHoaMatchPopup from '../../components/HangHoaMatchPopup'
+import BatchPhieuPopup from '../../components/BatchPhieuPopup'
 import { exportPhieuList } from '../../utils/exportExcel'
 import { useAuth } from '../../context/AuthContext'
 
@@ -55,78 +55,133 @@ export default function CTNhapKho() {
       .catch(() => {})
 
   // AI states
-  const [aiLoading, setAiLoading]         = useState(false)
-  const [aiProvider, setAiProvider]       = useState('gemini')
-  const [showMatchPopup, setShowMatchPopup] = useState(false)
-  const [matchResult, setMatchResult]     = useState(null)
-  const [aiMeta, setAiMeta]               = useState({})
+  const [aiLoading, setAiLoading]       = useState(false)
+  const [aiProvider, setAiProvider]     = useState('gemini')
+  const [aiProgress, setAiProgress]     = useState('')
+  const [batchPhieus, setBatchPhieus]   = useState([])
+  const [showBatchPopup, setShowBatchPopup] = useState(false)
+  const [savingBatch, setSavingBatch]   = useState(false)
+  const [batchMsg, setBatchMsg]         = useState(null)
   const aiFileRef = useRef()
 
-  const handleAiRead = async (file) => {
-    if (!file) return
+  const handleAiReadBatch = async (files) => {
+    if (!files?.length) return
     setAiLoading(true)
+    setAiProgress('')
+    const collected = []
     const t0 = Date.now()
     try {
-      // Bước 1: AI đọc PDF (multi cho PDF, single cho ảnh)
-      const fd = new FormData()
-      fd.append('file', file)
-      fd.append('loai', 'NK')
-      fd.append('provider', aiProvider)
-      if (realId) fd.append('cong_trinh_id', realId)
+      let fileCount = 0
+      for (const file of Array.from(files)) {
+        fileCount++
+        setAiProgress(`Đang đọc file ${fileCount}/${files.length}: ${file.name}`)
+        const fd = new FormData()
+        fd.append('file', file)
+        fd.append('loai', 'NK')
+        fd.append('provider', aiProvider)
+        if (realId) fd.append('cong_trinh_id', realId)
 
-      const isPdf = file.name.toLowerCase().endsWith('.pdf')
-      let data
-      if (isPdf) {
-        const res = await docPhieuMulti(fd)
-        const list = res.data?.phieu_list || []
-        // Lấy phiếu đầu tiên để điền form; các phiếu còn lại bỏ qua ở đây
-        // (dùng trang AI Reader nếu cần nhập batch)
-        data = list[0] || {}
-      } else {
-        const res = await docPhieu(fd)
-        data = res.data
+        const isPdf = file.name.toLowerCase().endsWith('.pdf')
+        let phieuList = []
+        if (isPdf) {
+          const res = await docPhieuMulti(fd)
+          phieuList = res.data?.phieu_list || []
+          if (phieuList.length === 0) phieuList = [res.data || {}]
+        } else {
+          const res = await docPhieu(fd)
+          phieuList = [res.data || {}]
+        }
+
+        let phieuCount = 0
+        for (const data of phieuList) {
+          phieuCount++
+          if (phieuList.length > 1)
+            setAiProgress(`File ${fileCount}/${files.length} — phiếu ${phieuCount}/${phieuList.length}`)
+          const rawItems = (data.items || data.hang_hoa || []).map(it => ({
+            ten_hang:   it.ten_hang || it.hang || '',
+            dvt:        it.dvt || 'cái',
+            so_luong:   it.so_luong || 0,
+            don_gia:    it.don_gia || 0,
+            thanh_tien: it.thanh_tien || ((it.so_luong || 0) * (it.don_gia || 0)) || 0,
+          }))
+          const processingMs = Date.now() - t0
+          const matchRes = await matchItems({
+            cong_trinh_id:      parseInt(realId),
+            loai_phieu:         'nhap',
+            file_name:          file.name,
+            items:              rawItems,
+            ai_provider:        aiProvider,
+            processing_time_ms: processingMs,
+          })
+          collected.push({
+            header: {
+              so_phieu: data.so_phieu || '',
+              ngay:     data.ngay || today(),
+              doi_tac:  data.doi_tac || data.nha_cung_cap || '',
+              ghi_chu:  data.ghi_chu || '',
+            },
+            matchResult: matchRes.data,
+          })
+        }
       }
-
-      const rawItems = (data.items || data.hang_hoa || []).map(it => ({
-        ten_hang:   it.ten_hang || it.hang || '',
-        dvt:        it.dvt || 'cái',
-        so_luong:   it.so_luong || 0,
-        don_gia:    it.don_gia || 0,
-        thanh_tien: it.thanh_tien || (it.so_luong * it.don_gia) || 0,
-      }))
-
-      // Pre-fill header từ AI (sẽ hoàn thiện sau khi popup confirm)
-      setForm(f => ({
-        ...f,
-        so_phieu: data.so_phieu || f.so_phieu,
-        ngay:     data.ngay || f.ngay,
-        doi_tac:  data.doi_tac || data.nha_cung_cap || f.doi_tac,
-      }))
-
-      // Bước 2: Phân loại items qua fuzzy match
-      const processingMs = Date.now() - t0
-      const matchRes = await matchItems({
-        cong_trinh_id:     parseInt(realId),
-        loai_phieu:        'nhap',
-        file_name:         file.name,
-        items:             rawItems,
-        ai_provider:       aiProvider,
-        processing_time_ms: processingMs,
-      })
-      setMatchResult(matchRes.data)
-      setAiMeta({
-        fileName:         file.name,
-        aiProvider,
-        aiModel:          '',
-        processingTimeMs: processingMs,
-      })
-      setShowMatchPopup(true)
+      setBatchPhieus(collected)
+      setShowBatchPopup(true)
       if (hangHoaList.length === 0) loadHangHoa()
     } catch (e) {
       alert(e.response?.data?.detail || 'Lỗi AI đọc phiếu. Vui lòng thử lại.')
     } finally {
       setAiLoading(false)
+      setAiProgress('')
       if (aiFileRef.current) aiFileRef.current.value = ''
+    }
+  }
+
+  const handleSaveBatch = async (localPhieus) => {
+    setSavingBatch(true)
+    setBatchMsg(null)
+    let savedCount = 0
+    const errors = []
+    for (const p of localPhieus) {
+      if (!p.header.so_phieu || !p.header.ngay) {
+        errors.push(`Thiếu số phiếu/ngày: ${p.header.so_phieu || '(trống)'}`)
+        continue
+      }
+      const validItems = p.items.filter(it => it.ten_hang && parseFloat(it.so_luong) > 0)
+      if (validItems.length === 0) {
+        errors.push(`Phiếu ${p.header.so_phieu}: không có dòng hàng hợp lệ`)
+        continue
+      }
+      try {
+        await createPhieu({
+          cong_trinh_id: parseInt(realId),
+          loai:          'NK',
+          so_phieu:      p.header.so_phieu,
+          ngay:          p.header.ngay,
+          doi_tac:       p.header.doi_tac,
+          ghi_chu:       p.header.ghi_chu,
+          tong_tien:     validItems.reduce((s, it) => s + (parseFloat(it.thanh_tien) || 0), 0),
+          user_email:    user?.email || '',
+          items:         validItems.map(it => ({
+            ten_hang:   it.ten_hang,
+            dvt:        it.dvt || 'cái',
+            so_luong:   parseFloat(it.so_luong) || 0,
+            don_gia:    parseFloat(it.don_gia)  || 0,
+            thanh_tien: parseFloat(it.thanh_tien) || 0,
+          })),
+        })
+        savedCount++
+      } catch (e) {
+        errors.push(`Phiếu ${p.header.so_phieu}: ${e.response?.data?.detail || e.message}`)
+      }
+    }
+    setSavingBatch(false)
+    if (errors.length > 0) {
+      setBatchMsg({ type: 'err', text: `Lưu ${savedCount}/${localPhieus.length} phiếu. Lỗi: ${errors.join(' | ')}` })
+    } else {
+      setShowBatchPopup(false)
+      setBatchPhieus([])
+      setSaveMsg({ type: 'ok', text: `Đã lưu ${savedCount} phiếu nhập kho!` })
+      loadData()
     }
   }
 
@@ -254,16 +309,17 @@ export default function CTNhapKho() {
             disabled={aiLoading}
             className="flex items-center gap-2 px-4 min-h-10 bg-hp-accent hover:bg-hp-accent/90 text-white rounded-lg text-sm font-medium disabled:opacity-50">
             {aiLoading
-              ? <><Loader className="w-4 h-4 animate-spin" /> AI đang đọc...</>
+              ? <><Loader className="w-4 h-4 animate-spin" /> {aiProgress || 'AI đang đọc...'}</>
               : <><Bot className="w-4 h-4" /> AI đọc PDF</>
             }
           </button>
           <input
             ref={aiFileRef}
             type="file"
+            multiple
             accept=".jpg,.jpeg,.png,.pdf"
             className="hidden"
-            onChange={e => handleAiRead(e.target.files?.[0])}
+            onChange={e => handleAiReadBatch(e.target.files)}
           />
           <button onClick={() => { if (hangHoaList.length === 0) loadHangHoa(); setShowForm(true); setSaveMsg(null) }}
             className="flex items-center gap-2 px-4 min-h-10 bg-hp-primary hover:bg-hp-primary/90 text-white rounded-lg text-sm font-medium">
@@ -516,32 +572,20 @@ export default function CTNhapKho() {
         </div>
       )}
 
-      {/* AI Fuzzy Match Popup */}
-      <HangHoaMatchPopup
-        isOpen={showMatchPopup}
-        onClose={() => setShowMatchPopup(false)}
-        matchResult={matchResult}
-        congTrinhId={parseInt(realId)}
-        loaiPhieu="nhap"
-        fileName={aiMeta.fileName || ''}
-        aiProvider={aiMeta.aiProvider || aiProvider}
-        aiModel={aiMeta.aiModel || ''}
-        processingTimeMs={aiMeta.processingTimeMs || 0}
-        onConfirm={(confirmedItems) => {
-          setShowMatchPopup(false)
-          setItems(confirmedItems.map(it => ({
-            ma_hang:    '',
-            ten_hang:   it.ten_hang,
-            dvt:        it.dvt || 'cái',
-            so_luong:   it.so_luong || '',
-            don_gia:    it.don_gia || '',
-            thanh_tien: it.thanh_tien || '',
-            selected:   false,
-          })))
-          setShowForm(true)
-          setSaveMsg(null)
-        }}
-        />
+      {/* Batch AI Confirm Popup */}
+      <BatchPhieuPopup
+        isOpen={showBatchPopup}
+        onClose={() => { setShowBatchPopup(false); setBatchMsg(null) }}
+        phieus={batchPhieus}
+        saving={savingBatch}
+        onSaveAll={handleSaveBatch}
+      />
+      {batchMsg && (
+        <div className={`fixed bottom-4 right-4 z-50 max-w-md p-4 rounded-hp-lg shadow-md text-sm font-medium ${batchMsg.type === 'ok' ? 'bg-hp-primary text-white' : 'bg-hp-danger text-white'}`}>
+          {batchMsg.text}
+          <button onClick={() => setBatchMsg(null)} className="ml-3 underline text-white/80">Đóng</button>
+        </div>
+      )}
     </div>
   )
 }
