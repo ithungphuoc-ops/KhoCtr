@@ -173,6 +173,45 @@ function PhieuEditor({ data, loai, realId, onSaved, onCancel, provider }) {
 function MultiPhieuList({ phieuList, loai, realId, provider }) {
   const [expanded, setExpanded] = useState(null)
   const [savedSet, setSavedSet] = useState(new Set())
+  const [savingAll, setSavingAll] = useState(false)
+  const [saveAllMsg, setSaveAllMsg] = useState(null)
+
+  const handleSaveAll = async () => {
+    setSavingAll(true); setSaveAllMsg(null)
+    let savedCount = 0; const errors = []
+    const newSaved = new Set(savedSet)
+    for (let idx = 0; idx < phieuList.length; idx++) {
+      if (newSaved.has(idx)) continue
+      const p = phieuList[idx]
+      if (!p.so_phieu) { errors.push(`Phiếu ${idx+1}: thiếu số phiếu`); continue }
+      const validItems = (p.items || p.hang_hoa || []).filter(it => it.ten_hang && parseFloat(it.so_luong) > 0)
+      if (!validItems.length) { errors.push(`Phiếu ${idx+1}: không có dòng hàng`); continue }
+      try {
+        await createPhieu({
+          cong_trinh_id: parseInt(realId), loai,
+          so_phieu: p.so_phieu,
+          ngay: p.ngay || new Date().toISOString().slice(0,10),
+          doi_tac: p.doi_tac || p.nha_cung_cap || '',
+          tong_tien: validItems.reduce((s, it) => s + (parseFloat(it.thanh_tien) || (parseFloat(it.so_luong||0) * parseFloat(it.don_gia||0))), 0),
+          items: validItems.map(it => ({
+            ten_hang: it.ten_hang || it.hang || '',
+            dvt: it.dvt || 'cái',
+            so_luong: parseFloat(it.so_luong) || 0,
+            don_gia: parseFloat(it.don_gia) || 0,
+            thanh_tien: parseFloat(it.thanh_tien) || (parseFloat(it.so_luong||0) * parseFloat(it.don_gia||0)),
+          }))
+        })
+        newSaved.add(idx); savedCount++
+      } catch (e) {
+        errors.push(`${p.so_phieu}: ${e?.response?.data?.detail || e.message}`)
+      }
+    }
+    setSavedSet(newSaved); setSavingAll(false)
+    if (errors.length > 0)
+      setSaveAllMsg({ type: 'err', text: `Lưu ${savedCount}/${phieuList.length} phiếu. Lỗi: ${errors.join(' | ')}` })
+    else
+      setSaveAllMsg({ type: 'ok', text: `Đã lưu ${savedCount} phiếu ${loai} thành công!` })
+  }
 
   return (
     <div className="space-y-3">
@@ -181,8 +220,21 @@ function MultiPhieuList({ phieuList, loai, realId, provider }) {
           <CheckCircle className="w-5 h-5" />
           <span className="font-semibold">AI đọc xong — tìm thấy <span className="font-bold">{phieuList.length} phiếu</span></span>
         </div>
-        <span className="text-xs text-hp-text-muted">{savedSet.size}/{phieuList.length} đã lưu</span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-hp-text-muted">{savedSet.size}/{phieuList.length} đã lưu</span>
+          {savedSet.size < phieuList.length && (
+            <button onClick={handleSaveAll} disabled={savingAll}
+              className={`flex items-center gap-1.5 px-4 min-h-9 text-sm font-medium rounded-hp-md text-white disabled:opacity-50 ${loai === 'NK' ? 'bg-hp-primary hover:bg-hp-primary/90' : 'bg-hp-warning hover:bg-hp-warning/90'}`}>
+              {savingAll ? <><Loader className="w-3.5 h-3.5 animate-spin" /> Đang lưu...</> : <><Save className="w-3.5 h-3.5" /> Lưu tất cả ({phieuList.length - savedSet.size})</>}
+            </button>
+          )}
+        </div>
       </div>
+      {saveAllMsg && (
+        <div className={`p-3 rounded-hp-lg text-sm font-medium ${saveAllMsg.type === 'ok' ? 'bg-hp-primary/15 text-hp-primary' : 'bg-hp-danger/15 text-hp-danger'}`}>
+          {saveAllMsg.text}
+        </div>
+      )}
 
       {phieuList.map((p, idx) => {
         const isSaved = savedSet.has(idx)

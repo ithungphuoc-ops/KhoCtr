@@ -2,7 +2,9 @@
  * BatchPhieuPopup.jsx — Xác nhận nhiều phiếu cùng lúc sau khi AI đọc
  */
 import React, { useState } from 'react'
-import { X, CheckCircle, AlertCircle, HelpCircle, ChevronDown, ChevronRight, Loader } from 'lucide-react'
+import { X, CheckCircle, AlertCircle, HelpCircle, ChevronDown, ChevronRight, Loader, PlusCircle, Check } from 'lucide-react'
+
+import { createHangHoa } from '../api'
 
 const TAB_COLOR = {
   green:  'text-hp-primary',
@@ -37,6 +39,10 @@ export default function BatchPhieuPopup({ isOpen, onClose, phieus, onSaveAll, sa
   })))
 
   const [expanded, setExpanded] = useState(() => new Set([0]))
+  const [creatingItem, setCreatingItem] = useState(null) // {pIdx, iIdx}
+  const [createForm, setCreateForm] = useState({ ma_hang: '', ten_hang: '', dvt: '', nhom: '' })
+  const [creating, setCreating] = useState(false)
+  const [createErr, setCreateErr] = useState(null)
 
   // Sync when phieus prop changes (new batch arrives)
   React.useEffect(() => {
@@ -49,6 +55,41 @@ export default function BatchPhieuPopup({ isOpen, onClose, phieus, onSaveAll, sa
   }, [phieus])
 
   if (!isOpen) return null
+
+  const openCreate = (pIdx, iIdx) => {
+    const it = local[pIdx].items[iIdx]
+    setCreatingItem({ pIdx, iIdx })
+    setCreateForm({ ma_hang: '', ten_hang: it.ten_hang || '', dvt: it.dvt || 'cái', nhom: '' })
+    setCreateErr(null)
+  }
+
+  const handleCreateHangHoa = async () => {
+    if (!createForm.ma_hang.trim() || !createForm.ten_hang.trim()) {
+      setCreateErr('Mã hàng và Tên hàng là bắt buộc'); return
+    }
+    setCreating(true); setCreateErr(null)
+    try {
+      await createHangHoa({
+        ma_hang: createForm.ma_hang.trim().toUpperCase(),
+        ten_hang: createForm.ten_hang.trim(),
+        dvt: createForm.dvt.trim() || 'cái',
+        nhom: createForm.nhom.trim() || '',
+      })
+      const { pIdx, iIdx } = creatingItem
+      setLocal(prev => prev.map((p, pi) => pi !== pIdx ? p : {
+        ...p,
+        items: p.items.map((it, ii) => ii !== iIdx ? it : {
+          ...it, ten_hang: createForm.ten_hang.trim(),
+          dvt: createForm.dvt.trim() || it.dvt, _tab: 'green'
+        })
+      }))
+      setCreatingItem(null)
+    } catch (e) {
+      setCreateErr(e?.response?.data?.detail || e?.message || 'Lỗi tạo mặt hàng')
+    } finally {
+      setCreating(false)
+    }
+  }
 
   const toggleExpand = (idx) => {
     setExpanded(prev => {
@@ -170,36 +211,82 @@ export default function BatchPhieuPopup({ isOpen, onClose, phieus, onSaveAll, sa
                       </thead>
                       <tbody>
                         {p.items.map((it, iIdx) => (
-                          <tr key={iIdx} className="border-t border-hp-border hover:bg-hp-card">
-                            <td className="py-1 text-hp-text-muted">{iIdx + 1}</td>
-                            <td className="py-1 pr-2">
-                              <input value={it.ten_hang}
-                                onChange={e => updateItem(pIdx, iIdx, 'ten_hang', e.target.value)}
-                                className={`w-full border border-hp-border rounded px-2 py-0.5 bg-hp-card text-hp-text focus:outline-none focus:ring-1 focus:ring-hp-accent ${TAB_COLOR[it._tab]}`} />
-                            </td>
-                            <td className="py-1 pr-1">
-                              <input type="number" value={it.so_luong}
-                                onChange={e => updateItem(pIdx, iIdx, 'so_luong', e.target.value)}
-                                className="w-full border border-hp-border rounded px-1 py-0.5 text-right bg-hp-card text-hp-text focus:outline-none focus:ring-1 focus:ring-hp-accent" />
-                            </td>
-                            <td className="py-1 pr-1">
-                              <input value={it.dvt}
-                                onChange={e => updateItem(pIdx, iIdx, 'dvt', e.target.value)}
-                                className="w-full border border-hp-border rounded px-1 py-0.5 bg-hp-card text-hp-text focus:outline-none focus:ring-1 focus:ring-hp-accent" />
-                            </td>
-                            <td className="py-1 pr-1">
-                              <input type="number" value={it.don_gia}
-                                onChange={e => updateItem(pIdx, iIdx, 'don_gia', e.target.value)}
-                                className="w-full border border-hp-border rounded px-1 py-0.5 text-right bg-hp-card text-hp-text focus:outline-none focus:ring-1 focus:ring-hp-accent" />
-                            </td>
-                            <td className="py-1 pr-1 text-right font-medium text-hp-text-secondary">{fmt(it.thanh_tien)}</td>
-                            <td className="py-1">
-                              <button onClick={() => removeItem(pIdx, iIdx)}
-                                className="text-hp-text-disabled hover:text-hp-danger p-0.5 rounded">
-                                <X className="w-3 h-3" />
-                              </button>
-                            </td>
-                          </tr>
+                          <React.Fragment key={iIdx}>
+                            <tr className="border-t border-hp-border hover:bg-hp-card">
+                              <td className="py-1 text-hp-text-muted">{iIdx + 1}</td>
+                              <td className="py-1 pr-2">
+                                <input value={it.ten_hang}
+                                  onChange={e => updateItem(pIdx, iIdx, 'ten_hang', e.target.value)}
+                                  className={`w-full border border-hp-border rounded px-2 py-0.5 bg-hp-card text-hp-text focus:outline-none focus:ring-1 focus:ring-hp-accent ${TAB_COLOR[it._tab]}`} />
+                              </td>
+                              <td className="py-1 pr-1">
+                                <input type="number" value={it.so_luong}
+                                  onChange={e => updateItem(pIdx, iIdx, 'so_luong', e.target.value)}
+                                  className="w-full border border-hp-border rounded px-1 py-0.5 text-right bg-hp-card text-hp-text focus:outline-none focus:ring-1 focus:ring-hp-accent" />
+                              </td>
+                              <td className="py-1 pr-1">
+                                <input value={it.dvt}
+                                  onChange={e => updateItem(pIdx, iIdx, 'dvt', e.target.value)}
+                                  className="w-full border border-hp-border rounded px-1 py-0.5 bg-hp-card text-hp-text focus:outline-none focus:ring-1 focus:ring-hp-accent" />
+                              </td>
+                              <td className="py-1 pr-1">
+                                <input type="number" value={it.don_gia}
+                                  onChange={e => updateItem(pIdx, iIdx, 'don_gia', e.target.value)}
+                                  className="w-full border border-hp-border rounded px-1 py-0.5 text-right bg-hp-card text-hp-text focus:outline-none focus:ring-1 focus:ring-hp-accent" />
+                              </td>
+                              <td className="py-1 pr-1 text-right font-medium text-hp-text-secondary">{fmt(it.thanh_tien)}</td>
+                              <td className="py-1">
+                                <div className="flex items-center gap-0.5">
+                                  {it._tab === 'red' && (
+                                    <button onClick={() => openCreate(pIdx, iIdx)} title="Tạo vào danh mục"
+                                      className="text-hp-text-disabled hover:text-hp-primary p-0.5 rounded">
+                                      <PlusCircle className="w-3 h-3" />
+                                    </button>
+                                  )}
+                                  <button onClick={() => removeItem(pIdx, iIdx)}
+                                    className="text-hp-text-disabled hover:text-hp-danger p-0.5 rounded">
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                            {creatingItem?.pIdx === pIdx && creatingItem?.iIdx === iIdx && (
+                              <tr className="bg-hp-primary/5 border-t border-hp-primary/20">
+                                <td colSpan={7} className="px-3 py-2">
+                                  <div className="flex flex-col gap-1.5">
+                                    <p className="text-xs font-medium text-hp-primary">Tạo mặt hàng vào danh mục</p>
+                                    <div className="flex gap-2 flex-wrap items-end">
+                                      {[
+                                        { key: 'ma_hang', label: 'Mã hàng *', w: 'w-24', ph: 'MM-001' },
+                                        { key: 'ten_hang', label: 'Tên hàng *', w: 'flex-1 min-w-32', ph: 'Tên chuẩn' },
+                                        { key: 'dvt', label: 'DVT', w: 'w-16', ph: 'cái' },
+                                        { key: 'nhom', label: 'Nhóm', w: 'w-24', ph: 'Thiết bị' },
+                                      ].map(({ key, label, w, ph }) => (
+                                        <div key={key} className={`flex flex-col gap-0.5 ${w}`}>
+                                          <label className="text-xs text-hp-text-muted">{label}</label>
+                                          <input value={createForm[key]}
+                                            onChange={e => setCreateForm(f => ({ ...f, [key]: e.target.value }))}
+                                            placeholder={ph}
+                                            className="border border-hp-border rounded px-2 py-0.5 text-xs bg-hp-card text-hp-text focus:outline-none focus:ring-1 focus:ring-hp-primary" />
+                                        </div>
+                                      ))}
+                                      <div className="flex gap-1">
+                                        <button onClick={handleCreateHangHoa} disabled={creating}
+                                          className="px-3 py-1 bg-hp-primary text-white rounded text-xs font-medium hover:bg-hp-primary/90 disabled:opacity-50 flex items-center gap-1 min-h-[26px]">
+                                          {creating ? <Loader className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />} Lưu
+                                        </button>
+                                        <button onClick={() => { setCreatingItem(null); setCreateErr(null) }}
+                                          className="px-3 py-1 border border-hp-border rounded text-xs text-hp-text-secondary hover:bg-hp-card min-h-[26px]">
+                                          Bỏ
+                                        </button>
+                                      </div>
+                                    </div>
+                                    {createErr && <p className="text-xs text-hp-danger">{createErr}</p>}
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
                         ))}
                       </tbody>
                       <tfoot>
