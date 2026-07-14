@@ -8,7 +8,7 @@ from typing import Optional, List, Any
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 import ai_reader
-import supabase_client as db
+import firestore_client as db
 from config import get_settings
 from routers.auth import get_current_user
 

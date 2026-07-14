@@ -8,7 +8,7 @@ from typing import Optional
 from datetime import datetime
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-import supabase_client as db
+import firestore_client as db
 
 router = APIRouter(prefix="/api/ton-kho", tags=["ton_kho"])
 

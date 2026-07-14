@@ -18,7 +18,7 @@ from pydantic import BaseModel, validator
 from typing import Optional
 from datetime import datetime, timezone
 
-import supabase_client as db
+import firestore_client as db
 from routers.auth import get_current_user
 
 router = APIRouter(prefix="/api/ghi-chu", tags=["ghi_chu"])

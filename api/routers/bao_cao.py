@@ -6,7 +6,7 @@ from typing import Optional
 from datetime import date, datetime
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-import supabase_client as db
+import firestore_client as db
 
 router = APIRouter(prefix="/api/bao-cao", tags=["bao_cao"])
 

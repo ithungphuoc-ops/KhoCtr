@@ -9,7 +9,7 @@ from typing import Optional
 from urllib.parse import quote as _url_quote
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-import supabase_client as db
+import firestore_client as db
 import hpcore_auth
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])

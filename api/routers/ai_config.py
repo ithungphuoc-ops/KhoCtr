@@ -15,7 +15,7 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, validator
 from typing import Optional
 
-import supabase_client as db
+import firestore_client as db
 from crypto_utils import encrypt_api_key, decrypt_api_key, mask_api_key, log_safe_key
 from ai_providers import (
     validate_api_key_format, list_providers_info,

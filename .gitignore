@@ -1,6 +1,8 @@
 # Secrets — KHÔNG bao giờ commit
 api/.env
 *.env
+*firebase-adminsdk*.json
+*service-account*.json
 
 # Python
 __pycache__/

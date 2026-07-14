@@ -12,7 +12,7 @@ import time
 from typing import Optional
 from datetime import datetime, timezone
 
-import supabase_client as db
+import firestore_client as db
 from fuzzy_match import normalize, fuzzy_score, find_best_match, classify_tab
 
 # ── Hằng số mặc định ────────────────────────────────────────
