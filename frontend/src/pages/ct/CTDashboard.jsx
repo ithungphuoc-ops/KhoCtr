@@ -71,14 +71,14 @@ export default function CTDashboard() {
       {/* KPI */}
       <div className="grid grid-cols-4 gap-4">
         {[
-          { icon: Download, bg: 'bg-hp-primary', label: 'Số phiếu NK', value: loading ? '...' : phieuNK.length, sub: formatVND(tongTienNK) },
-          { icon: Upload,   bg: 'bg-hp-warning', label: 'Số phiếu XK', value: loading ? '...' : phieuXK.length, sub: formatVND(tongTienXK) },
-          { icon: Package,  bg: 'bg-hp-accent', label: 'Mặt hàng còn hàng', value: loading ? '...' : conHang.length, sub: `/ ${tonKho.length} mặt hàng` },
-          { icon: AlertCircle, bg: 'bg-hp-danger', label: 'Âm kho / Hết hàng', value: loading ? '...' : amKho.length + hetHang.length, sub: 'Cần nhập thêm', color: 'text-hp-danger' },
+          { icon: Download, bg: 'bg-hp-primary/15', fg: 'text-hp-primary', label: 'Số phiếu NK', value: loading ? '...' : phieuNK.length, sub: formatVND(tongTienNK) },
+          { icon: Upload,   bg: 'bg-hp-warning/15', fg: 'text-hp-warning', label: 'Số phiếu XK', value: loading ? '...' : phieuXK.length, sub: formatVND(tongTienXK) },
+          { icon: Package,  bg: 'bg-hp-accent/15',  fg: 'text-hp-accent',  label: 'Mặt hàng còn hàng', value: loading ? '...' : conHang.length, sub: `/ ${tonKho.length} mặt hàng` },
+          { icon: AlertCircle, bg: 'bg-hp-danger/15', fg: 'text-hp-danger', label: 'Âm kho / Hết hàng', value: loading ? '...' : amKho.length + hetHang.length, sub: 'Cần nhập thêm', color: 'text-hp-danger' },
         ].map((kpi, i) => (
           <div key={i} className="bg-hp-card rounded-hp-lg border border-hp-border p-4 flex items-center gap-3">
             <div className={`w-10 h-10 ${kpi.bg} rounded-hp-lg flex items-center justify-center flex-shrink-0`}>
-              <kpi.icon className="w-5 h-5 text-white" />
+              <kpi.icon className={`w-5 h-5 ${kpi.fg}`} />
             </div>
             <div>
               <div className="text-xs text-hp-text-secondary">{kpi.label}</div>

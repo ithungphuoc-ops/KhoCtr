@@ -185,11 +185,11 @@ function formatVND(n) {
   return num.toLocaleString('vi-VN')
 }
 
-function KPICard({ icon: Icon, iconBg, title, value, subtitle, valueColor, loading }) {
+function KPICard({ icon: Icon, iconBg, iconColor, title, value, subtitle, valueColor, loading }) {
   return (
     <div className="bg-hp-card rounded-hp-lg shadow-sm border border-hp-border p-5 flex items-center gap-4 flex-1 min-w-0">
       <div className={`w-12 h-12 rounded-hp-lg flex items-center justify-center flex-shrink-0 ${iconBg}`}>
-        <Icon className="w-6 h-6 text-white" />
+        <Icon className={`w-6 h-6 ${iconColor}`} />
       </div>
       <div className="min-w-0">
         <div className="text-sm text-hp-text-secondary truncate">{title}</div>
@@ -466,20 +466,20 @@ export default function Dashboard() {
 
       {/* KPI Cards — Row 1 */}
       <div className="flex gap-4">
-        <KPICard loading={loading} icon={Building2}     iconBg="bg-hp-accent"  title="Tổng công trình"   value={kpi?.so_cong_trinh ?? '—'}         subtitle="Đang hoạt động" />
-        <KPICard loading={loading} icon={Download}      iconBg="bg-hp-primary" title="Phiếu nhập"        value={kpi?.so_phieu_nk ?? '—'}            subtitle="Tổng số phiếu" />
-        <KPICard loading={loading} icon={Upload}        iconBg="bg-hp-warning" title="Phiếu xuất"        value={kpi?.so_phieu_xk ?? '—'}            subtitle="Tổng số phiếu" />
-        <KPICard loading={loading} icon={Package}       iconBg="bg-hp-nav"     title="Mặt hàng quản lý"  value={fmt(kpi?.so_mat_hang)}              subtitle="Mã hàng hóa" />
-        <KPICard loading={loading} icon={AlertTriangle} iconBg="bg-hp-danger"  title="Cảnh báo hết hàng" value={kpi?.so_canh_bao ?? '—'}            subtitle="Tồn ≤ 0" valueColor="text-hp-danger" />
+        <KPICard loading={loading} icon={Building2}     iconBg="bg-hp-accent/15"  iconColor="text-hp-accent"  title="Tổng công trình"   value={kpi?.so_cong_trinh ?? '—'}         subtitle="Đang hoạt động" />
+        <KPICard loading={loading} icon={Download}      iconBg="bg-hp-primary/15" iconColor="text-hp-primary" title="Phiếu nhập"        value={kpi?.so_phieu_nk ?? '—'}            subtitle="Tổng số phiếu" />
+        <KPICard loading={loading} icon={Upload}        iconBg="bg-hp-warning/15" iconColor="text-hp-warning" title="Phiếu xuất"        value={kpi?.so_phieu_xk ?? '—'}            subtitle="Tổng số phiếu" />
+        <KPICard loading={loading} icon={Package}       iconBg="bg-hp-muted/15"   iconColor="text-hp-muted"   title="Mặt hàng quản lý"  value={fmt(kpi?.so_mat_hang)}              subtitle="Mã hàng hóa" />
+        <KPICard loading={loading} icon={AlertTriangle} iconBg="bg-hp-danger/15"  iconColor="text-hp-danger"  title="Cảnh báo hết hàng" value={kpi?.so_canh_bao ?? '—'}            subtitle="Tồn ≤ 0" valueColor="text-hp-danger" />
       </div>
 
       {/* KPI Cards — Row 2: Giá trị */}
       <div className="flex gap-4">
-        <KPICard loading={loading} icon={TrendingUp}   iconBg="bg-hp-primary" title="Tổng tiền nhập"  value={formatVND(kpi?.tong_tien_nk)}          subtitle="Giá trị phiếu NK" valueColor="text-hp-primary" />
-        <KPICard loading={loading} icon={TrendingDown} iconBg="bg-hp-warning" title="Tổng tiền xuất"  value={formatVND(kpi?.tong_tien_xk)}          subtitle="Giá trị phiếu XK" valueColor="text-hp-warning" />
-        <KPICard loading={loading} icon={DollarSign}   iconBg="bg-hp-accent"  title="Tổng phiếu"      value={fmt(tongPhieu)}                        subtitle="NK + XK" />
-        <KPICard loading={loading} icon={AlertCircle}  iconBg="bg-hp-warning" title="Sắp hết hàng"    value={kpi?.so_canh_bao_thap ?? canhBao.length} subtitle="Tồn ≤ 20" valueColor="text-hp-warning" />
-        <KPICard loading={loading} icon={Layers}       iconBg="bg-hp-danger"  title="Âm kho"          value={kpi?.so_am_kho ?? '—'}                 subtitle="Tồn < 0" valueColor="text-hp-danger" />
+        <KPICard loading={loading} icon={TrendingUp}   iconBg="bg-hp-primary/15" iconColor="text-hp-primary" title="Tổng tiền nhập"  value={formatVND(kpi?.tong_tien_nk)}          subtitle="Giá trị phiếu NK" valueColor="text-hp-primary" />
+        <KPICard loading={loading} icon={TrendingDown} iconBg="bg-hp-warning/15" iconColor="text-hp-warning" title="Tổng tiền xuất"  value={formatVND(kpi?.tong_tien_xk)}          subtitle="Giá trị phiếu XK" valueColor="text-hp-warning" />
+        <KPICard loading={loading} icon={DollarSign}   iconBg="bg-hp-accent/15"  iconColor="text-hp-accent"  title="Tổng phiếu"      value={fmt(tongPhieu)}                        subtitle="NK + XK" />
+        <KPICard loading={loading} icon={AlertCircle}  iconBg="bg-hp-warning/15" iconColor="text-hp-warning" title="Sắp hết hàng"    value={kpi?.so_canh_bao_thap ?? canhBao.length} subtitle="Tồn ≤ 20" valueColor="text-hp-warning" />
+        <KPICard loading={loading} icon={Layers}       iconBg="bg-hp-danger/15"  iconColor="text-hp-danger"  title="Âm kho"          value={kpi?.so_am_kho ?? '—'}                 subtitle="Tồn < 0" valueColor="text-hp-danger" />
       </div>
 
       {/* Row 3: Chart + Donut */}
