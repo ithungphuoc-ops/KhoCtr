@@ -135,7 +135,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
               <img src="/logo-hpcons.png" alt="HP Cons" className="h-9 w-auto object-contain flex-shrink-0" />
               <div className="min-w-0">
                 <div className="font-bold text-hp-sidebar-text text-sm leading-tight">HPCons</div>
-                <div className="text-xs text-hp-sidebar-muted leading-tight truncate">HPC Warehouse</div>
+                <div className="text-xs text-hp-sidebar-muted leading-tight truncate">Construction</div>
               </div>
             </button>
           )}
