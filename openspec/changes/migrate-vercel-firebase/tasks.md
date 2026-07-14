@@ -17,7 +17,7 @@ Gộp frontend+backend vào 1 project Vercel (`khounice-web`, team `hpcons-ita-s
 
 - [x] 2.1 Firebase project đã có sẵn: **`hpcons-khoctr`** (Spark plan) — chưa bật Firestore, chưa add app nào
 - [ ] 2.2 Bấm "+Add app" (Web app) trong `hpcons-khoctr`, bật Firestore Database (chọn region), tạo Service Account key (Admin SDK) — Sếp thao tác trên Firebase Console
-- [ ] 2.3 Thêm `api/firestore_client.py` (khởi tạo lazy, Admin SDK) — theo đúng pattern `api/hpcore_auth.py` đã dùng cho project Firebase khác trong cùng repo
+- [x] 2.3 Thêm `api/firestore_client.py` (khởi tạo lazy, Admin SDK) — viết trên nhánh `migrate-firestore` (chưa merge main), port 1:1 chữ ký hàm từ `supabase_client.py` + bộ lọc mini-PostgREST tự viết (eq/gte/lte/in/is.null/ilike/or) + chiến lược doc-ID (counter cho bảng có id số, khóa tự nhiên cho hang_hoa/project_ai_config, auto-id cho bảng còn lại) — CHƯA test được với dữ liệu thật vì chưa có Service Account key (mục 2.2) và máy này không có Python cục bộ để chạy unit test, mới rà tay bằng đọc lại code (đã bắt và sửa 2 lỗi lúc rà: filter value chưa unquote email, `select()` gọi nhầm `limit=` như kwarg thay vì nhét vào `filters`)
 - [ ] 2.4 Thêm biến môi trường Firebase (`KHOCTR_FIREBASE_SERVICE_ACCOUNT` hoặc tên tương tự — đặt tên khác `HPCORE_FIREBASE_SERVICE_ACCOUNT` đang dùng cho SSO để tránh nhầm 2 project Firebase khác nhau) vào Vercel Environment Variables
 
 ## 3. Data Model & Firestore Infrastructure
