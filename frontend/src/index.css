@@ -34,7 +34,7 @@
 
   /* Sidebar text — luôn sáng (sidebar bg tối cả 2 mode) */
   --color-sidebar-text:    245 247 250;
-  --color-sidebar-muted:   143 154 165;
+  --color-sidebar-muted:   215 216 218;    /* #D7D8DA — khớp pkd_crm-next (78% trắng pha nav-base) */
 
   /* Overlay */
   --hp-overlay:         rgba(0, 0, 0, 0.6);

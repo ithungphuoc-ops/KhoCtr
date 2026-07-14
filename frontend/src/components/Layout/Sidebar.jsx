@@ -82,14 +82,14 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
             to={item.path}
             onClick={closeOnMobile}
             title={!showLabels ? item.label : undefined}
-            className={`flex items-center gap-3 mx-2 px-3 min-h-11 rounded-hp-md text-sm transition-all duration-150 relative group
+            className={`flex items-center gap-2 mx-3 px-3 min-h-11 rounded-hp-md text-sm transition-all duration-150 relative group
               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent
               ${active
-                ? 'bg-hp-primary/15 text-hp-primary font-semibold border-l-[3px] border-hp-primary'
-                : 'text-hp-sidebar-muted hover:bg-white/5 hover:text-hp-sidebar-text border-l-[3px] border-transparent'
+                ? 'bg-hp-primary text-white font-semibold'
+                : 'text-hp-sidebar-muted hover:bg-white/5 hover:text-hp-sidebar-text'
               }`}
           >
-            <Icon className={`w-4 h-4 flex-shrink-0 ${active ? 'text-hp-primary' : 'text-hp-sidebar-muted'}`} />
+            <Icon className={`w-4 h-4 flex-shrink-0 ${active ? 'text-white' : 'text-hp-sidebar-muted'}`} />
             {showLabels && <span className="flex-1 truncate">{item.label}</span>}
             {!showLabels && item.badge && (
               <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-hp-danger rounded-full" />
@@ -203,11 +203,11 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
                 <button
                   onClick={() => { setSelectedCT(null); closeOnMobile() }}
                   title={!showLabels ? 'Tất cả công trình' : undefined}
-                  className={`flex items-center gap-3 mx-2 px-3 min-h-11 rounded-hp-md text-sm transition-all duration-150 relative group w-[calc(100%-16px)]
+                  className={`flex items-center gap-2 mx-3 px-3 min-h-11 rounded-hp-md text-sm transition-all duration-150 relative group w-[calc(100%-16px)]
                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent
                     ${selectedCT === null
-                      ? 'bg-hp-primary/15 text-hp-primary font-semibold border-l-[3px] border-hp-primary'
-                      : 'text-hp-sidebar-muted hover:bg-white/5 hover:text-hp-sidebar-text border-l-[3px] border-transparent'
+                      ? 'bg-hp-primary text-white font-semibold'
+                      : 'text-hp-sidebar-muted hover:bg-white/5 hover:text-hp-sidebar-text'
                     }`}
                 >
                   <div className="w-5 h-5 bg-hp-accent rounded-hp-sm flex items-center justify-center flex-shrink-0">
@@ -229,11 +229,11 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
                     key={ct.id}
                     onClick={() => { setSelectedCT(ct); closeOnMobile() }}
                     title={!showLabels ? ct.ten_ct : undefined}
-                    className={`flex items-center gap-3 mx-2 px-3 min-h-11 rounded-hp-md text-sm transition-all duration-150 relative group w-[calc(100%-16px)]
+                    className={`flex items-center gap-2 mx-3 px-3 min-h-11 rounded-hp-md text-sm transition-all duration-150 relative group w-[calc(100%-16px)]
                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent
                       ${active
-                        ? 'bg-hp-primary/15 text-hp-primary font-semibold border-l-[3px] border-hp-primary'
-                        : 'text-hp-sidebar-muted hover:bg-white/5 hover:text-hp-sidebar-text border-l-[3px] border-transparent'
+                        ? 'bg-hp-primary text-white font-semibold'
+                        : 'text-hp-sidebar-muted hover:bg-white/5 hover:text-hp-sidebar-text'
                       }`}
                   >
                     <div className="w-5 h-5 bg-hp-accent rounded-hp-sm flex items-center justify-center flex-shrink-0">

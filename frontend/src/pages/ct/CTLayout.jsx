@@ -108,10 +108,10 @@ export default function CTLayout() {
                 onClick={closeOnMobile}
                 title={!showLabels ? item.label : undefined}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 mx-2 px-3 py-2.5 min-h-11 rounded-hp-md text-sm transition-all duration-150 relative group
+                  `flex items-center gap-2 mx-3 px-3 py-2.5 min-h-11 rounded-hp-md text-sm transition-all duration-150 relative group
                   ${isActive
-                    ? 'bg-hp-primary/15 text-hp-primary font-medium border-l-[3px] border-hp-primary'
-                    : 'text-hp-text-secondary hover:bg-white/5 border-l-[3px] border-transparent'
+                    ? 'bg-hp-primary text-white font-medium'
+                    : 'text-hp-text-secondary hover:bg-white/5'
                   }`
                 }
               >
