@@ -62,11 +62,9 @@ def get_cong_trinh_stats(id: int):
 
         chi_tiet_count = 0
         if phieu_ids:
-            for i in range(0, len(phieu_ids), 100):
-                chunk = phieu_ids[i:i + 100]
-                ids_str = ",".join(str(x) for x in chunk)
-                rows = db.select("chi_tiet_phieu", query="id", filters=f"phieu_id=in.({ids_str})")
-                chi_tiet_count += len(rows)
+            ids_str = ",".join(str(x) for x in phieu_ids)
+            rows = db.select("chi_tiet_phieu", query="id", filters=f"phieu_id=in.({ids_str})")
+            chi_tiet_count = len(rows)
 
         hang_hoa_list = db.get_all_hang_hoa(cong_trinh_id=id, limit=100000)
         hang_hoa_count = len(hang_hoa_list)
@@ -95,10 +93,8 @@ def delete_cong_trinh(id: int):
 
         # 2. Xóa chi_tiet_phieu
         if phieu_ids:
-            for i in range(0, len(phieu_ids), 100):
-                chunk = phieu_ids[i:i + 100]
-                ids_str = ",".join(str(x) for x in chunk)
-                db.delete("chi_tiet_phieu", f"phieu_id=in.({ids_str})")
+            ids_str = ",".join(str(x) for x in phieu_ids)
+            db.delete("chi_tiet_phieu", f"phieu_id=in.({ids_str})")
 
         # 3. Xóa phieu
         db.delete("phieu", f"cong_trinh_id=eq.{id}")

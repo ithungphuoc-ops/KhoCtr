@@ -23,6 +23,7 @@ composite index sau nếu cần (xem openspec task 3.4).
 """
 import os
 import json
+from functools import lru_cache
 from typing import Optional
 from datetime import datetime, timezone
 from urllib.parse import unquote
@@ -117,6 +118,11 @@ def _parse_condition(cond: str):
     return field, op, unquote(value)
 
 
+@lru_cache(maxsize=64)
+def _in_opts(value: str) -> frozenset:
+    return frozenset(value.strip("()").split(","))
+
+
 def _match_value(row_val, op: str, value: str, field: str = "") -> bool:
     # 'id=gte.0' trong codebase này chỉ có 1 ý nghĩa thực tế: xoá/khớp TOÀN BỘ bản ghi
     # (vd save_permissions xoá sạch user_congtrinh trước khi ghi lại). Với các bảng
@@ -127,8 +133,10 @@ def _match_value(row_val, op: str, value: str, field: str = "") -> bool:
     if op == "is" and value == "null":
         return row_val is None
     if op == "in":
-        opts = value.strip("()").split(",")
-        return str(row_val) in opts
+        # cache theo value: 1 lệnh select() gọi _match_value cho MOI dong dữ liệu
+        # với cùng chuỗi "in.(...)" — tách chuỗi 1 lần, dùng set để tra O(1) thay vì
+        # re-split + list-scan cho từng dòng (quan trọng khi list id ~1-2 nghìn phần tử).
+        return str(row_val) in _in_opts(value)
     if op == "ilike":
         needle = value.strip("*").lower()
         return needle in str(row_val or "").lower()
@@ -412,16 +420,14 @@ def compute_ton_kho(cong_trinh_id: int = None) -> list:
         return []
 
     phieu_map = {p["id"]: p for p in phieu_list}
-    phieu_ids = list(phieu_map.keys())
+    phieu_id_set = set(phieu_map.keys())
 
-    chi_tiets: list = []
-    for i in range(0, len(phieu_ids), 100):
-        chunk = phieu_ids[i:i + 100]
-        ids_str = ",".join(str(x) for x in chunk)
-        rows = select("chi_tiet_phieu",
-                      query="phieu_id,ten_hang,dvt,so_luong,ma_hang",
-                      filters=f"phieu_id=in.({ids_str})")
-        chi_tiets.extend(rows)
+    # 1 lần quét toàn bộ chi_tiet_phieu rồi lọc trong Python — KHÔNG chia batch
+    # gọi select() nhiều lần, vì mỗi lần select() đều quét lại TOÀN BỘ collection
+    # (xem ghi chú đầu file). Chia batch ở đây từng gây timeout thật trên production
+    # (2026-07-14): quét lại ~4000 doc x 15 lần cho 1 công trình ~1500 phiếu.
+    all_chi_tiets = select("chi_tiet_phieu", query="phieu_id,ten_hang,dvt,so_luong,ma_hang")
+    chi_tiets = [r for r in all_chi_tiets if r.get("phieu_id") in phieu_id_set]
 
     if not chi_tiets:
         return []
@@ -501,12 +507,9 @@ def delete_chi_tiet_by_hang(cong_trinh_id: int, ten_hang: str) -> int:
     ids = [str(i) for i in get_phieu_ids_by_ct(cong_trinh_id)]
     if not ids:
         return 0
-    deleted = 0
-    for i in range(0, len(ids), 100):
-        chunk = ",".join(ids[i:i + 100])
-        rows = delete("chi_tiet_phieu", filters=f"phieu_id=in.({chunk})&ten_hang=eq.{ten_hang}")
-        deleted += len(rows) if isinstance(rows, list) else 0
-    return deleted
+    ids_str = ",".join(ids)
+    rows = delete("chi_tiet_phieu", filters=f"phieu_id=in.({ids_str})&ten_hang=eq.{ten_hang}")
+    return len(rows) if isinstance(rows, list) else 0
 
 
 # ── Thống kê nhanh ────────────────────────────────────────────
@@ -544,18 +547,13 @@ def get_lich_su(phieu_list: list, limit: int = 20000) -> list:
     if not phieu_list:
         return []
     phieu_map = {p["id"]: p for p in phieu_list if p.get("id")}
-    phieu_ids = list(phieu_map.keys())
-    if not phieu_ids:
+    phieu_id_set = set(phieu_map.keys())
+    if not phieu_id_set:
         return []
 
-    chi_tiets: list = []
-    for i in range(0, len(phieu_ids), 100):
-        chunk = phieu_ids[i:i + 100]
-        ids_str = ",".join(str(x) for x in chunk)
-        rows = select("chi_tiet_phieu",
-                      query="phieu_id,ten_hang,dvt,so_luong,don_gia,thanh_tien,ghi_chu",
-                      filters=f"phieu_id=in.({ids_str})")
-        chi_tiets.extend(rows)
+    all_chi_tiets = select("chi_tiet_phieu",
+                           query="phieu_id,ten_hang,dvt,so_luong,don_gia,thanh_tien,ghi_chu")
+    chi_tiets = [r for r in all_chi_tiets if r.get("phieu_id") in phieu_id_set]
 
     result = []
     for r in chi_tiets:
