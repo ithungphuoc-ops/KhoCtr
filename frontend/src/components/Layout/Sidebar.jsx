@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { useCongTrinh } from '../../context/CongTrinhContext'
 import { useAuth } from '../../context/AuthContext'
+import AppLauncher from './AppLauncher'
 
 // ── Menu tĩnh ─────────────────────────────────────────────────
 const groupTongQuan = {
@@ -53,6 +54,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
   const { user } = useAuth()
   const isAdminUser = user?.role === 'admin' || isAdmin
   const [ctCollapsed, setCtCollapsed] = useState(false)
+  const [launcherOpen, setLauncherOpen] = useState(false)
 
   // Trên mobile, Drawer luôn hiện đầy đủ nhãn — không áp dụng chế độ "thu gọn chỉ icon" của desktop
   const showLabels = !collapsed || mobileOpen
@@ -121,21 +123,31 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
           md:static md:z-auto md:translate-x-0
           ${collapsed ? 'md:w-hp-sidebar-collapsed' : 'md:w-hp-sidebar'}`}
       >
-        {/* Logo */}
+        {/* Logo — bấm để mở danh sách ứng dụng (như app tổng/PKD) */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-hp-divider min-h-16">
           {showLabels && (
-            <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setLauncherOpen(true)}
+              title="Mở danh sách ứng dụng"
+              className="flex items-center gap-2 min-w-0 text-left rounded-hp-md -mx-1 px-1 py-1 transition-colors hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent"
+            >
               <img src="/logo-hpcons.png" alt="HP Cons" className="h-9 w-auto object-contain flex-shrink-0" />
-              <div>
-                <div className="font-bold text-hp-sidebar-text text-sm leading-tight">
-                  {isAdminUser ? 'HPCons App Tổng' : `HPCons - ${selectedCT?.ten_ct || ''}`}
-                </div>
-                <div className="text-xs text-hp-sidebar-muted leading-tight">Quản lý kho v2.0</div>
+              <div className="min-w-0">
+                <div className="font-bold text-hp-sidebar-text text-sm leading-tight">HPCons</div>
+                <div className="text-xs text-hp-sidebar-muted leading-tight truncate">HPC Warehouse</div>
               </div>
-            </div>
+            </button>
           )}
           {!showLabels && (
-            <img src="/logo-hpcons.png" alt="HP Cons" className="h-8 w-auto object-contain mx-auto" />
+            <button
+              type="button"
+              onClick={() => setLauncherOpen(true)}
+              title="Mở danh sách ứng dụng"
+              className="mx-auto rounded-hp-md p-0.5 hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent"
+            >
+              <img src="/logo-hpcons.png" alt="HP Cons" className="h-8 w-auto object-contain" />
+            </button>
           )}
           {/* Đóng Drawer — chỉ hiện trên mobile */}
           <button
@@ -297,11 +309,15 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
         {/* Footer */}
         {showLabels && (
           <div className="px-4 py-3 border-t border-hp-divider">
-            <p className="text-xs text-hp-sidebar-muted text-center">© 2026 {isAdminUser ? 'HPCons App Tổng' : `HPCons - ${selectedCT?.ten_ct || ''}`}</p>
+            <p className="text-xs text-hp-sidebar-muted text-center">© 2026 HPC Warehouse</p>
             <p className="text-xs text-hp-sidebar-muted text-center">Phiên bản 2.0.0</p>
           </div>
         )}
       </aside>
+
+      {launcherOpen && (
+        <AppLauncher user={user} onClose={() => setLauncherOpen(false)} />
+      )}
     </>
   )
 }
