@@ -103,6 +103,58 @@ def get_roles():
     }
 
 
+# ── TẠM THỜI (nhánh migrate-firestore, xoá trước khi merge main) ──
+# Self-test firestore_client.py: insert/select/update/delete + counter,
+# chỉ đụng vào collection rác "_migration_selftest*", không đụng dữ liệu thật.
+@app.get("/api/health/firestore-selftest", tags=["system"])
+def health_firestore_selftest():
+    import firestore_client as fdb
+    steps = []
+    try:
+        steps.append(("connect", "start"))
+        app_ref = fdb._get_app()
+        steps[-1] = ("connect", f"ok project={app_ref.project_id}")
+
+        steps.append(("insert (counter table sim)", "start"))
+        fdb.COUNTER_TABLES.add("_migration_selftest")
+        row = fdb.insert("_migration_selftest", {"note": "hello"})[0]
+        assert isinstance(row["id"], int) and row["id"] >= 1
+        steps[-1] = ("insert (counter table sim)", f"ok id={row['id']}")
+
+        steps.append(("select eq", "start"))
+        found = fdb.select("_migration_selftest", filters=f"id=eq.{row['id']}")
+        assert len(found) == 1 and found[0]["note"] == "hello"
+        steps[-1] = ("select eq", "ok")
+
+        steps.append(("update", "start"))
+        updated = fdb.update("_migration_selftest", {"note": "world"}, filters=f"id=eq.{row['id']}")
+        assert updated[0]["note"] == "world"
+        steps[-1] = ("update", "ok")
+
+        steps.append(("insert second + gte/order", "start"))
+        row2 = fdb.insert("_migration_selftest", {"note": "second"})[0]
+        assert row2["id"] == row["id"] + 1
+        ordered = fdb.select("_migration_selftest", filters="id=gte.0", order="id.desc")
+        assert ordered[0]["id"] == row2["id"]
+        steps[-1] = ("insert second + gte/order", f"ok id2={row2['id']}")
+
+        steps.append(("cleanup (delete all via id=gte.0)", "start"))
+        deleted = fdb.delete("_migration_selftest", filters="id=gte.0")
+        assert len(deleted) == 2
+        remaining = fdb.select("_migration_selftest")
+        assert len(remaining) == 0
+        steps[-1] = ("cleanup (delete all via id=gte.0)", "ok")
+
+        steps.append(("business fn smoke (get_all_cong_trinh trên collection rỗng)", "start"))
+        cts = fdb.get_all_cong_trinh()
+        assert cts == []
+        steps[-1] = ("business fn smoke (get_all_cong_trinh trên collection rỗng)", "ok (rỗng, đúng vì chưa migrate dữ liệu thật)")
+
+        return {"result": "PASS", "steps": steps}
+    except Exception as e:
+        return {"result": "FAIL", "steps": steps, "error": f"{type(e).__name__}: {e}"}
+
+
 # ── Serve React frontend build (nếu folder tồn tại) ─────────
 frontend_build = Path(__file__).parent.parent / "frontend" / "dist"
 if frontend_build.exists():
