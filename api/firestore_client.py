@@ -32,6 +32,7 @@ from urllib.parse import unquote
 import firebase_admin
 from firebase_admin import credentials, firestore
 from google.cloud.firestore_v1 import transactional
+from google.cloud.firestore_v1.base_query import FieldFilter
 
 APP_NAME = "khoctr"
 
@@ -122,6 +123,47 @@ def _parse_condition(cond: str):
 @lru_cache(maxsize=64)
 def _in_opts(value: str) -> frozenset:
     return frozenset(value.strip("()").split(","))
+
+
+# Field số nguyên thật trong schema (id/FK) — cần ép kiểu để so khớp đúng
+# với giá trị int lưu trong document Firestore (filter string luôn ở dạng chuỗi).
+_NUMERIC_FIELDS = {"id", "cong_trinh_id", "phieu_id", "user_id"}
+
+
+def _coerce(field: str, value: str):
+    if field in _NUMERIC_FIELDS:
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return value
+    return value
+
+
+def _try_native_query(table: str, filters: str):
+    """
+    Nếu filters (bỏ qua limit=/offset=) chỉ gồm ĐÚNG 1 điều kiện eq hoặc in
+    trên 1 field, dùng Firestore where() thật — chỉ tải về đúng document cần,
+    KHÔNG quét toàn bộ collection. Đây là trường hợp chiếm phần lớn truy vấn
+    thật của app (lọc theo cong_trinh_id/phieu_id) nên tối ưu riêng cho nó.
+    Trả None nếu không áp dụng được (fallback sang quét + lọc Python).
+    """
+    parts = [p for p in filters.split("&") if p and not p.startswith(("limit=", "offset="))]
+    if len(parts) != 1 or parts[0].startswith("or=("):
+        return None
+    field, op, value = _parse_condition(parts[0])
+    try:
+        if op == "eq":
+            docs = _db().collection(table).where(filter=FieldFilter(field, "==", _coerce(field, value))).stream()
+            return [_doc_to_row(d) for d in docs]
+        if op == "in":
+            opts = list(_in_opts(value))
+            if not opts or len(opts) > 30:  # gioi han "in" cua Firestore
+                return None
+            docs = _db().collection(table).where(filter=FieldFilter(field, "in", [_coerce(field, v) for v in opts])).stream()
+            return [_doc_to_row(d) for d in docs]
+    except Exception:
+        return None  # field chua co index/loi khac -> fallback an toan
+    return None
 
 
 def _match_value(row_val, op: str, value: str, field: str = "") -> bool:
@@ -228,8 +270,12 @@ def _invalidate_cache(table: str):
 # ── CRUD helpers (chữ ký giống hệt supabase_client.py) ──────────
 
 def select(table: str, query: str = "*", filters: str = "", order: str = "") -> list:
-    rows = _fetch_collection_rows(table)
-    rows = [r for r in rows if _row_matches(r, filters)]
+    native_rows = _try_native_query(table, filters)
+    if native_rows is not None:
+        rows = native_rows
+    else:
+        rows = _fetch_collection_rows(table)
+        rows = [r for r in rows if _row_matches(r, filters)]
 
     if order:
         for field_spec in reversed(order.split(",")):
