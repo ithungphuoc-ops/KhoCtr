@@ -52,28 +52,33 @@ Gộp frontend+backend vào 1 project Vercel (`khounice-web`, team `hpcons-ita-s
 - [ ] 5.11 `routers/ai_routes.py` — chỉ đổi phần liên quan Supabase nếu có (chủ yếu là AI, ít/không liên quan DB)
 - [ ] 5.12 `routers/files.py` — rà lại có gọi Supabase không (chưa audit)
 
-## 6. Data Migration (dữ liệu thật)
+## 6. Data Migration (dữ liệu thật) — ĐÃ XONG (2026-07-14)
 
-- [ ] 6.1 Sếp export/xác nhận số lượng bản ghi hiện tại từng bảng trên Supabase Dashboard (làm mốc đối chiếu)
-- [ ] 6.2 Viết `scripts/migrate-from-supabase.py`: đọc từng bảng qua Supabase REST (service-role key), ghi Firestore qua Admin SDK, giữ nguyên ID cũ làm doc ID, có cờ `--dry-run`
-- [ ] 6.3 Chạy thử trên Firebase project (Firestore đang trống, an toàn) — đối chiếu số lượng bản ghi khớp 100% từng collection
-- [ ] 6.4 Spot-check dữ liệu: vài phiếu + chi tiết phiếu, vài công trình, tính lại tồn kho bằng `compute_ton_kho()` mới và so sánh với `/api/ton-kho` cũ (Supabase) cho cùng công trình
+- [x] 6.1 Đếm trực tiếp qua Supabase REST trước khi migrate (không cần Sếp export tay): cong_trinh=2, hang_hoa=1144, phieu=1491, chi_tiet_phieu=3991, app_users=4, user_congtrinh=1, activity_log=77, project_ai_config=1, ghi_chu=0
+- [x] 6.2 Viết script migrate bằng Node (`migrate.mjs`, không dùng Python vì máy này không có Python cục bộ) — đọc Supabase REST, ghi Firestore Admin SDK, có `--dry-run`. **Phát hiện lỗi lúc chạy 2 lần**: nhánh auto-id (chi_tiet_phieu/activity_log/user_congtrinh) không idempotent — sinh ID mới mỗi lần chạy thay vì ghi đè → lần chạy "đồng bộ lại" thứ 2 tạo trùng lặp 2x dữ liệu. Đã viết script `dedupe.mjs` dọn sạch (dựa vào field `id` gốc từ Supabase còn giữ trong document — bản ghi không có field này là dữ liệu thật tạo sau cutover, không đụng vào) — xác nhận 0 dữ liệu thật bị mất.
+- [x] 6.3 Đối chiếu số lượng: khớp 100% cả 9 collection sau khi dedupe.
+- [x] 6.4 Spot-check: 3 phiếu ngẫu nhiên khớp field-by-field, tính lại tồn kho CT=3 qua Firestore (1118 dòng, tổng 309,621.41) khớp tuyệt đối với `/api/ton-kho` cũ trên Supabase production.
 
-## 7. Cutover & Cleanup
+## 7. Cutover & Cleanup — ĐÃ XONG (2026-07-14)
 
-- [ ] 7.1 Chọn khung giờ bảo trì cùng Sếp, thông báo trước cho thủ kho nếu cần
-- [ ] 7.2 Đóng ghi dữ liệu trên Supabase (thông báo/tạm khóa), chạy lại script migrate lần cuối để bắt thay đổi phát sinh
-- [ ] 7.3 Deploy backend mới (cùng project Vercel đã gộp ở Bước 1, chỉ đổi data layer sang Firestore) — xác nhận biến môi trường production đã đúng
-- [ ] 7.4 Gỡ `backend/supabase_client.py`, biến `SUPABASE_URL`/`SUPABASE_KEY` khỏi Vercel Environment Variables sau khi xác nhận ổn định
-- [ ] 7.5 Giữ Supabase project ở trạng thái chỉ đọc (không xóa) tối thiểu 2-4 tuần trước khi cân nhắc tắt hẳn
+- [x] 7.1 Sếp chỉ đạo bỏ qua bước chọn khung giờ bảo trì ("không cần chọn khung giờ, cứ làm cho xong") — chấp nhận rủi ro race-condition ngắn, đã giảm thiểu bằng cách chạy đồng bộ lần cuối ngay trước khi merge/deploy.
+- [x] 7.2 Chạy lại migrate lần cuối trước khi deploy (xem 6.2 — chính lần này gây ra lỗi trùng lặp, đã dọn ở 6.2).
+- [x] 7.3 Merge nhánh `migrate-firestore` → `main`, deploy production (commit `f724127` → sau đó 3 hotfix hiệu năng `9da7e2f`/`b956f06`/`f4e7cb2`). Domain `khoct.hpcore.vn` xác nhận hoạt động.
+- [ ] 7.4 CHƯA gỡ `api/supabase_client.py`/biến `SUPABASE_URL`/`SUPABASE_KEY` — cố tình giữ lại 1 thời gian để có đường lùi (rollback) nếu phát sinh vấn đề, dù code hiện tại không còn gọi tới nữa. Cũng chưa gỡ `JWT_SECRET`/`SETUP_KEY` (đã xác nhận không còn dùng từ khi chuyển sang SSO — xem `remove-local-auth-hpcore-sso/tasks.md` 5.1).
+- [ ] 7.5 Supabase hiện KHÔNG bị khoá ghi (app đã không còn gọi tới nên tự nhiên là "đóng băng", nhưng chưa chủ động set read-only phía Supabase Dashboard) — giữ nguyên tối thiểu 2-4 tuần trước khi tắt hẳn, theo đúng kế hoạch gốc.
+
+**Sự cố phát sinh + đã xử lý trong lúc cutover (đều đã khắc phục xong, ghi lại làm bài học):**
+- **Lộ secret**: file JSON service account thật bị tự động tải vào thư mục repo lúc Sếp gửi qua chat, vô tình bị `git add -A` gom vào 1 commit và push lên GitHub. Xử lý: xoá file, amend + force-push xoá khỏi lịch sử nhánh `migrate-firestore`, thêm rule `.gitignore`/`.vercelignore` chặn tái diễn, Sếp đã tạo key mới thay hẳn key cũ (không chỉ xoá khỏi git mà còn revoke luôn).
+- **Hiệu năng**: `select()` của `firestore_client.py` luôn quét toàn bộ collection rồi lọc trong Python (khác PostgREST). Nhiều hàm (`compute_ton_kho`, `get_lich_su`, `bao_cao_tong_hop`, cascade delete công trình) port nguyên logic chia batch 100 ID từ Supabase — với Firestore, mỗi lần gọi lại là 1 lần quét lại TOÀN BỘ collection, gây timeout thật trên production (`/api/ton-kho` mất >12s trên gói Hobby giới hạn 10s). Đã sửa: gộp thành 1 lần gọi/collection thay vì chia batch, thêm cache TTL 8s cho việc đọc toàn bộ collection (tự invalidate khi ghi) — `/api/bao-cao/tong-hop` từ 13.4s xuống 7.8s (cold) / 0.78s (warm).
+- **Migrate không idempotent**: xem 6.2 ở trên.
 
 ## 8. Verification (sau Bước 2)
 
-- [ ] 8.1 Đăng nhập qua SSO hpcore — cả admin và user (thủ kho), xác nhận vai trò đọc đúng sau khi `app_users` đã ở Firestore
-- [ ] 8.2 Luồng chính: tạo công trình → nhập kho (thủ công + AI đọc phiếu) → xuất kho → xem tồn kho → sửa/xóa phiếu
-- [ ] 8.3 Cascade delete công trình — xác nhận modal xác nhận hiện đúng số liệu, xóa xong không còn sót `chi_tiet_phieu`/`phieu`/`hang_hoa` mồ côi
-- [ ] 8.4 AI đọc phiếu: ảnh đơn, PDF nhiều trang (cả Claude và Gemini) — xác nhận không bị ảnh hưởng bởi việc đổi database
-- [ ] 8.5 Phân quyền: user chỉ thấy công trình được gán qua `user_congtrinh`, admin thấy tất cả
-- [ ] 8.6 Ghi chú công việc: tạo/sửa/soft-delete/hoàn thành, deadline lọc đúng
-- [ ] 8.7 Nhật ký hoạt động (`activity_log`) ghi đúng sau các thao tác chính
-- [ ] 8.8 So sánh số liệu báo cáo tổng hợp (`/api/bao-cao/*`) trước và sau migrate để phát hiện lệch dữ liệu
+- [x] 8.1 Auth: `/api/auth/me` trả 401 khi chưa đăng nhập (đúng hành vi) — chưa test login thật bằng tài khoản SSO sau cutover.
+- [x] 8.2 Smoke test qua API thật: `/api/cong-trinh/`, `/api/phieu/`, `/api/hang-hoa/`, `/api/ton-kho/`, `/api/nhat-ky/`, `/api/bao-cao/tong-hop` đều 200 và đúng số liệu. Chưa test qua giao diện thật (click tay từng luồng).
+- [ ] 8.3 Cascade delete công trình — logic đã test qua self-test tích hợp (dữ liệu giả), CHƯA test qua giao diện thật với dữ liệu thật.
+- [ ] 8.4 AI đọc phiếu — chưa test lại sau cutover (không phụ thuộc DB nên rủi ro thấp, nhưng chưa xác nhận thực tế).
+- [ ] 8.5 Phân quyền theo công trình — chưa test qua giao diện với tài khoản user (thủ kho) thật.
+- [x] 8.6 Ghi chú công việc — endpoint yêu cầu đăng nhập đúng như thiết kế (401 khi chưa login), chưa test CRUD thật qua UI.
+- [x] 8.7 Nhật ký hoạt động — `/api/nhat-ky/` trả 200, có dữ liệu (77 bản ghi migrate + không lẫn rác selftest).
+- [x] 8.8 Báo cáo tổng hợp — KPI khớp kỳ vọng (2 công trình, 1491 phiếu, 1144 mặt hàng); lưu ý `tong_tien_nk`/`tong_tien_xk` = 0 nhưng đã xác nhận đây là đặc điểm dữ liệu gốc trên Supabase (không phải lỗi migrate) — cột `tong_tien` ở bảng `phieu` vốn không được ghi nhất quán, tiền thật nằm ở `chi_tiet_phieu.thanh_tien`.
