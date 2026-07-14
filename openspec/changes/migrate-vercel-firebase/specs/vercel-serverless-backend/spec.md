@@ -37,7 +37,7 @@ The system SHALL move the backend's hosting from Render to Vercel (Stage 1) whil
 - **THEN** re-pointing the `khoct.hpcore.vn` domain (or DNS) back to the Render deployment restores prior behavior, since Supabase was never touched during Stage 1
 
 ### Requirement: Environment secrets are configured on Vercel without exposure
-The system SHALL configure all required secrets (Firebase service account credentials, `JWT_SECRET`, `SETUP_KEY`, `CLAUDE_API_KEY`, `GEMINI_API_KEY`) as Vercel encrypted environment variables, never committed to the repository or displayed unmasked in logs or chat.
+The system SHALL configure all required secrets (KhoUNICE Firestore service account credentials, `CLAUDE_API_KEY`, `GEMINI_API_KEY` — plus the already-configured `HPCORE_FIREBASE_SERVICE_ACCOUNT` for SSO) as Vercel encrypted environment variables, never committed to the repository or displayed unmasked in logs or chat. `JWT_SECRET`/`SETUP_KEY` are dead (auth moved to hpcore SSO) and SHALL be removed, not migrated.
 
 #### Scenario: Backend reads secrets at runtime
 - **WHEN** a Vercel Function needs to authenticate to Firebase or call an AI provider

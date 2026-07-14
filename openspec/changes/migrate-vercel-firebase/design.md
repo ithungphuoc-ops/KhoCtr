@@ -15,7 +15,7 @@ KhoUNICE Web hiện tại: FastAPI (`backend/main.py`, 12 router, ~4700 dòng ba
 
 **Phát hiện quan trọng**: view `v_ton_kho` (Postgres view) có vẻ là nguồn tồn kho, nhưng `supabase_client.py` đã có sẵn hàm `compute_ton_kho()` (dòng 257-358) tính tồn kho **trực tiếp trong Python** từ `phieu`+`chi_tiet_phieu`, group theo `(ma_hang hoặc ten_hang, cong_trinh_id)`, enrich từ `hang_hoa`. Nghĩa là phần lớn logic tồn kho vốn đã ở tầng ứng dụng chứ không phải SQL — port sang Firestore dễ hơn dự kiến ban đầu, chỉ cần đổi các lệnh `select()` bên trong hàm này để đọc Firestore.
 
-Auth: JWT tự chế HMAC-SHA256 (`routers/auth.py`), password PBKDF2 100k iterations — hoàn toàn độc lập với Supabase, không dùng Supabase Auth.
+Auth: **đã đổi sang SSO hpcore** (`api/routers/auth.py`, `api/hpcore_auth.py`, change `remove-local-auth-hpcore-sso` — xong 2026-07-14, không nằm trong phạm vi change này). Không còn JWT/password tự chế. `app_users` giờ chỉ là bảng cache `role`/`active` đồng bộ từ `app_permissions` của hpcore (Firestore project `hpcons-portal`, đọc qua Firebase Admin SDK) khi user đăng nhập lần đầu; `password_hash` là cột NOT NULL cũ giờ chỉ chứa giá trị placeholder cố định, không phải mật khẩu thật.
 
 AI đọc phiếu (`ai_reader.py` 757 dòng, `pdf_splitter.py`, `mapping_service.py`, `fuzzy_match.py`): dùng `pymupdf` (fitz) render PDF → ảnh PNG gửi Claude, hoặc Gemini Files API cho PDF lớn hơn ngưỡng trang. Không liên quan Supabase, nhưng liên quan trực tiếp quyết định Vercel vì đây là phần compute nặng nhất và phụ thuộc thư viện native.
 
@@ -31,7 +31,7 @@ AI đọc phiếu (`ai_reader.py` 757 dòng, `pdf_splitter.py`, `mapping_service
 **Non-Goals:**
 - Không đổi UI/UX.
 - Không đổi luồng nghiệp vụ hiện có (nhập kho, xuất kho, AI đọc phiếu, cascade delete công trình, phân quyền theo công trình...).
-- Không đổi cơ chế Auth (giữ JWT tự chế HMAC-SHA256).
+- Không đổi cơ chế Auth — đã là SSO hpcore từ trước, không thuộc phạm vi change này. Chỉ đổi nơi lưu `role`/`active` (cache nội bộ) sang Firestore.
 - Không tối ưu lại thuật toán fuzzy-match/mapping AI hiện có — port nguyên vẹn logic.
 - Không đổi tên field từ snake_case sang camelCase (khác với cách đã làm ở ITAsset) — ưu tiên rủi ro thấp nhất cho hệ thống đang chạy production thật, không đổi gì ngoài phạm vi bắt buộc.
 
@@ -43,7 +43,7 @@ AI đọc phiếu (`ai_reader.py` 757 dòng, `pdf_splitter.py`, `mapping_service
 - **Cascade delete công trình**: Firestore không có `DELETE WHERE` hàng loạt hay cascade tự động — viết lại bằng `WriteBatch` (giới hạn 500 thao tác/batch của Firestore), giữ đúng thứ tự hiện tại: `chi_tiet_phieu` → `phieu` → `hang_hoa` → `cong_trinh` (`routers/cong_trinh.py` dòng 92-110).
 - **Backend hosting**: Vercel Serverless Functions, Python runtime. FastAPI có thể chạy trên Vercel qua ASGI adapter — **cần xác nhận qua spike** (xem Risks) trước khi cam kết toàn bộ, vì đây là thay đổi runtime lớn nhất so với Render (dịch vụ chạy dài hạn, có state) sang serverless (mỗi request có thể là 1 cold start riêng).
 - **AI đọc phiếu (pymupdf) — quyết định treo chờ spike**: nếu spike cho kết quả xấu (vượt dung lượng/timeout), phương án dự phòng là kiến trúc lai — giữ riêng các endpoint AI (`/api/ai/*`) chạy trên Render như hiện tại, chuyển các endpoint còn lại (CRUD thuần) sang Vercel. Đây là lựa chọn kiến trúc cần Sếp duyệt nếu xảy ra.
-- **Auth**: giữ nguyên JWT tự chế; `JWT_SECRET` chuyển thành Vercel Environment Variable (đã biết secret này từng bị lộ trong lịch sử git repo cũ — xem Open Questions về việc rotate).
+- **Auth**: không thuộc phạm vi — đã đổi sang SSO hpcore từ trước. `JWT_SECRET`/`SETUP_KEY` không còn được dùng ở đâu trong code, cần **xoá hẳn** khỏi Vercel Environment Variables (không phải rotate, vì không còn tác dụng gì) khi dọn dẹp Bước 2.
 - **Mã hóa API key AI**: giữ nguyên thuật toán `crypto_utils.py`, chỉ đổi nơi đọc/ghi ciphertext (Firestore field thay Postgres column).
 - **Thứ tự cutover — 2 trục độc lập, không phải 2 "giai đoạn" đổi từng phần hệ thống** (chốt lại 2026-07-14, sau khi nhận ra hosting và database là 2 rủi ro khác bản chất):
   - **Trục 1 — nơi chạy (hosting)**: gộp frontend + backend vào 1 Vercel project ngay từ đầu (Bước 1), khớp đúng cấu trúc hpcons-portal/ITAsset/pkd-crm. Rủi ro THẤP vì backend vẫn gọi y hệt Supabase như cũ — chỉ đổi máy chạy code, không đổi câu query hay nơi lưu dữ liệu.
@@ -63,19 +63,11 @@ AI đọc phiếu (`ai_reader.py` 757 dòng, `pdf_splitter.py`, `mapping_service
 
 1. **Spike — ĐÃ XONG (2026-07-14)**: `pymupdf` chạy tốt trên Vercel Python (40.32MB, cold start 1.2s). Không cần kiến trúc hybrid.
 
-2. **Bước 1 — Gộp frontend + backend vào 1 Vercel project, Supabase giữ nguyên** (rủi ro thấp — chỉ đổi nơi chạy, không đổi nơi lưu dữ liệu):
-   - Sếp tạo Vercel project mới cho KhoUNICE Web.
-   - Cấu hình project: frontend `frontend/` (Vite build) làm static output; backend `backend/` chạy dưới `/api` như Vercel Function (Python runtime, theo đúng cấu hình `pyproject.toml` đã xác nhận qua spike).
-   - Backend **giữ nguyên 100%** `supabase_client.py` và toàn bộ router — chỉ đổi entrypoint để chạy được trên Vercel (ASGI adapter) và bỏ đoạn code serve frontend qua `StaticFiles`/catch-all trong `main.py` (Vercel tự serve frontend tĩnh).
-   - Copy nguyên giá trị biến môi trường từ Render sang Vercel (`SUPABASE_URL`, `SUPABASE_KEY`, `CLAUDE_API_KEY`, `GEMINI_API_KEY`, `JWT_SECRET`, `SETUP_KEY`) — không đổi giá trị.
-   - Deploy preview, test toàn bộ luồng chính bằng **dữ liệu Supabase thật** (an toàn vì database không đổi gì, chỉ là code chạy trên máy khác gọi vào cùng 1 DB như cũ).
-   - Trỏ domain `khoct.hpcore.vn` vào project Vercel này.
-   - Theo dõi ổn định, rồi tắt service cũ trên Render (giữ lại vài ngày phòng hờ trước khi tắt hẳn).
-   - **Rollback nếu cần**: trỏ domain lại Render — Render service + Supabase không hề bị đụng vào trong suốt Bước 1.
+2. **Bước 1 — ĐÃ XONG (2026-07-14)**: frontend+backend đã gộp 1 Vercel project (`khounice-web`, team `hpcons-ita-sset`), domain `khoct.hpcore.vn` đã trỏ vào, backend gọi Supabase y hệt cũ, đang chạy production ổn định. Render cũ chưa xác nhận đã tắt hẳn hay chưa — cần rà lại trước khi dọn hẳn.
 
-3. **Bước 2 — Đổi Supabase → Firestore** (rủi ro cao, làm riêng sau khi Bước 1 ổn định, trong CHÍNH project Vercel đã gộp ở Bước 1):
-   - Sếp tạo Firebase project riêng cho KhoUNICE Web (Firestore + service account key), tương tự ITAsset/hpcons-portal trước đây.
-   - Viết tầng data-access mới (`backend/firestore_client.py` thay `supabase_client.py`), **giữ nguyên chữ ký hàm** để tối thiểu hóa thay đổi trong từng router.
+3. **Bước 2 — Đổi Supabase → Firestore** (rủi ro cao, làm trong CHÍNH project Vercel đã gộp ở Bước 1):
+   - Firebase project đích **đã có sẵn**: `hpcons-khoctr` (Spark plan) — còn thiếu: bấm "+Add app" (Web app), bật Firestore Database, tạo service account key (Admin SDK).
+   - Viết tầng data-access mới (`api/firestore_client.py` thay `supabase_client.py`), **giữ nguyên chữ ký hàm** để tối thiểu hóa thay đổi trong từng router.
    - Build song song, test bằng dữ liệu giả trên Firebase project vừa tạo — CHƯA đấu dữ liệu production thật.
    - Viết script migrate dữ liệu thật 1 lần (đọc Supabase qua REST bằng service-role key, ghi Firestore qua Admin SDK, giữ nguyên ID cũ làm doc ID), có cờ `--dry-run`, in số lượng bản ghi từng bảng/collection để đối chiếu.
    - Chọn khung giờ bảo trì cùng Sếp: đóng ghi dữ liệu trên Supabase → chạy script migrate lần cuối (bắt thay đổi phát sinh) → deploy backend (cùng project Vercel, chỉ đổi data layer) trỏ Firestore → smoke test toàn bộ luồng chính → mở lại cho người dùng.
@@ -85,6 +77,7 @@ AI đọc phiếu (`ai_reader.py` 757 dòng, `pdf_splitter.py`, `mapping_service
 ## Open Questions
 
 - ~~Kết quả spike `pymupdf` trên Vercel~~ **Đã chốt (2026-07-14)**: kiến trúc toàn Vercel, không cần hybrid — xem Risks.
+- ~~Auth giữ JWT tự chế hay đổi?~~ **Đã chốt (2026-07-14)**: đã đổi sang SSO hpcore từ trước, không thuộc phạm vi change này nữa.
 - Vercel gói đang/sẽ dùng là Hobby hay Pro? (ảnh hưởng trực tiếp giới hạn timeout 10s vs 60s cho luồng AI đọc phiếu — riêng bước render đo được rất nhanh (~0.1s/trang), nhưng còn cần cộng thêm thời gian gọi API Claude/Gemini thật, chưa đo).
-- Khung giờ bảo trì cắt chuyển Giai đoạn B — Sếp chọn thời điểm nào ít ảnh hưởng thủ kho nhất?
-- Rotate `JWT_SECRET`/`GEMINI_API_KEY` (đã phát hiện bị lộ trong lịch sử git repo cũ ngày 2026-07-14, Sếp đã chọn hoãn) — làm trước, trong, hay sau migration này? Nên làm trước khi migrate xong vì `JWT_SECRET` sẽ tiếp tục được dùng nguyên trên Vercel nếu không đổi.
+- Khung giờ bảo trì cắt chuyển Bước 2 — Sếp chọn thời điểm nào ít ảnh hưởng thủ kho nhất?
+- Rotate `GEMINI_API_KEY` (đã phát hiện bị lộ trong lịch sử git repo cũ ngày 2026-07-14, Sếp đã chọn hoãn) — vẫn còn treo, không liên quan Firestore migration nhưng nên làm trước khi coi change này xong hẳn. `JWT_SECRET`/`SETUP_KEY` thì không cần rotate nữa — xoá hẳn vì không còn dùng.

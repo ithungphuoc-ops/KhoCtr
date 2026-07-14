@@ -5,34 +5,24 @@
 - [x] 0.3 Quyết định (cùng Sếp): kiến trúc toàn Vercel hay hybrid — **đã chốt: toàn Vercel**
 - [ ] 0.4 Xác nhận gói Vercel đang dùng (Hobby/Pro) — Sếp kiểm tra tại vercel.com/teams/hpcons-ita-sset/settings/billing — ảnh hưởng timeout 10s/60s cho luồng AI
 
-## 1. Bước 1 — Gộp frontend + backend vào 1 Vercel project (Supabase giữ nguyên, rủi ro thấp)
+## 1. Bước 1 — ĐÃ XONG (2026-07-14)
 
-Mục tiêu: đổi *nơi chạy* code, KHÔNG đổi *nơi lưu dữ liệu*. Backend vẫn gọi Supabase y hệt hiện tại.
+Gộp frontend+backend vào 1 project Vercel (`khounice-web`, team `hpcons-ita-sset`), domain `khoct.hpcore.vn` đã trỏ vào, backend chạy dưới `api/` (đổi tên từ `backend/`), Supabase không đổi gì lúc đó. Đang chạy production ổn định.
 
-- [ ] 1.1 Trước khi làm: xác nhận URL Render thật + ai đang sở hữu tài khoản Render + Render đang auto-deploy từ repo nào (`nguyenhuuphuoc-dotcom/Kho-Tong` cũ hay `ithungphuoc-ops/KhoCtr` mới) — cần Sếp cung cấp
-- [ ] 1.2 Sếp tạo Vercel project mới cho KhoUNICE Web (team `hpcons-ita-sset`, giống ITAsset/pkd-crm/hpcons-portal)
-- [ ] 1.3 Viết `pyproject.toml` (root) khai báo entrypoint Vercel cho backend Python (theo cấu hình đã xác nhận qua spike)
-- [ ] 1.4 Viết `vercel.json` (root): cấu hình build frontend (`frontend/`, Vite, output `dist`) làm static output + route `/api/*` vào Vercel Function Python
-- [ ] 1.5 Viết/điều chỉnh entrypoint ASGI để FastAPI (`backend/main.py`) chạy được trên Vercel Function — KHÔNG đổi logic router nào, chỉ đổi cách khởi động app
-- [ ] 1.6 Bỏ đoạn code serve frontend qua `StaticFiles`/catch-all trong `backend/main.py` (dòng 76-98) — Vercel tự serve frontend build tĩnh, không cần FastAPI làm việc này nữa
-- [ ] 1.7 Rà lại toàn bộ `backend/` (12 router + `supabase_client.py` + `ai_reader.py` + helper khác) xem có biến toàn cục/cache trong bộ nhớ nào phụ thuộc việc chạy dài hạn (khác serverless mỗi request có thể là 1 instance riêng) không — sơ bộ thấy `supabase_client.py` không cache gì, cần xác nhận lại các file còn lại
-- [ ] 1.8 Copy nguyên giá trị biến môi trường từ Render sang Vercel Environment Variables: `SUPABASE_URL`, `SUPABASE_KEY`, `CLAUDE_API_KEY`, `GEMINI_API_KEY`, `JWT_SECRET`, `SETUP_KEY` — không đổi giá trị nào
-- [ ] 1.9 Deploy preview lên Vercel, test toàn bộ luồng chính bằng dữ liệu Supabase thật (đăng nhập, nhập/xuất kho, AI đọc phiếu, tồn kho, cascade delete công trình, ghi chú, nhật ký, phân quyền) — an toàn vì database không đổi
-- [ ] 1.10 Đo lại thời gian phản hồi luồng AI đọc phiếu trên Vercel thật, so với baseline đo được ở Render (mục 0.2) — xác nhận không vượt timeout gói Vercel đang dùng
-- [ ] 1.11 Trỏ domain `khoct.hpcore.vn` vào project Vercel này
-- [ ] 1.12 Theo dõi ổn định vài ngày — DỪNG, chờ Sếp xác nhận trước khi tắt Render
-- [ ] 1.13 Tắt/tạm dừng service Render cũ (giữ vài ngày phòng hờ trước khi tắt hẳn — KHÔNG xóa ngay)
+- [x] 1.1–1.11 Toàn bộ việc gộp hosting, đổi entrypoint, bỏ static-serve, trỏ domain — đã xong, xác nhận qua smoke test `khoct.hpcore.vn` trả 200.
+- [ ] 1.12 Chưa xác nhận Render cũ đã tắt hẳn chưa — rà lại trước khi dọn dẹp Bước 2 (không chặn đường, chỉ cần biết để không bỏ sót)
+- [ ] 1.13 Tắt/tạm dừng service Render cũ nếu còn chạy
 
 ## 2. Bước 2 — Firebase Project Setup
 
-- [ ] 2.1 Sếp tạo Firebase project riêng cho KhoUNICE Web — bật Firestore Database
-- [ ] 2.2 Sếp lấy Service Account key (Admin SDK) cho backend
-- [ ] 2.3 Thêm `backend/firebase_admin_client.py` (khởi tạo lazy, Admin SDK)
-- [ ] 2.4 Thêm biến môi trường Firebase vào Vercel Environment Variables
+- [x] 2.1 Firebase project đã có sẵn: **`hpcons-khoctr`** (Spark plan) — chưa bật Firestore, chưa add app nào
+- [ ] 2.2 Bấm "+Add app" (Web app) trong `hpcons-khoctr`, bật Firestore Database (chọn region), tạo Service Account key (Admin SDK) — Sếp thao tác trên Firebase Console
+- [ ] 2.3 Thêm `api/firestore_client.py` (khởi tạo lazy, Admin SDK) — theo đúng pattern `api/hpcore_auth.py` đã dùng cho project Firebase khác trong cùng repo
+- [ ] 2.4 Thêm biến môi trường Firebase (`KHOCTR_FIREBASE_SERVICE_ACCOUNT` hoặc tên tương tự — đặt tên khác `HPCORE_FIREBASE_SERVICE_ACCOUNT` đang dùng cho SSO để tránh nhầm 2 project Firebase khác nhau) vào Vercel Environment Variables
 
 ## 3. Data Model & Firestore Infrastructure
 
-- [ ] 3.1 Định nghĩa cấu trúc document Firestore cho 9 collection (`cong_trinh`, `phieu`, `chi_tiet_phieu`, `hang_hoa`, `app_users`, `user_congtrinh`, `activity_log`, `project_ai_config`, `ghi_chu`) — giữ nguyên tên field snake_case
+- [ ] 3.1 Định nghĩa cấu trúc document Firestore cho 9 collection (`cong_trinh`, `phieu`, `chi_tiet_phieu`, `hang_hoa`, `app_users`, `user_congtrinh`, `activity_log`, `project_ai_config`, `ghi_chu`) — giữ nguyên tên field snake_case. `app_users` chỉ cần `email`, `ten`, `role`, `active` — KHÔNG migrate `password_hash` (giờ chỉ là placeholder cố định, không phải mật khẩu thật, không có giá trị gì để giữ)
 - [ ] 3.2 Quyết định document ID: giữ nguyên ID cũ (dạng string) làm Firestore doc ID cho mọi collection có foreign key tham chiếu (`phieu.id`, `hang_hoa.ma_hang`, `cong_trinh.id`, `app_users.id`)
 - [ ] 3.3 Viết `firestore.rules` — chặn ghi trực tiếp từ client (toàn bộ đi qua Admin SDK phía server), vì đây là backend server-side, không có Firestore client SDK phía frontend
 - [ ] 3.4 Viết `firestore.indexes.json` dựa trên toàn bộ query hiện có trong `supabase_client.py` (lọc theo `cong_trinh_id`, `phieu_id in (...)`, `deleted_at is null`, sort theo `ngay`/`created_at`)
@@ -54,7 +44,7 @@ Mục tiêu: đổi *nơi chạy* code, KHÔNG đổi *nơi lưu dữ liệu*. B
 - [ ] 5.3 `routers/hang_hoa.py`
 - [ ] 5.4 `routers/ton_kho.py` (them-hang, dieu-chinh, xoa-hang)
 - [ ] 5.5 `routers/bao_cao.py` (pagination, thống kê)
-- [ ] 5.6 `routers/auth.py` — chỉ đổi phần đọc/ghi `app_users`/`user_congtrinh`, giữ nguyên toàn bộ logic JWT/hash password
+- [ ] 5.6 `routers/auth.py` — auth đã là SSO hpcore (không đổi ở change này), chỉ đổi phần đọc/ghi `app_users` (đồng bộ role/active) và `user_congtrinh`/`permissions` (phân quyền công trình) sang Firestore
 - [ ] 5.7 `routers/import_data.py`
 - [ ] 5.8 `routers/nhat_ky.py` (activity_log)
 - [ ] 5.9 `routers/ghi_chu.py` (soft-delete)
@@ -79,7 +69,7 @@ Mục tiêu: đổi *nơi chạy* code, KHÔNG đổi *nơi lưu dữ liệu*. B
 
 ## 8. Verification (sau Bước 2)
 
-- [ ] 8.1 Đăng nhập bằng tài khoản cũ (đã migrate) — cả admin và user (thủ kho)
+- [ ] 8.1 Đăng nhập qua SSO hpcore — cả admin và user (thủ kho), xác nhận vai trò đọc đúng sau khi `app_users` đã ở Firestore
 - [ ] 8.2 Luồng chính: tạo công trình → nhập kho (thủ công + AI đọc phiếu) → xuất kho → xem tồn kho → sửa/xóa phiếu
 - [ ] 8.3 Cascade delete công trình — xác nhận modal xác nhận hiện đúng số liệu, xóa xong không còn sót `chi_tiet_phieu`/`phieu`/`hang_hoa` mồ côi
 - [ ] 8.4 AI đọc phiếu: ảnh đơn, PDF nhiều trang (cả Claude và Gemini) — xác nhận không bị ảnh hưởng bởi việc đổi database
