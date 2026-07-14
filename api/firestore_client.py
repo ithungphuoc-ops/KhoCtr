@@ -23,6 +23,7 @@ composite index sau nếu cần (xem openspec task 3.4).
 """
 import os
 import json
+import time
 from functools import lru_cache
 from typing import Optional
 from datetime import datetime, timezone
@@ -197,11 +198,37 @@ def _order_key(field_spec: str):
     return key, reverse
 
 
+# ── Cache đọc toàn bộ collection (TTL ngắn) ─────────────────────
+# select() luôn stream() TOÀN BỘ collection rồi lọc trong Python. Nhiều
+# hàm nghiệp vụ (vd bao_cao_tong_hop khi xem "Tất cả công trình") gọi
+# select() trên CÙNG 1 bảng (phieu, chi_tiet_phieu) nhiều lần độc lập
+# trong 1 request — gây quét mạng lặp lại không cần thiết (đã gây timeout
+# thật trên production 2026-07-14). Cache raw rows theo tên bảng, TTL
+# ngắn để vẫn thấy dữ liệu mới sau ghi gần như ngay lập tức; insert/
+# update/delete tự xoá cache của bảng đó để không đọc dữ liệu cũ.
+_COLLECTION_CACHE: dict = {}
+_CACHE_TTL_SECONDS = 8
+
+
+def _fetch_collection_rows(table: str) -> list:
+    now = time.time()
+    cached = _COLLECTION_CACHE.get(table)
+    if cached and (now - cached[0]) < _CACHE_TTL_SECONDS:
+        return [dict(r) for r in cached[1]]
+    docs = _db().collection(table).stream()
+    rows = [_doc_to_row(d) for d in docs]
+    _COLLECTION_CACHE[table] = (now, rows)
+    return [dict(r) for r in rows]
+
+
+def _invalidate_cache(table: str):
+    _COLLECTION_CACHE.pop(table, None)
+
+
 # ── CRUD helpers (chữ ký giống hệt supabase_client.py) ──────────
 
 def select(table: str, query: str = "*", filters: str = "", order: str = "") -> list:
-    docs = _db().collection(table).stream()
-    rows = [_doc_to_row(d) for d in docs]
+    rows = _fetch_collection_rows(table)
     rows = [r for r in rows if _row_matches(r, filters)]
 
     if order:
@@ -235,6 +262,7 @@ def insert(table: str, data) -> list:
             chunk_results.append({**full_data, "id": full_data.get("id", doc_id)})
         batch.commit()
         results.extend(chunk_results)
+    _invalidate_cache(table)
     return results
 
 
@@ -250,6 +278,7 @@ def update(table: str, data: dict, filters: str) -> list:
             batch.update(doc_ref, data)
         batch.commit()
         updated.extend({**row, **data} for row in chunk)
+    _invalidate_cache(table)
     return updated
 
 
@@ -261,6 +290,7 @@ def delete(table: str, filters: str) -> list:
         for row in matched[i:i + 400]:
             batch.delete(db.collection(table).document(str(row["id"])))
         batch.commit()
+    _invalidate_cache(table)
     return matched
 
 
