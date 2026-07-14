@@ -93,13 +93,11 @@ def bao_cao_tong_hop(
         phieu_map = {p["id"]: p for p in phieu_date if p.get("id")}
         phieu_ids = list(phieu_map.keys())
         chi_tiets = []
-        for i in range(0, len(phieu_ids), 100):
-            chunk   = phieu_ids[i:i + 100]
-            ids_str = ",".join(str(x) for x in chunk)
-            rows    = db.select("chi_tiet_phieu",
-                                query="phieu_id,ten_hang,dvt,so_luong,thanh_tien",
-                                filters=f"phieu_id=in.({ids_str})")
-            chi_tiets.extend(rows)
+        if phieu_ids:
+            ids_str = ",".join(str(x) for x in phieu_ids)
+            chi_tiets = db.select("chi_tiet_phieu",
+                                  query="phieu_id,ten_hang,dvt,so_luong,thanh_tien",
+                                  filters=f"phieu_id=in.({ids_str})")
         print(f"[bao_cao] chi_tiets batch: {len(chi_tiets)} dòng từ {len(phieu_ids)} phiếu")
 
         hang_nk: dict = {}
@@ -224,12 +222,10 @@ def bao_cao_theo_thang(
         phieu_ids_list = [p["id"] for p in phieu_thang if p.get("id")]
         phieu_ids      = set(phieu_ids_list)
         ct_thang: list = []
-        for i in range(0, len(phieu_ids_list), 100):
-            chunk   = phieu_ids_list[i:i + 100]
-            ids_str = ",".join(str(x) for x in chunk)
-            rows    = db.select("chi_tiet_phieu", query="*",
-                                filters=f"phieu_id=in.({ids_str})")
-            ct_thang.extend(rows)
+        if phieu_ids_list:
+            ids_str  = ",".join(str(x) for x in phieu_ids_list)
+            ct_thang = db.select("chi_tiet_phieu", query="*",
+                                 filters=f"phieu_id=in.({ids_str})")
 
         phieu_map = {p["id"]: p for p in phieu_thang}
         hang_stats: dict = {}
