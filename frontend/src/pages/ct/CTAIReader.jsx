@@ -145,7 +145,7 @@ function PhieuEditor({ data, loai, realId, onSaved, onCancel, provider }) {
       </div>
 
       {saveMsg && (
-        <div className={`p-3 rounded-hp-lg text-sm font-medium ${saveMsg.type === 'ok' ? 'bg-hp-primary/15 text-hp-primary' : 'bg-hp-danger/15 text-hp-danger'}`}>
+        <div className={`p-3 rounded-hp-lg text-sm font-medium ${saveMsg.type === 'ok' ? 'bg-hp-success/15 text-hp-success' : 'bg-hp-danger/15 text-hp-danger'}`}>
           {saveMsg.text}
         </div>
       )}
@@ -216,7 +216,7 @@ function MultiPhieuList({ phieuList, loai, realId, provider }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-hp-primary">
+        <div className="flex items-center gap-2 text-hp-success">
           <CheckCircle className="w-5 h-5" />
           <span className="font-semibold">AI đọc xong — tìm thấy <span className="font-bold">{phieuList.length} phiếu</span></span>
         </div>
@@ -231,7 +231,7 @@ function MultiPhieuList({ phieuList, loai, realId, provider }) {
         </div>
       </div>
       {saveAllMsg && (
-        <div className={`p-3 rounded-hp-lg text-sm font-medium ${saveAllMsg.type === 'ok' ? 'bg-hp-primary/15 text-hp-primary' : 'bg-hp-danger/15 text-hp-danger'}`}>
+        <div className={`p-3 rounded-hp-lg text-sm font-medium ${saveAllMsg.type === 'ok' ? 'bg-hp-success/15 text-hp-success' : 'bg-hp-danger/15 text-hp-danger'}`}>
           {saveAllMsg.text}
         </div>
       )}
@@ -241,7 +241,7 @@ function MultiPhieuList({ phieuList, loai, realId, provider }) {
         const isOpen = expanded === idx
         const soP = p.so_phieu || `Phiếu ${idx + 1}`
         return (
-          <div key={idx} className={`border rounded-hp-lg overflow-hidden transition-colors ${isSaved ? 'border-hp-primary/40 bg-hp-primary/5' : 'border-hp-border bg-hp-card'}`}>
+          <div key={idx} className={`border rounded-hp-lg overflow-hidden transition-colors ${isSaved ? 'border-hp-success/40 bg-hp-success/5' : 'border-hp-border bg-hp-card'}`}>
             <button
               className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-hp-elevated/50 transition-colors"
               onClick={() => setExpanded(isOpen ? null : idx)}
@@ -253,7 +253,7 @@ function MultiPhieuList({ phieuList, loai, realId, provider }) {
                 {p.doi_tac && <span className="ml-2 text-xs text-hp-text-muted truncate">· {p.doi_tac}</span>}
               </div>
               <span className="text-xs text-hp-text-muted">{(p.items || []).length} mặt hàng</span>
-              {isSaved && <span className="text-xs font-medium text-hp-primary bg-hp-primary/15 px-2 py-0.5 rounded-full">Đã lưu</span>}
+              {isSaved && <span className="text-xs font-medium text-hp-success bg-hp-success/15 px-2 py-0.5 rounded-full">Đã lưu</span>}
               {isOpen ? <ChevronUp className="w-4 h-4 text-hp-text-muted flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-hp-text-muted flex-shrink-0" />}
             </button>
 
@@ -434,7 +434,7 @@ export default function CTAIReader() {
       {result && (
         <div className="bg-hp-card rounded-hp-lg border border-hp-border p-5 space-y-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-hp-primary">
+            <div className="flex items-center gap-2 text-hp-success">
               <CheckCircle className="w-5 h-5" />
               <span className="font-semibold">AI đọc xong — kiểm tra và xác nhận trước khi lưu</span>
             </div>

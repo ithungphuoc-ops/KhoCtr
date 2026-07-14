@@ -294,7 +294,7 @@ export default function CTXuatKho() {
       </div>
 
       {saveMsg && (
-        <div className={`p-3 rounded-hp-xl text-sm font-medium ${saveMsg.type === 'ok' ? 'bg-hp-primary/15 text-hp-primary' : 'bg-hp-danger/15 text-hp-danger'}`}>
+        <div className={`p-3 rounded-hp-xl text-sm font-medium ${saveMsg.type === 'ok' ? 'bg-hp-success/15 text-hp-success' : 'bg-hp-danger/15 text-hp-danger'}`}>
           {saveMsg.text}
         </div>
       )}
@@ -535,7 +535,7 @@ export default function CTXuatKho() {
               </div>
 
               {saveMsg && (
-                <div className={`p-3 rounded-hp-xl text-sm ${saveMsg.type === 'ok' ? 'bg-hp-primary/15 text-hp-primary' : 'bg-hp-danger/15 text-hp-danger'}`}>
+                <div className={`p-3 rounded-hp-xl text-sm ${saveMsg.type === 'ok' ? 'bg-hp-success/15 text-hp-success' : 'bg-hp-danger/15 text-hp-danger'}`}>
                   {saveMsg.text}
                 </div>
               )}
@@ -564,7 +564,7 @@ export default function CTXuatKho() {
         onSaveAll={handleSaveBatch}
       />
       {batchMsg && (
-        <div className={`fixed bottom-4 right-4 z-50 max-w-md p-4 rounded-hp-lg shadow-md text-sm font-medium ${batchMsg.type === 'ok' ? 'bg-hp-primary text-white' : 'bg-hp-danger text-white'}`}>
+        <div className={`fixed bottom-4 right-4 z-50 max-w-md p-4 rounded-hp-lg shadow-md text-sm font-medium ${batchMsg.type === 'ok' ? 'bg-hp-success text-white' : 'bg-hp-danger text-white'}`}>
           {batchMsg.text}
           <button onClick={() => setBatchMsg(null)} className="ml-3 underline text-white/80">Đóng</button>
         </div>

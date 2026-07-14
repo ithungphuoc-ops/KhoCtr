@@ -71,7 +71,7 @@ export default function TonKho() {
           </div>
         </div>
         <div className="bg-hp-card rounded-hp-lg border border-hp-border p-4 flex items-center gap-3">
-          <CheckCircle className="w-8 h-8 text-hp-primary flex-shrink-0" />
+          <CheckCircle className="w-8 h-8 text-hp-success flex-shrink-0" />
           <div>
             <div className="text-2xl font-bold text-hp-text">{fmt(conHangCount)}</div>
             <div className="text-sm text-hp-text-secondary">Còn hàng trong kho</div>
@@ -144,9 +144,9 @@ export default function TonKho() {
                           <td className="px-4 py-2.5 text-hp-text-secondary text-xs">{r.dvt || '—'}</td>
                           <td className="px-4 py-2.5 text-center">
                             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                              hetHang ? 'bg-hp-danger/15 text-hp-danger' : 'bg-hp-primary/15 text-hp-primary'
+                              hetHang ? 'bg-hp-danger/15 text-hp-danger' : 'bg-hp-success/15 text-hp-success'
                             }`}>
-                              <span className={`w-1.5 h-1.5 rounded-full ${hetHang ? 'bg-hp-danger' : 'bg-hp-primary'}`} />
+                              <span className={`w-1.5 h-1.5 rounded-full ${hetHang ? 'bg-hp-danger' : 'bg-hp-success'}`} />
                               {hetHang ? 'Hết hàng' : 'Còn hàng'}
                             </span>
                           </td>
@@ -172,9 +172,9 @@ export default function TonKho() {
                     <div className="text-hp-accent font-mono text-xs">{r.ma_hang || '—'}</div>
                   </div>
                   <span className={`flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                    hetHang ? 'bg-hp-danger/15 text-hp-danger' : 'bg-hp-primary/15 text-hp-primary'
+                    hetHang ? 'bg-hp-danger/15 text-hp-danger' : 'bg-hp-success/15 text-hp-success'
                   }`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${hetHang ? 'bg-hp-danger' : 'bg-hp-primary'}`} />
+                    <span className={`w-1.5 h-1.5 rounded-full ${hetHang ? 'bg-hp-danger' : 'bg-hp-success'}`} />
                     {hetHang ? 'Hết hàng' : 'Còn hàng'}
                   </span>
                 </div>

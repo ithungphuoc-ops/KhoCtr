@@ -65,7 +65,7 @@ function saveToSession(congTrinhId, rows) {
 function clearSession() { sessionStorage.removeItem(SESSION_KEY) }
 
 const TAB_META = {
-  green:  { label: '🟢 Tự động khớp', bg: 'bg-hp-primary/10',  text: 'text-hp-primary',  badge: 'bg-hp-primary/15 text-hp-primary' },
+  green:  { label: '🟢 Tự động khớp', bg: 'bg-hp-success/10',  text: 'text-hp-success',  badge: 'bg-hp-success/15 text-hp-success' },
   yellow: { label: '🟡 Cần xác nhận', bg: 'bg-hp-warning/10',  text: 'text-hp-warning',  badge: 'bg-hp-warning/15 text-hp-warning' },
   red:    { label: '🔴 Hàng mới',     bg: 'bg-hp-danger/10',   text: 'text-hp-danger',   badge: 'bg-hp-danger/15 text-hp-danger' },
 }

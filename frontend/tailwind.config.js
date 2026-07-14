@@ -6,6 +6,7 @@ export default {
       colors: {
         // Brand (cố định, không đổi theo theme)
         'hp-primary':            'rgb(var(--color-primary) / <alpha-value>)',
+        'hp-success':            'rgb(var(--color-success) / <alpha-value>)',
         'hp-accent':             'rgb(var(--color-accent) / <alpha-value>)',
         'hp-nav':                'rgb(var(--color-nav) / <alpha-value>)',
         'hp-danger':             'rgb(var(--color-danger) / <alpha-value>)',

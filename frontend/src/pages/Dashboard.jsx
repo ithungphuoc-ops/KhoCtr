@@ -18,7 +18,7 @@ import { HP } from '../theme/tokens'
 const NOTE_COLORS = [
   { key: 'yellow', bg: 'bg-hp-warning/10', border: 'border-hp-warning/40', btn: 'bg-hp-warning' },
   { key: 'blue',   bg: 'bg-hp-accent/10',  border: 'border-hp-accent/40',  btn: 'bg-hp-accent'  },
-  { key: 'green',  bg: 'bg-hp-primary/10', border: 'border-hp-primary/40', btn: 'bg-hp-primary' },
+  { key: 'green',  bg: 'bg-hp-success/10', border: 'border-hp-success/40', btn: 'bg-hp-success' },
   { key: 'pink',   bg: 'bg-hp-danger/10',  border: 'border-hp-danger/40',  btn: 'bg-hp-danger'  },
 ]
 const colorMap = Object.fromEntries(NOTE_COLORS.map(c => [c.key, c]))
@@ -60,7 +60,7 @@ function GhiChuWidget() {
   const soonCount    = notes.filter(n => dlStatus(n.deadline) === 'soon').length
 
   const dlBorderMap = { overdue: 'border-hp-danger', soon: 'border-hp-warning', ok: 'border-transparent' }
-  const dlBadgeMap  = { overdue: 'bg-hp-danger/15 text-hp-danger', soon: 'bg-hp-warning/15 text-hp-warning', ok: 'bg-hp-primary/15 text-hp-primary' }
+  const dlBadgeMap  = { overdue: 'bg-hp-danger/15 text-hp-danger', soon: 'bg-hp-warning/15 text-hp-warning', ok: 'bg-hp-success/15 text-hp-success' }
   const dlLabelMap  = { overdue: 'Quá hạn', soon: 'Sắp đến', ok: '' }
 
   const addNote = () => {
@@ -243,7 +243,7 @@ function TonKhoWidget({ data, loading }) {
                   <tbody className="divide-y divide-hp-border">
                     {filtered.map((r, i) => {
                       const ton = r.ton_cuoi ?? 0
-                      const tonColor = ton <= 0 ? 'text-hp-danger font-bold' : ton <= 20 ? 'text-hp-warning font-semibold' : 'text-hp-primary font-semibold'
+                      const tonColor = ton <= 0 ? 'text-hp-danger font-bold' : ton <= 20 ? 'text-hp-warning font-semibold' : 'text-hp-success font-semibold'
                       return (
                         <tr key={i} className="hover:bg-hp-elevated">
                           <td className="py-1.5 text-hp-text max-w-hp-filter-md truncate" title={r.ten_hang}>{r.ten_hang}</td>
@@ -262,7 +262,7 @@ function TonKhoWidget({ data, loading }) {
               <div className="md:hidden max-h-64 overflow-y-auto space-y-2">
                 {filtered.map((r, i) => {
                   const ton = r.ton_cuoi ?? 0
-                  const tonColor = ton <= 0 ? 'text-hp-danger font-bold' : ton <= 20 ? 'text-hp-warning font-semibold' : 'text-hp-primary font-semibold'
+                  const tonColor = ton <= 0 ? 'text-hp-danger font-bold' : ton <= 20 ? 'text-hp-warning font-semibold' : 'text-hp-success font-semibold'
                   return (
                     <div key={i} className="bg-hp-surface rounded-hp-md p-2.5 text-sm">
                       <div className="text-hp-text truncate mb-1">{r.ten_hang}</div>
@@ -549,7 +549,7 @@ export default function Dashboard() {
             ? <div className="text-hp-text-muted text-sm text-center py-4">Đang tải...</div>
             : canhBao.length === 0
               ? <div className="flex flex-col items-center justify-center py-8 text-hp-text-muted">
-                  <CheckCircle className="w-10 h-10 text-hp-primary mb-2" />
+                  <CheckCircle className="w-10 h-10 text-hp-success mb-2" />
                   <span className="text-sm">Không có cảnh báo tồn kho</span>
                 </div>
               : <div className="space-y-2 max-h-64 overflow-y-auto">

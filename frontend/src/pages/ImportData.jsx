@@ -104,7 +104,7 @@ export default function ImportData() {
               step === s.key
                 ? 'bg-hp-accent text-white'
                 : STEPS.indexOf(step) > i
-                  ? 'bg-hp-primary/20 text-hp-primary'
+                  ? 'bg-hp-success/20 text-hp-success'
                   : 'bg-hp-elevated text-hp-text-muted'
             }`}>
               {STEPS.indexOf(step) > i ? '✓ ' : ''}{s.label}
@@ -144,14 +144,14 @@ export default function ImportData() {
               onClick={() => fileRef.current?.click()}
               className={`border-2 border-dashed rounded-hp-xl p-10 text-center cursor-pointer transition-all ${
                 dragging ? 'border-hp-accent bg-hp-accent/10'
-                : file   ? 'border-hp-primary bg-hp-primary/10'
+                : file   ? 'border-hp-success bg-hp-success/10'
                 : 'border-hp-border hover:border-hp-accent hover:bg-hp-elevated'
               }`}
             >
               {file ? (
                 <div className="space-y-1">
-                  <FileSpreadsheet className="w-10 h-10 text-hp-primary mx-auto" />
-                  <p className="font-medium text-hp-primary">{file.name}</p>
+                  <FileSpreadsheet className="w-10 h-10 text-hp-success mx-auto" />
+                  <p className="font-medium text-hp-success">{file.name}</p>
                   <p className="text-xs text-hp-text-muted">{(file.size / 1024).toFixed(0)} KB — Click để đổi file</p>
                 </div>
               ) : (
@@ -261,7 +261,7 @@ export default function ImportData() {
       {step === 'done' && result && (
         <div className="bg-hp-card rounded-hp-xl border border-hp-border p-6 space-y-5">
           <div className="text-center">
-            <CheckCircle className="w-14 h-14 text-hp-primary mx-auto mb-3" />
+            <CheckCircle className="w-14 h-14 text-hp-success mx-auto mb-3" />
             <h2 className="text-xl font-bold text-hp-text">Import hoàn tất!</h2>
             <p className="text-sm text-hp-text-secondary mt-1">
               Công trình: <span className="font-medium text-hp-accent">{ctName}</span>

@@ -274,8 +274,8 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
                   <span className="text-xs text-hp-sidebar-muted">Database tổng</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-hp-primary inline-block" />
-                  <span className="text-xs text-hp-primary font-medium">Online</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-hp-success inline-block" />
+                  <span className="text-xs text-hp-success font-medium">Online</span>
                 </div>
               </div>
               {isAdminUser ? (
@@ -300,7 +300,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
                   <CheckCircle className="w-3 h-3 text-hp-sidebar-muted" />
                   <span className="text-xs text-hp-sidebar-muted">Đồng bộ</span>
                 </div>
-                <span className="text-xs text-hp-primary font-medium">Thành công</span>
+                <span className="text-xs text-hp-success font-medium">Thành công</span>
               </div>
             </div>
           </div>

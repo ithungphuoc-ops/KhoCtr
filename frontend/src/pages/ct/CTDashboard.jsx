@@ -276,9 +276,9 @@ export default function CTDashboard() {
 
           {/* OK - không có cảnh báo */}
           {amKho.length === 0 && hetHang.length === 0 && sapHet.length === 0 && (
-            <div className="bg-hp-primary/15 rounded-hp-lg border border-hp-primary/20 p-4 flex items-center gap-3">
-              <CheckCircle className="w-5 h-5 text-hp-primary" />
-              <span className="text-sm text-hp-primary font-medium">Tồn kho ổn định — không có cảnh báo</span>
+            <div className="bg-hp-success/15 rounded-hp-lg border border-hp-success/20 p-4 flex items-center gap-3">
+              <CheckCircle className="w-5 h-5 text-hp-success" />
+              <span className="text-sm text-hp-success font-medium">Tồn kho ổn định — không có cảnh báo</span>
             </div>
           )}
         </div>
@@ -286,9 +286,9 @@ export default function CTDashboard() {
 
       {/* Không có cảnh báo */}
       {!loading && amKho.length === 0 && hetHang.length === 0 && sapHet.length === 0 && tonKho.length > 0 && (
-        <div className="bg-hp-primary/15 rounded-hp-lg border border-hp-primary/20 p-4 flex items-center gap-3">
-          <CheckCircle className="w-5 h-5 text-hp-primary" />
-          <span className="text-sm text-hp-primary font-medium">Tồn kho ổn định — không có cảnh báo</span>
+        <div className="bg-hp-success/15 rounded-hp-lg border border-hp-success/20 p-4 flex items-center gap-3">
+          <CheckCircle className="w-5 h-5 text-hp-success" />
+          <span className="text-sm text-hp-success font-medium">Tồn kho ổn định — không có cảnh báo</span>
         </div>
       )}
     </div>

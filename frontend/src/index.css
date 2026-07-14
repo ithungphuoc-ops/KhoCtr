@@ -8,8 +8,9 @@
 :root,
 [data-theme="dark"] {
   /* Brand — cố định cả 2 mode (space-separated RGB cho Tailwind opacity) */
-  --color-primary:         96 187 70;      /* #60BB46  Success/CTA */
-  --color-accent:          9 106 167;      /* #096AA7  Primary blue */
+  --color-primary:         9 106 167;      /* #096AA7  Primary — hành động chính */
+  --color-success:         96 187 70;      /* #60BB46  Success — thành công, hoàn thành */
+  --color-accent:          9 106 167;      /* #096AA7  = Primary (V1.1 không có màu accent riêng) */
   --color-nav:             75 79 85;       /* #4B4F55  Sidebar */
   --color-danger:          229 57 53;      /* #E53935 */
   --color-warning:         255 167 38;     /* #FFA726 */
@@ -39,7 +40,8 @@
   --hp-overlay:         rgba(0, 0, 0, 0.6);
 
   /* CSS var thuần (dùng cho JS / Chart.js / non-Tailwind) */
-  --hp-brand-primary:   #60BB46;
+  --hp-brand-primary:   #096AA7;
+  --hp-brand-success:   #60BB46;
   --hp-brand-accent:    #096AA7;
   --hp-nav-base:        #4B4F55;
   --hp-background:      #0F1923;
@@ -55,6 +57,7 @@
   --hp-danger:          #E53935;
   --hp-warning:         #FFA726;
   --hp-muted:           #9E9E9E;
+  --hp-success:         #60BB46;
   --hp-radius-sm:       6px;
   --hp-radius-md:       8px;
   --hp-radius-lg:       12px;

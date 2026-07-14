@@ -17,7 +17,7 @@ const PROVIDER_COLORS = {
 }
 
 const STATUS_BADGE = {
-  ok:             { cls: 'bg-hp-primary/20 text-hp-primary',  label: 'OK' },
+  ok:             { cls: 'bg-hp-success/20 text-hp-success',  label: 'OK' },
   error:          { cls: 'bg-hp-danger/20 text-hp-danger',    label: 'Lỗi' },
   quota_exceeded: { cls: 'bg-hp-warning/20 text-hp-warning',  label: 'Hết quota' },
   null:           { cls: 'bg-hp-elevated text-hp-text-muted', label: 'Chưa test' },
@@ -282,7 +282,7 @@ export default function ThietLapAPI() {
                   {!hasKey ? (
                     <AlertCircle className="w-4 h-4 text-hp-border" title="Chưa cấu hình" />
                   ) : active ? (
-                    <CheckCircle2 className="w-4 h-4 text-hp-primary" title="Đang hoạt động" />
+                    <CheckCircle2 className="w-4 h-4 text-hp-success" title="Đang hoạt động" />
                   ) : (
                     <XCircle className="w-4 h-4 text-hp-text-muted" title="Đã tắt / chưa test" />
                   )}
@@ -319,8 +319,8 @@ export default function ThietLapAPI() {
                   {/* Trạng thái tổng */}
                   {currentCfg?.api_key_set ? (
                     currentCfg.is_active
-                      ? <span className="flex items-center gap-1 text-xs font-medium text-hp-primary bg-hp-primary/15 px-2.5 py-1 rounded-full">
-                          <span className="w-1.5 h-1.5 bg-hp-primary rounded-full" />AI Đang hoạt động
+                      ? <span className="flex items-center gap-1 text-xs font-medium text-hp-success bg-hp-success/15 px-2.5 py-1 rounded-full">
+                          <span className="w-1.5 h-1.5 bg-hp-success rounded-full" />AI Đang hoạt động
                         </span>
                       : <span className="flex items-center gap-1 text-xs font-medium text-hp-text-muted bg-hp-elevated px-2.5 py-1 rounded-full">
                           <span className="w-1.5 h-1.5 bg-hp-muted rounded-full" />AI Đã tắt
@@ -337,7 +337,7 @@ export default function ThietLapAPI() {
               {msg && (
                 <div className={`rounded-hp-lg px-4 py-3 text-sm flex items-start gap-2
                   ${msg.type === 'ok'
-                    ? 'bg-hp-primary/10 text-hp-primary border border-hp-primary/30'
+                    ? 'bg-hp-success/10 text-hp-success border border-hp-success/30'
                     : 'bg-hp-danger/10 text-hp-danger border border-hp-danger/30'}`}>
                   {msg.type === 'ok' ? <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
                                      : <XCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />}

@@ -150,7 +150,7 @@ export default function CTTonKho() {
           </div>
         </div>
         <div className="bg-hp-card rounded-hp-lg border border-hp-border p-4 flex items-center gap-3">
-          <CheckCircle className="w-8 h-8 text-hp-primary flex-shrink-0" />
+          <CheckCircle className="w-8 h-8 text-hp-success flex-shrink-0" />
           <div>
             <div className="text-2xl font-bold text-hp-text">{fmt(conHang.length)}</div>
             <div className="text-sm text-hp-text-secondary">Còn hàng</div>
@@ -222,8 +222,8 @@ export default function CTTonKho() {
                           </td>
                           <td className="px-4 py-2.5 text-hp-text-secondary text-xs">{r.dvt || '—'}</td>
                           <td className="px-4 py-2.5 text-center">
-                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${het ? 'bg-hp-danger/20 text-hp-danger' : 'bg-hp-primary/20 text-hp-primary'}`}>
-                              <span className={`w-1.5 h-1.5 rounded-full ${het ? 'bg-hp-danger' : 'bg-hp-primary'}`} />
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${het ? 'bg-hp-danger/20 text-hp-danger' : 'bg-hp-success/20 text-hp-success'}`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${het ? 'bg-hp-danger' : 'bg-hp-success'}`} />
                               {het ? 'Hết' : 'Còn'}
                             </span>
                           </td>
@@ -258,8 +258,8 @@ export default function CTTonKho() {
                     <div className="text-hp-text font-medium truncate">{r.ten_hang}</div>
                     <div className="text-hp-text-secondary text-xs">{r.nhom || '—'}</div>
                   </div>
-                  <span className={`flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${het ? 'bg-hp-danger/20 text-hp-danger' : 'bg-hp-primary/20 text-hp-primary'}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${het ? 'bg-hp-danger' : 'bg-hp-primary'}`} />
+                  <span className={`flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${het ? 'bg-hp-danger/20 text-hp-danger' : 'bg-hp-success/20 text-hp-success'}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${het ? 'bg-hp-danger' : 'bg-hp-success'}`} />
                     {het ? 'Hết' : 'Còn'}
                   </span>
                 </div>

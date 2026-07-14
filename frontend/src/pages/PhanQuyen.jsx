@@ -108,7 +108,7 @@ export default function PhanQuyen() {
 
       {msg && (
         <div className={`flex items-center gap-3 p-4 rounded-hp-md border text-sm ${
-          msg.type === 'ok' ? 'bg-hp-primary/15 border-hp-primary/30 text-hp-primary' : 'bg-hp-danger/15 border-hp-danger/30 text-hp-danger'
+          msg.type === 'ok' ? 'bg-hp-success/15 border-hp-success/30 text-hp-success' : 'bg-hp-danger/15 border-hp-danger/30 text-hp-danger'
         }`}>
           {msg.type === 'ok' ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
           {msg.text}

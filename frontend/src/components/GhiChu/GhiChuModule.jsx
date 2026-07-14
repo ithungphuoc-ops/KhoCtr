@@ -90,7 +90,7 @@ export default function GhiChuModule({
               </span>
             )}
             {stats.hoan_thanh > 0 && (
-              <span className="px-2 py-0.5 bg-hp-primary/15 text-hp-primary text-xs font-medium rounded-full">
+              <span className="px-2 py-0.5 bg-hp-success/15 text-hp-success text-xs font-medium rounded-full">
                 {stats.hoan_thanh} hoàn thành
               </span>
             )}

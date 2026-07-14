@@ -12,10 +12,10 @@ export const MAU_MAP = {
     label:  'Vàng',
   },
   success: {
-    bg:     'bg-hp-primary/10',
-    border: 'border-hp-primary/40',
-    badge:  'bg-hp-primary/15 text-hp-primary',
-    dot:    'bg-hp-primary',
+    bg:     'bg-hp-success/10',
+    border: 'border-hp-success/40',
+    badge:  'bg-hp-success/15 text-hp-success',
+    dot:    'bg-hp-success',
     label:  'Xanh lá',
   },
   danger: {
@@ -52,7 +52,7 @@ export const TRANG_THAI_MAP = {
   mo:          { label: 'Mở',          badge: 'bg-hp-muted/20 text-hp-text-secondary', col: 'Mở' },
   dang_lam:    { label: 'Đang làm',    badge: 'bg-hp-accent/15 text-hp-accent',        col: 'Đang làm' },
   tam_dung:    { label: 'Tạm dừng',    badge: 'bg-hp-warning/15 text-hp-warning',      col: 'Tạm dừng' },
-  hoan_thanh:  { label: 'Hoàn thành',  badge: 'bg-hp-primary/15 text-hp-primary',      col: 'Hoàn thành' },
+  hoan_thanh:  { label: 'Hoàn thành',  badge: 'bg-hp-success/15 text-hp-success',      col: 'Hoàn thành' },
   huy:         { label: 'Huỷ',         badge: 'bg-hp-muted/20 text-hp-text-secondary', col: 'Huỷ' },
 }
 

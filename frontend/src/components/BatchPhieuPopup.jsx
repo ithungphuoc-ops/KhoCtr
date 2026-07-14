@@ -7,7 +7,7 @@ import { X, CheckCircle, AlertCircle, HelpCircle, ChevronDown, ChevronRight, Loa
 import { createHangHoa } from '../api'
 
 const TAB_COLOR = {
-  green:  'text-hp-primary',
+  green:  'text-hp-success',
   yellow: 'text-hp-warning',
   red:    'text-hp-danger',
 }
@@ -168,7 +168,7 @@ export default function BatchPhieuPopup({ isOpen, onClose, phieus, onSaveAll, sa
                   <span className="text-xs text-hp-text-secondary w-24 shrink-0">{p.header.ngay || ''}</span>
                   <span className="text-xs text-hp-text-secondary flex-1 truncate">{p.header.doi_tac || '—'}</span>
                   <div className="flex gap-1.5 shrink-0">
-                    {gCnt > 0 && <span className="text-xs px-1.5 py-0.5 rounded-full bg-hp-primary/15 text-hp-primary">{gCnt} ✓</span>}
+                    {gCnt > 0 && <span className="text-xs px-1.5 py-0.5 rounded-full bg-hp-success/15 text-hp-success">{gCnt} ✓</span>}
                     {yCnt > 0 && <span className="text-xs px-1.5 py-0.5 rounded-full bg-hp-warning/15 text-hp-warning">{yCnt} ?</span>}
                     {rCnt > 0 && <span className="text-xs px-1.5 py-0.5 rounded-full bg-hp-danger/15 text-hp-danger">{rCnt} mới</span>}
                   </div>

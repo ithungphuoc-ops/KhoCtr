@@ -1,7 +1,7 @@
 # HPCons Project Instructions // Chỉ dẫn dự án HPCons
 
 ## Quy tắc bắt buộc
-Mọi giao diện phải tuân thủ HPCons Design System V1.0.
+Mọi giao diện phải tuân thủ HPCons Design System V1.1 (cập nhật 11/07/2026).
 
 ## Tài liệu phải đọc trước khi sửa giao diện
 - Tổng quan: @README.md
@@ -14,9 +14,9 @@ Mọi giao diện phải tuân thủ HPCons Design System V1.0.
 - Quy tắc lập trình: @15-coding/README.md
 
 ## Luật giao diện
-1. Dark Mode // giao diện tối là mặc định.
-2. Màu chính: `#60BB46`.
-3. Màu nhấn: `#0969A7`.
+1. Hỗ trợ cả Light Mode và Dark Mode (Dark Mode là mặc định).
+2. Màu chính (Primary — hành động chính, nút CTA, menu đang chọn): `#096AA7`.
+3. Màu thành công (Success — hoàn thành, trạng thái tốt/ổn định): `#60BB46`. Không dùng Success cho hành động/nút bấm thông thường.
 4. Thanh điều hướng: `#4B4F55`.
 5. Không tạo màu mới nếu chưa bổ sung vào Design Token // biến thiết kế.
 6. Không dùng khoảng cách tùy ý ngoài thang quy chuẩn.

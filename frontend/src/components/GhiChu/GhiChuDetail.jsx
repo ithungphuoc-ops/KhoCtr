@@ -113,10 +113,10 @@ export default function GhiChuDetail({ item, congTrinhName, onClose, onEdit, onC
             {/* Hoàn thành lúc */}
             {item.completed_at && (
               <div className="flex items-start gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-hp-primary mt-0.5 flex-shrink-0" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-hp-success mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-hp-text-muted">Hoàn thành lúc</p>
-                  <p className="font-medium text-hp-primary">{fmtDate(item.completed_at)}</p>
+                  <p className="font-medium text-hp-success">{fmtDate(item.completed_at)}</p>
                 </div>
               </div>
             )}

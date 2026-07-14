@@ -1,6 +1,7 @@
 // HPCons Design System V1.1 — Token JS cho thư viện không dùng class (Chart.js...)
 export const HP = {
-  primary:       '#60BB46',
+  primary:       '#096AA7',
+  success:       '#60BB46',
   accent:        '#096AA7',
   nav:           '#4B4F55',
   danger:        '#E53935',
@@ -19,7 +20,7 @@ export const HP = {
 // Dải màu cho biểu đồ nhiều chuỗi (dựa trên token thương hiệu)
 export const HP_CHART_COLORS = [
   HP.primary,
-  HP.accent,
+  HP.success,
   HP.warning,
   HP.danger,
   HP.muted,

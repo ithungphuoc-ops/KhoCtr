@@ -133,7 +133,7 @@ export default function CongTrinh() {
       {msg && (
         <div className={`flex items-center gap-3 p-4 rounded-hp-xl border text-sm ${
           msg.type === 'ok'
-            ? 'bg-hp-primary/10 border-hp-primary/30 text-hp-primary'
+            ? 'bg-hp-success/10 border-hp-success/30 text-hp-success'
             : 'bg-hp-danger/10 border-hp-danger/30 text-hp-danger'
         }`}>
           {msg.type === 'ok' ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}

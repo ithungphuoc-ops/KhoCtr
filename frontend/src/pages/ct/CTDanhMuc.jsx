@@ -149,7 +149,7 @@ export default function CTDanhMuc() {
           </div>
 
           {msg && (
-            <div className={`mt-3 text-sm px-3 py-2 rounded-hp-md ${msg.err ? 'bg-hp-danger/10 text-hp-danger' : 'bg-hp-primary/15 text-hp-primary'}`}>
+            <div className={`mt-3 text-sm px-3 py-2 rounded-hp-md ${msg.err ? 'bg-hp-danger/10 text-hp-danger' : 'bg-hp-success/15 text-hp-success'}`}>
               {msg.err ? '✗' : '✓'} {msg.text}
             </div>
           )}
@@ -320,7 +320,7 @@ export default function CTDanhMuc() {
               </div>
 
               {editMsg && (
-                <div className={`text-sm px-3 py-2 rounded-hp-md ${editMsg.err ? 'bg-hp-danger/10 text-hp-danger' : 'bg-hp-primary/15 text-hp-primary'}`}>
+                <div className={`text-sm px-3 py-2 rounded-hp-md ${editMsg.err ? 'bg-hp-danger/10 text-hp-danger' : 'bg-hp-success/15 text-hp-success'}`}>
                   {editMsg.err ? '✗' : '✓'} {editMsg.text}
                 </div>
               )}

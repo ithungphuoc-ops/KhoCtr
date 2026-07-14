@@ -23,7 +23,7 @@ export default function TimelineProgress({ startDate, endDate, completed = false
   const isOverdue  = daysLeft < 0
 
   const barColor = completed
-    ? 'bg-hp-primary'
+    ? 'bg-hp-success'
     : isOverdue
       ? 'bg-hp-danger'
       : pct >= 80
@@ -37,7 +37,7 @@ export default function TimelineProgress({ startDate, endDate, completed = false
       : `Còn ${daysLeft} ngày`
 
   const statusColor = completed
-    ? 'text-hp-primary'
+    ? 'text-hp-success'
     : isOverdue
       ? 'text-hp-danger'
       : pct >= 80

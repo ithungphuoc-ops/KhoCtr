@@ -229,18 +229,18 @@ export default function AIReader() {
           )}
 
           {savedOk && (
-            <div className="flex items-center gap-3 p-4 bg-hp-primary/15 rounded-hp-lg border border-hp-primary/30">
-              <CheckCircle className="w-5 h-5 text-hp-primary flex-shrink-0" />
+            <div className="flex items-center gap-3 p-4 bg-hp-success/15 rounded-hp-lg border border-hp-success/30">
+              <CheckCircle className="w-5 h-5 text-hp-success flex-shrink-0" />
               <div>
-                <p className="text-sm font-medium text-hp-primary">Lưu phiếu thành công!</p>
-                <p className="text-xs text-hp-primary mt-0.5">Phiếu đã được lưu vào hệ thống</p>
+                <p className="text-sm font-medium text-hp-success">Lưu phiếu thành công!</p>
+                <p className="text-xs text-hp-success mt-0.5">Phiếu đã được lưu vào hệ thống</p>
               </div>
             </div>
           )}
 
           {result && !savedOk && (
             <div className="space-y-3">
-              <div className="flex items-center gap-2 text-hp-primary">
+              <div className="flex items-center gap-2 text-hp-success">
                 <CheckCircle className="w-4 h-4" />
                 <span className="text-sm font-medium">Đọc phiếu thành công!</span>
               </div>

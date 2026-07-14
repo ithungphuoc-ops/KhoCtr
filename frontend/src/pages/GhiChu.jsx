@@ -66,7 +66,7 @@ function CTGroup({ ct, items, onExpand, isOpen }) {
             </span>
           )}
           {done > 0 && (
-            <span className="px-2 py-0.5 bg-hp-primary/15 text-hp-primary text-xs rounded-full">
+            <span className="px-2 py-0.5 bg-hp-success/15 text-hp-success text-xs rounded-full">
               {done} xong
             </span>
           )}
@@ -223,7 +223,7 @@ export default function GhiChu() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <StatCard label="Tổng ghi chú"  value={globalStats.total}      color="bg-hp-nav" />
               <StatCard label="Đang mở"        value={globalStats.mo}         color="bg-hp-accent" />
-              <StatCard label="Hoàn thành"     value={globalStats.hoan_thanh} color="bg-hp-primary" />
+              <StatCard label="Hoàn thành"     value={globalStats.hoan_thanh} color="bg-hp-success" />
               <StatCard label="Quá hạn"        value={globalStats.overdue}    color="bg-hp-danger" />
             </div>
           )}
