@@ -20,15 +20,15 @@ if errorlevel 1 (
 )
 
 :: Tao file .env neu chua co
-if not exist "backend\.env" (
+if not exist "api\.env" (
     echo [INFO] Tao file .env tu .env.example...
-    copy "backend\.env.example" "backend\.env" >nul
+    copy "api\.env.example" "api\.env" >nul
     echo.
-    echo [QUAN TRONG] Mo file backend\.env va dien vao:
+    echo [QUAN TRONG] Mo file api\.env va dien vao:
     echo   CLAUDE_API_KEY=your_claude_api_key
     echo   (SUPABASE da duoc dien san)
     echo.
-    notepad "backend\.env"
+    notepad "api\.env"
 )
 
 :: Cai thu vien Python
@@ -68,7 +68,7 @@ if errorlevel 1 (
     echo Mo 2 cua so rieng:
     echo   Cua so 1: chay backend (tu dong mo)
     echo   Cua so 2: chay frontend dev (http://localhost:3000)
-    start "KhoUNICE Backend" cmd /k "cd /d "%~dp0backend" && python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+    start "KhoUNICE Backend" cmd /k "cd /d "%~dp0api" && python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
     start "KhoUNICE Frontend" cmd /k "cd /d "%~dp0frontend" && npm run dev"
     timeout /t 3 >nul
     start http://localhost:3000
@@ -87,7 +87,7 @@ echo   Nhan Ctrl+C de dung
 echo ==========================================
 echo.
 start http://localhost:8000
-cd /d "%~dp0backend"
+cd /d "%~dp0api"
 python -m uvicorn main:app --host 0.0.0.0 --port 8000
 
 pause

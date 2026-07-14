@@ -90,7 +90,7 @@ export default function CTDashboard() {
       </div>
 
       {/* Recent phieu */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* NK */}
         <div className="bg-hp-card rounded-hp-lg border border-hp-border p-5">
           <div className="flex items-center justify-between mb-3">
@@ -103,22 +103,37 @@ export default function CTDashboard() {
             ? <div className="text-hp-text-muted text-sm text-center py-4">Đang tải...</div>
             : recentNK.length === 0
               ? <div className="text-hp-text-muted text-sm text-center py-4">Chưa có phiếu nhập</div>
-              : <table className="w-full text-xs">
-                  <thead><tr className="text-hp-text-muted border-b border-hp-border">
-                    <th className="text-left py-1.5 font-medium">Số phiếu</th>
-                    <th className="text-left py-1.5 font-medium">Ngày</th>
-                    <th className="text-right py-1.5 font-medium">Tổng tiền</th>
-                  </tr></thead>
-                  <tbody>
+              : <>
+                  {/* Table — PC/Tablet */}
+                  <table className="hidden md:table w-full text-xs">
+                    <thead><tr className="text-hp-text-muted border-b border-hp-border">
+                      <th className="text-left py-1.5 font-medium">Số phiếu</th>
+                      <th className="text-left py-1.5 font-medium">Ngày</th>
+                      <th className="text-right py-1.5 font-medium">Tổng tiền</th>
+                    </tr></thead>
+                    <tbody>
+                      {recentNK.map(p => (
+                        <tr key={p.id} className="border-b border-hp-border hover:bg-hp-elevated">
+                          <td className="py-1.5 font-mono text-hp-primary font-medium">{p.so_phieu}</td>
+                          <td className="py-1.5 text-hp-text-secondary">{p.ngay}</td>
+                          <td className="py-1.5 text-right text-hp-text">{formatVND(p.tong_tien)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {/* Card List — Mobile */}
+                  <div className="md:hidden space-y-1.5">
                     {recentNK.map(p => (
-                      <tr key={p.id} className="border-b border-hp-border hover:bg-hp-elevated">
-                        <td className="py-1.5 font-mono text-hp-primary font-medium">{p.so_phieu}</td>
-                        <td className="py-1.5 text-hp-text-secondary">{p.ngay}</td>
-                        <td className="py-1.5 text-right text-hp-text">{formatVND(p.tong_tien)}</td>
-                      </tr>
+                      <div key={p.id} className="flex justify-between items-center text-xs bg-hp-surface rounded-hp-md px-2.5 py-2">
+                        <div>
+                          <div className="font-mono text-hp-primary font-medium">{p.so_phieu}</div>
+                          <div className="text-hp-text-secondary">{p.ngay}</div>
+                        </div>
+                        <div className="text-hp-text font-medium">{formatVND(p.tong_tien)}</div>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
+                  </div>
+                </>
           }
         </div>
 
@@ -134,22 +149,37 @@ export default function CTDashboard() {
             ? <div className="text-hp-text-muted text-sm text-center py-4">Đang tải...</div>
             : recentXK.length === 0
               ? <div className="text-hp-text-muted text-sm text-center py-4">Chưa có phiếu xuất</div>
-              : <table className="w-full text-xs">
-                  <thead><tr className="text-hp-text-muted border-b border-hp-border">
-                    <th className="text-left py-1.5 font-medium">Số phiếu</th>
-                    <th className="text-left py-1.5 font-medium">Ngày</th>
-                    <th className="text-right py-1.5 font-medium">Tổng tiền</th>
-                  </tr></thead>
-                  <tbody>
+              : <>
+                  {/* Table — PC/Tablet */}
+                  <table className="hidden md:table w-full text-xs">
+                    <thead><tr className="text-hp-text-muted border-b border-hp-border">
+                      <th className="text-left py-1.5 font-medium">Số phiếu</th>
+                      <th className="text-left py-1.5 font-medium">Ngày</th>
+                      <th className="text-right py-1.5 font-medium">Tổng tiền</th>
+                    </tr></thead>
+                    <tbody>
+                      {recentXK.map(p => (
+                        <tr key={p.id} className="border-b border-hp-border hover:bg-hp-elevated">
+                          <td className="py-1.5 font-mono text-hp-warning font-medium">{p.so_phieu}</td>
+                          <td className="py-1.5 text-hp-text-secondary">{p.ngay}</td>
+                          <td className="py-1.5 text-right text-hp-text">{formatVND(p.tong_tien)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {/* Card List — Mobile */}
+                  <div className="md:hidden space-y-1.5">
                     {recentXK.map(p => (
-                      <tr key={p.id} className="border-b border-hp-border hover:bg-hp-elevated">
-                        <td className="py-1.5 font-mono text-hp-warning font-medium">{p.so_phieu}</td>
-                        <td className="py-1.5 text-hp-text-secondary">{p.ngay}</td>
-                        <td className="py-1.5 text-right text-hp-text">{formatVND(p.tong_tien)}</td>
-                      </tr>
+                      <div key={p.id} className="flex justify-between items-center text-xs bg-hp-surface rounded-hp-md px-2.5 py-2">
+                        <div>
+                          <div className="font-mono text-hp-warning font-medium">{p.so_phieu}</div>
+                          <div className="text-hp-text-secondary">{p.ngay}</div>
+                        </div>
+                        <div className="text-hp-text font-medium">{formatVND(p.tong_tien)}</div>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
+                  </div>
+                </>
           }
         </div>
       </div>

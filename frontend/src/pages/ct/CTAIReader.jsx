@@ -89,8 +89,8 @@ function PhieuEditor({ data, loai, realId, onSaved, onCancel, provider }) {
         </div>
       </div>
 
-      <div className="border border-hp-border rounded-hp-lg overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="border border-hp-border rounded-hp-lg overflow-x-auto">
+        <table className="w-full text-sm min-w-[560px]">
           <thead className="bg-hp-surface">
             <tr>
               <th className="text-left px-3 py-2 text-hp-text-secondary font-medium w-8">#</th>
@@ -224,7 +224,7 @@ function MultiPhieuList({ phieuList, loai, realId, provider }) {
           <span className="text-xs text-hp-text-muted">{savedSet.size}/{phieuList.length} đã lưu</span>
           {savedSet.size < phieuList.length && (
             <button onClick={handleSaveAll} disabled={savingAll}
-              className={`flex items-center gap-1.5 px-4 min-h-9 text-sm font-medium rounded-hp-md text-white disabled:opacity-50 ${loai === 'NK' ? 'bg-hp-primary hover:bg-hp-primary/90' : 'bg-hp-warning hover:bg-hp-warning/90'}`}>
+              className={`flex items-center gap-1.5 px-4 min-h-10 text-sm font-medium rounded-hp-md text-white disabled:opacity-50 ${loai === 'NK' ? 'bg-hp-primary hover:bg-hp-primary/90' : 'bg-hp-warning hover:bg-hp-warning/90'}`}>
               {savingAll ? <><Loader className="w-3.5 h-3.5 animate-spin" /> Đang lưu...</> : <><Save className="w-3.5 h-3.5" /> Lưu tất cả ({phieuList.length - savedSet.size})</>}
             </button>
           )}
@@ -367,15 +367,15 @@ export default function CTAIReader() {
             <label className="text-xs text-hp-text-secondary font-medium block mb-1">AI đọc phiếu</label>
             <div className="flex gap-1 p-1 bg-hp-surface rounded-hp-md">
               <button onClick={() => setProvider('gemini')}
-                className={"flex-1 px-2 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1 " + (provider === 'gemini' ? 'bg-hp-elevated text-hp-text shadow-sm' : 'text-hp-text-secondary hover:text-hp-text')}>
+                className={"flex-1 px-2 py-1.5 rounded-hp-md text-xs font-medium transition-colors flex items-center justify-center gap-1 " + (provider === 'gemini' ? 'bg-hp-elevated text-hp-text shadow-sm' : 'text-hp-text-secondary hover:text-hp-text')}>
                 🆓 Gemini
               </button>
               <button onClick={() => setProvider('openai')}
-                className={"flex-1 px-2 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1 " + (provider === 'openai' ? 'bg-hp-elevated text-hp-text shadow-sm' : 'text-hp-text-secondary hover:text-hp-text')}>
+                className={"flex-1 px-2 py-1.5 rounded-hp-md text-xs font-medium transition-colors flex items-center justify-center gap-1 " + (provider === 'openai' ? 'bg-hp-elevated text-hp-text shadow-sm' : 'text-hp-text-secondary hover:text-hp-text')}>
                 🤖 ChatGPT
               </button>
               <button onClick={() => setProvider('claude')}
-                className={"flex-1 px-2 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1 " + (provider === 'claude' ? 'bg-hp-elevated text-hp-text shadow-sm' : 'text-hp-text-secondary hover:text-hp-text')}>
+                className={"flex-1 px-2 py-1.5 rounded-hp-md text-xs font-medium transition-colors flex items-center justify-center gap-1 " + (provider === 'claude' ? 'bg-hp-elevated text-hp-text shadow-sm' : 'text-hp-text-secondary hover:text-hp-text')}>
                 <Zap className="w-3 h-3 text-hp-accent" /> Claude
               </button>
             </div>

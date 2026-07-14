@@ -119,11 +119,11 @@ export default function CongTrinh() {
         </div>
         <div className="flex gap-2">
           <button onClick={loadData} disabled={loading}
-            className="p-2 border border-hp-border rounded-lg hover:bg-hp-elevated text-hp-text-secondary">
+            className="p-2 border border-hp-border rounded-hp-lg hover:bg-hp-elevated text-hp-text-secondary">
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
           <button onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-hp-primary hover:bg-hp-primary/90 text-white rounded-lg text-sm font-medium transition-colors">
+            className="flex items-center gap-2 px-4 py-2 bg-hp-primary hover:bg-hp-primary/90 text-white rounded-hp-lg text-sm font-medium transition-colors">
             <Plus className="w-4 h-4" />
             Thêm công trình
           </button>
@@ -131,7 +131,7 @@ export default function CongTrinh() {
       </div>
 
       {msg && (
-        <div className={`flex items-center gap-3 p-4 rounded-xl border text-sm ${
+        <div className={`flex items-center gap-3 p-4 rounded-hp-xl border text-sm ${
           msg.type === 'ok'
             ? 'bg-hp-primary/10 border-hp-primary/30 text-hp-primary'
             : 'bg-hp-danger/10 border-hp-danger/30 text-hp-danger'
@@ -143,12 +143,12 @@ export default function CongTrinh() {
       )}
 
       {/* Search */}
-      <div className="bg-hp-card rounded-xl border border-hp-border p-4">
+      <div className="bg-hp-card rounded-hp-xl border border-hp-border p-4">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-hp-text-muted" />
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Tìm theo tên, mã, địa chỉ..."
-            className="w-full pl-9 pr-4 py-2 border border-hp-border rounded-lg text-sm bg-hp-elevated text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
+            className="w-full pl-9 pr-4 py-2 border border-hp-border rounded-hp-lg text-sm bg-hp-elevated text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
         </div>
       </div>
 
@@ -169,10 +169,10 @@ export default function CongTrinh() {
                 const isHoanThanh = ct.trang_thai === 'hoan_thanh'
                 const isUpdating = updating === ct.id
                 return (
-                  <div key={ct.id} className={`bg-hp-card rounded-xl border p-5 flex items-start gap-4 hover:shadow-sm transition-all ${
+                  <div key={ct.id} className={`bg-hp-card rounded-hp-xl border p-5 flex items-start gap-4 hover:shadow-sm transition-all ${
                     isHoanThanh ? 'border-hp-border opacity-70' : 'border-hp-border'
                   }`}>
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-sm ${
+                    <div className={`w-10 h-10 rounded-hp-xl flex items-center justify-center flex-shrink-0 font-bold text-sm ${
                       isHoanThanh ? 'bg-hp-elevated text-hp-text-muted' : 'bg-hp-primary/20 text-hp-primary'
                     }`}>
                       {i + 1}
@@ -199,7 +199,7 @@ export default function CongTrinh() {
                             onClick={() => handleToggleStatus(ct)}
                             disabled={isUpdating}
                             title={isHoanThanh ? 'Hoạt động lại' : 'Đánh dấu Hoàn thành'}
-                            className={`p-1.5 rounded-lg transition-colors disabled:opacity-50 ${
+                            className={`p-1.5 rounded-hp-lg transition-colors disabled:opacity-50 ${
                               isHoanThanh
                                 ? 'text-hp-text-muted hover:text-hp-primary hover:bg-hp-primary/10'
                                 : 'text-hp-text-muted hover:text-hp-warning hover:bg-hp-warning/10'
@@ -217,7 +217,7 @@ export default function CongTrinh() {
                           <button
                             onClick={() => handleDeleteClick(ct)}
                             title="Xóa công trình"
-                            className="p-1.5 text-hp-text-muted hover:text-hp-danger hover:bg-hp-danger/10 rounded-lg transition-colors"
+                            className="p-1.5 text-hp-text-muted hover:text-hp-danger hover:bg-hp-danger/10 rounded-hp-lg transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -245,9 +245,9 @@ export default function CongTrinh() {
       {/* Modal xác nhận xóa CT */}
       {deleteModal.show && (
         <div className="fixed inset-0 bg-hp-overlay flex items-center justify-center z-50 p-4">
-          <div className="bg-hp-elevated rounded-xl shadow-md w-full max-w-md p-6">
+          <div className="bg-hp-elevated rounded-hp-xl shadow-md w-full max-w-md p-6">
             <div className="flex items-start gap-4 mb-5">
-              <div className="w-10 h-10 bg-hp-danger/20 rounded-xl flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 bg-hp-danger/20 rounded-hp-xl flex items-center justify-center flex-shrink-0">
                 <AlertTriangle className="w-5 h-5 text-hp-danger" />
               </div>
               <div>
@@ -256,7 +256,7 @@ export default function CongTrinh() {
               </div>
             </div>
 
-            <div className="bg-hp-danger/10 border border-hp-danger/30 rounded-xl p-4 mb-4">
+            <div className="bg-hp-danger/10 border border-hp-danger/30 rounded-hp-xl p-4 mb-4">
               <p className="text-sm font-semibold text-hp-danger">
                 Bạn có chắc chắn muốn xóa công trình này?
               </p>
@@ -270,7 +270,7 @@ export default function CongTrinh() {
             )}
 
             {deleteModal.counts && (
-              <div className="bg-hp-surface rounded-xl p-4 mb-4 space-y-2">
+              <div className="bg-hp-surface rounded-hp-xl p-4 mb-4 space-y-2">
                 <p className="text-xs font-semibold text-hp-text-secondary uppercase tracking-wide mb-1">Dữ liệu sẽ bị xóa:</p>
                 <div className="flex justify-between text-sm">
                   <span className="text-hp-text-secondary">Phiếu nhập / xuất</span>
@@ -291,14 +291,14 @@ export default function CongTrinh() {
               <button
                 onClick={() => setDeleteModal({ show: false, ct: null, loading: false, counts: null })}
                 disabled={deleteModal.loading && !!deleteModal.counts}
-                className="flex-1 py-2.5 border border-hp-border text-hp-text-secondary rounded-xl text-sm hover:bg-hp-elevated disabled:opacity-50"
+                className="flex-1 py-2.5 border border-hp-border text-hp-text-secondary rounded-hp-xl text-sm hover:bg-hp-elevated disabled:opacity-50"
               >
                 Hủy
               </button>
               <button
                 onClick={handleDeleteConfirm}
                 disabled={deleteModal.loading}
-                className="flex-1 py-2.5 bg-hp-danger text-white rounded-xl text-sm font-semibold hover:bg-hp-danger/90 disabled:opacity-50 transition-colors"
+                className="flex-1 py-2.5 bg-hp-danger text-white rounded-hp-xl text-sm font-semibold hover:bg-hp-danger/90 disabled:opacity-50 transition-colors"
               >
                 {deleteModal.loading && deleteModal.counts ? 'Đang xóa...' : 'Xóa vĩnh viễn'}
               </button>
@@ -311,10 +311,10 @@ export default function CongTrinh() {
       {showForm && (
         <div className="fixed inset-0 bg-hp-overlay flex items-center justify-center z-50 p-4"
           onClick={e => { if (e.target === e.currentTarget) setShowForm(false) }}>
-          <div className="bg-hp-elevated rounded-xl shadow-md w-full max-w-md p-6">
+          <div className="bg-hp-elevated rounded-hp-xl shadow-md w-full max-w-md p-6">
             <div className="flex items-center justify-between mb-5">
               <h3 className="font-bold text-hp-text text-lg">Thêm công trình mới</h3>
-              <button onClick={() => setShowForm(false)} className="p-1 hover:bg-hp-surface rounded-lg text-hp-text-muted">
+              <button onClick={() => setShowForm(false)} className="p-1 hover:bg-hp-surface rounded-hp-lg text-hp-text-muted">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -323,33 +323,33 @@ export default function CongTrinh() {
                 <label className="text-xs font-medium text-hp-text-secondary mb-1.5 block">Tên công trình *</label>
                 <input value={form.ten_ct} onChange={e => setForm({...form, ten_ct: e.target.value})}
                   placeholder="VD: Nhà xưởng Bình Dương"
-                  className="w-full border border-hp-border rounded-xl px-3 py-2.5 text-sm bg-hp-surface text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
+                  className="w-full border border-hp-border rounded-hp-xl px-3 py-2.5 text-sm bg-hp-surface text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
               </div>
               <div>
                 <label className="text-xs font-medium text-hp-text-secondary mb-1.5 block">Mã công trình *</label>
                 <input value={form.ma_ct} onChange={e => setForm({...form, ma_ct: e.target.value.toUpperCase()})}
                   placeholder="VD: CT001"
-                  className="w-full border border-hp-border rounded-xl px-3 py-2.5 text-sm font-mono bg-hp-surface text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
+                  className="w-full border border-hp-border rounded-hp-xl px-3 py-2.5 text-sm font-mono bg-hp-surface text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
               </div>
               <div>
                 <label className="text-xs font-medium text-hp-text-secondary mb-1.5 block">Địa chỉ</label>
                 <input value={form.dia_chi} onChange={e => setForm({...form, dia_chi: e.target.value})}
                   placeholder="Địa chỉ công trình..."
-                  className="w-full border border-hp-border rounded-xl px-3 py-2.5 text-sm bg-hp-surface text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
+                  className="w-full border border-hp-border rounded-hp-xl px-3 py-2.5 text-sm bg-hp-surface text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
               </div>
               <div>
                 <label className="text-xs font-medium text-hp-text-secondary mb-1.5 block">Ghi chú</label>
                 <input value={form.ghi_chu} onChange={e => setForm({...form, ghi_chu: e.target.value})}
                   placeholder="Ghi chú thêm..."
-                  className="w-full border border-hp-border rounded-xl px-3 py-2.5 text-sm bg-hp-surface text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
+                  className="w-full border border-hp-border rounded-hp-xl px-3 py-2.5 text-sm bg-hp-surface text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setShowForm(false)}
-                  className="flex-1 py-2.5 border border-hp-border text-hp-text-secondary rounded-xl text-sm hover:bg-hp-elevated">
+                  className="flex-1 py-2.5 border border-hp-border text-hp-text-secondary rounded-hp-xl text-sm hover:bg-hp-elevated">
                   Hủy
                 </button>
                 <button type="submit" disabled={saving}
-                  className="flex-1 py-2.5 bg-hp-primary text-white rounded-xl text-sm font-medium hover:bg-hp-primary/90 disabled:opacity-50">
+                  className="flex-1 py-2.5 bg-hp-primary text-white rounded-hp-xl text-sm font-medium hover:bg-hp-primary/90 disabled:opacity-50">
                   {saving ? 'Đang lưu...' : 'Tạo công trình'}
                 </button>
               </div>

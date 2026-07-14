@@ -3,74 +3,37 @@ import { api } from '../api'
 
 const AuthContext = createContext(null)
 
-const TOKEN_KEY  = 'hpcons_token'
-const USER_KEY   = 'hpcons_user'
-const REMEMBER_KEY = 'hpcons_remember'
+const HPCORE_LOGIN_URL = 'https://account.hpcore.vn/login'
 
-// Helper: doc token tu localStorage hoac sessionStorage
-function getStoredToken() {
-  return localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY) || null
-}
-function getStoredUser() {
-  try {
-    const s = localStorage.getItem(USER_KEY) || sessionStorage.getItem(USER_KEY)
-    return s ? JSON.parse(s) : null
-  } catch { return null }
+function redirectToHpcoreLogin() {
+  const next = encodeURIComponent(window.location.href)
+  window.location.href = `${HPCORE_LOGIN_URL}?next=${next}`
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser]     = useState(() => getStoredUser())
-  const [token, setToken]   = useState(() => getStoredToken())
+  const [user, setUser]       = useState(null)
   const [loading, setLoading] = useState(true)
+  const [denied, setDenied]   = useState(false) // dang nhap hpcore roi nhung chua duoc cap quyen app nay
 
-  // Gan Bearer token vao moi request
+  // Lay thong tin user hien tai qua cookie session hpcore (tu dong gui kem)
   useEffect(() => {
-    const id = api.interceptors.request.use(cfg => {
-      const t = getStoredToken()
-      if (t) cfg.headers = { ...cfg.headers, Authorization: `Bearer ${t}` }
-      return cfg
-    })
-    return () => api.interceptors.request.eject(id)
-  }, [])
-
-  // Verify token khi khoi dong
-  useEffect(() => {
-    const t = getStoredToken()
-    if (!t) { setLoading(false); return }
     api.get('/auth/me')
       .then(res => setUser(res.data))
-      .catch(() => {
-        localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(USER_KEY)
-        sessionStorage.removeItem(TOKEN_KEY); sessionStorage.removeItem(USER_KEY)
-        setToken(null); setUser(null)
+      .catch(err => {
+        setUser(null)
+        if (err.response?.status === 403) setDenied(true)
       })
       .finally(() => setLoading(false))
   }, [])
 
-  const login = async (email, password, rememberMe = false) => {
-    const res = await api.post('/auth/login', { email, password })
-    const { access_token, user: u } = res.data
-    if (rememberMe) {
-      localStorage.setItem(REMEMBER_KEY, '1')
-    } else {
-      localStorage.removeItem(REMEMBER_KEY)
-    }
-    const storage = rememberMe ? localStorage : sessionStorage
-    storage.setItem(TOKEN_KEY, access_token)
-    storage.setItem(USER_KEY, JSON.stringify(u))
-    setToken(access_token)
-    setUser(u)
-  }
-
-  const logout = () => {
-    localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(USER_KEY)
-    localStorage.removeItem(REMEMBER_KEY)
-    sessionStorage.removeItem(TOKEN_KEY); sessionStorage.removeItem(USER_KEY)
-    setToken(null); setUser(null)
+  const logout = async () => {
+    try { await api.post('/auth/logout') } catch { /* bo qua */ }
+    setUser(null)
+    window.location.href = HPCORE_LOGIN_URL
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, denied, logout, redirectToHpcoreLogin }}>
       {children}
     </AuthContext.Provider>
   )

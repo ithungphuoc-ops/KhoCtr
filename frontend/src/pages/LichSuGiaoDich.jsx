@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { History, Search, RefreshCw, Download, Upload } from 'lucide-react'
 import { getLichSuGiaoDich } from '../api'
 import { useCongTrinh } from '../context/CongTrinhContext'
+import { CardList, CardListItem, CardListRow } from '../components/ui/CardListItem'
 
 const fmt = (n) => (n ?? 0).toLocaleString('vi-VN')
 function formatVND(n) {
@@ -104,7 +105,7 @@ export default function LichSuGiaoDich() {
 
       {/* Filters */}
       <div className="bg-hp-card rounded-hp-lg shadow-sm border border-hp-border p-4 flex gap-3 flex-wrap items-center">
-        <div className="relative flex-1 min-w-[200px]">
+        <div className="relative flex-1 min-w-hp-filter-lg">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-hp-text-muted" />
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Tìm tên hàng, số phiếu, đối tác..."
@@ -125,8 +126,8 @@ export default function LichSuGiaoDich() {
         <span className="text-xs text-hp-text-muted">{filtered.length} / {total} dòng</span>
       </div>
 
-      {/* Table */}
-      <div className="bg-hp-card rounded-hp-lg shadow-sm border border-hp-border overflow-hidden">
+      {/* Table — PC/Tablet */}
+      <div className="hidden md:block bg-hp-card rounded-hp-lg shadow-sm border border-hp-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-hp-surface border-b border-hp-border">
@@ -151,7 +152,7 @@ export default function LichSuGiaoDich() {
                   : filtered.map((r, i) => (
                       <tr key={i} className="border-b border-hp-divider hover:bg-hp-elevated transition-colors">
                         <td className="px-4 py-2.5 text-hp-text-muted text-xs">{i + 1}</td>
-                        <td className="px-4 py-2.5 text-hp-text font-medium max-w-[200px] truncate">{r.ten_hang}</td>
+                        <td className="px-4 py-2.5 text-hp-text font-medium max-w-hp-filter-lg truncate">{r.ten_hang}</td>
                         <td className="px-3 py-2.5 text-right text-hp-text">{fmt(r.so_luong)}</td>
                         <td className="px-2 py-2.5 text-hp-text-secondary text-xs">{r.dvt || '—'}</td>
                         <td className="px-3 py-2.5 text-right text-hp-text-secondary text-xs">{formatVND(r.don_gia)}</td>
@@ -167,13 +168,36 @@ export default function LichSuGiaoDich() {
                         </td>
                         <td className="px-3 py-2.5 font-mono text-xs text-hp-accent">{r.so_phieu}</td>
                         <td className="px-3 py-2.5 text-hp-text-secondary text-xs">{r.ngay}</td>
-                        <td className="px-3 py-2.5 text-hp-text-secondary text-xs truncate max-w-[120px]">{r.doi_tac || '—'}</td>
+                        <td className="px-3 py-2.5 text-hp-text-secondary text-xs truncate max-w-hp-filter-sm">{r.doi_tac || '—'}</td>
                       </tr>
                     ))
               }
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Card List — Mobile */}
+      <div className="md:hidden">
+        <CardList loading={loading} empty={filtered.length === 0} emptyMessage="Không có dữ liệu">
+          {filtered.map((r, i) => (
+            <CardListItem key={i}>
+              <div className="flex items-start justify-between gap-2">
+                <div className="text-hp-text font-medium min-w-0 truncate">{r.ten_hang}</div>
+                <span className={`flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                  r.loai === 'NK' ? 'bg-hp-accent/15 text-hp-accent' : 'bg-hp-warning/15 text-hp-warning'
+                }`}>
+                  {r.loai === 'NK' ? '↓ NK' : '↑ XK'}
+                </span>
+              </div>
+              <CardListRow label="Số phiếu" value={<span className="font-mono text-hp-accent">{r.so_phieu}</span>} />
+              <CardListRow label="Ngày" value={r.ngay} />
+              <CardListRow label="Đối tác" value={r.doi_tac || '—'} />
+              <CardListRow label="Số lượng" value={`${fmt(r.so_luong)} ${r.dvt || ''}`} />
+              <CardListRow label="Thành tiền" value={formatVND(r.thanh_tien)} valueClassName={r.loai === 'NK' ? 'text-hp-accent font-bold' : 'text-hp-warning font-bold'} />
+            </CardListItem>
+          ))}
+        </CardList>
       </div>
     </div>
   )

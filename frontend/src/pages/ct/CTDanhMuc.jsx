@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useOutletContext, useParams } from 'react-router-dom'
 import { Plus, Search, RefreshCw, Trash2, Package, X, Pencil } from 'lucide-react'
 import { getHangHoa, createHangHoa, deleteHangHoa, updateHangHoa } from '../../api'
+import { CardListItem, CardListRow } from '../../components/ui/CardListItem'
 
 export default function CTDanhMuc() {
   const { ctId } = useOutletContext() || {}
@@ -194,45 +195,74 @@ export default function CTDanhMuc() {
             )}
           </div>
         ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-hp-surface border-b border-hp-border">
-              <tr>
-                <th className="text-left px-4 py-3 text-xs text-hp-text-muted font-medium w-8">#</th>
-                <th className="text-left px-4 py-3 text-xs text-hp-text-muted font-medium">Mã hàng</th>
-                <th className="text-left px-4 py-3 text-xs text-hp-text-muted font-medium">Tên hàng hóa</th>
-                <th className="text-left px-4 py-3 text-xs text-hp-text-muted font-medium">DVT</th>
-                <th className="text-left px-4 py-3 text-xs text-hp-text-muted font-medium">Nhóm</th>
-                <th className="w-10" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-hp-border">
-              {filtered.map((h, i) => (
-                <tr key={h.ma_hang || i} className="hover:bg-hp-elevated transition-colors">
-                  <td className="px-4 py-3 text-hp-text-muted text-xs">{i + 1}</td>
-                  <td className="px-4 py-3">
-                    <span className="font-mono text-xs bg-hp-elevated text-hp-text-secondary px-2 py-0.5 rounded-hp-sm">{h.ma_hang}</span>
-                  </td>
-                  <td className="px-4 py-3 font-medium text-hp-text">{h.ten_hang}</td>
-                  <td className="px-4 py-3 text-hp-text-secondary">{h.dvt}</td>
-                  <td className="px-4 py-3">
-                    <span className="text-xs bg-hp-accent/15 text-hp-accent px-2 py-0.5 rounded-full">{h.nhom || 'Vật tư'}</span>
-                  </td>
-                  <td className="px-2 py-3">
-                    <div className="flex gap-1">
-                      <button onClick={() => openEdit(h)}
-                        className="p-1.5 text-hp-text-muted hover:text-hp-accent hover:bg-hp-accent/10 rounded-hp-md transition-colors">
-                        <Pencil className="w-3.5 h-3.5" />
-                      </button>
-                      <button onClick={() => handleDelete(h.ma_hang)}
-                        className="p-1.5 text-hp-text-muted hover:text-hp-danger hover:bg-hp-danger/10 rounded-hp-md transition-colors">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </td>
+          <>
+            {/* Table — PC/Tablet */}
+            <table className="hidden md:table w-full text-sm">
+              <thead className="bg-hp-surface border-b border-hp-border">
+                <tr>
+                  <th className="text-left px-4 py-3 text-xs text-hp-text-muted font-medium w-8">#</th>
+                  <th className="text-left px-4 py-3 text-xs text-hp-text-muted font-medium">Mã hàng</th>
+                  <th className="text-left px-4 py-3 text-xs text-hp-text-muted font-medium">Tên hàng hóa</th>
+                  <th className="text-left px-4 py-3 text-xs text-hp-text-muted font-medium">DVT</th>
+                  <th className="text-left px-4 py-3 text-xs text-hp-text-muted font-medium">Nhóm</th>
+                  <th className="w-10" />
                 </tr>
+              </thead>
+              <tbody className="divide-y divide-hp-border">
+                {filtered.map((h, i) => (
+                  <tr key={h.ma_hang || i} className="hover:bg-hp-elevated transition-colors">
+                    <td className="px-4 py-3 text-hp-text-muted text-xs">{i + 1}</td>
+                    <td className="px-4 py-3">
+                      <span className="font-mono text-xs bg-hp-elevated text-hp-text-secondary px-2 py-0.5 rounded-hp-sm">{h.ma_hang}</span>
+                    </td>
+                    <td className="px-4 py-3 font-medium text-hp-text">{h.ten_hang}</td>
+                    <td className="px-4 py-3 text-hp-text-secondary">{h.dvt}</td>
+                    <td className="px-4 py-3">
+                      <span className="text-xs bg-hp-accent/15 text-hp-accent px-2 py-0.5 rounded-full">{h.nhom || 'Vật tư'}</span>
+                    </td>
+                    <td className="px-2 py-3">
+                      <div className="flex gap-1">
+                        <button onClick={() => openEdit(h)}
+                          className="p-1.5 text-hp-text-muted hover:text-hp-accent hover:bg-hp-accent/10 rounded-hp-md transition-colors">
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={() => handleDelete(h.ma_hang)}
+                          className="p-1.5 text-hp-text-muted hover:text-hp-danger hover:bg-hp-danger/10 rounded-hp-md transition-colors">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Card List — Mobile */}
+            <div className="md:hidden p-3 space-y-3">
+              {filtered.map((h, i) => (
+                <CardListItem key={h.ma_hang || i}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="text-hp-text font-medium truncate">{h.ten_hang}</div>
+                      <span className="font-mono text-xs bg-hp-elevated text-hp-text-secondary px-1.5 py-0.5 rounded-hp-sm">{h.ma_hang}</span>
+                    </div>
+                    <span className="flex-shrink-0 text-xs bg-hp-accent/15 text-hp-accent px-2 py-0.5 rounded-full">{h.nhom || 'Vật tư'}</span>
+                  </div>
+                  <CardListRow label="ĐVT" value={h.dvt} />
+                  <div className="flex items-center justify-end gap-1 pt-1 border-t border-hp-divider">
+                    <button onClick={() => openEdit(h)} aria-label="Sửa hàng hóa"
+                      className="min-w-11 min-h-11 flex items-center justify-center text-hp-text-muted hover:text-hp-accent hover:bg-hp-accent/10 rounded-hp-md transition-colors">
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => handleDelete(h.ma_hang)} aria-label="Xóa hàng hóa"
+                      className="min-w-11 min-h-11 flex items-center justify-center text-hp-text-muted hover:text-hp-danger hover:bg-hp-danger/10 rounded-hp-md transition-colors">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </CardListItem>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </>
         )}
       </div>
 

@@ -1,5 +1,5 @@
-import React from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import React, { useEffect } from 'react'
+import { Routes, Route } from 'react-router-dom'
 import { CongTrinhProvider } from './context/CongTrinhContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 
@@ -17,13 +17,11 @@ import AIReader from './pages/AIReader'
 import CaiDat from './pages/CaiDat'
 import CanhBao from './pages/CanhBao'
 import PhanQuyen from './pages/PhanQuyen'
-import NguoiDung from './pages/NguoiDung'
 import ImportData from './pages/ImportData'
 import NhatKy from './pages/NhatKy'
 import LichSuGiaoDich from './pages/LichSuGiaoDich'
 import GhiChu from './pages/GhiChu'
 import ThietLapAPI from './pages/ThietLapAPI'
-import Login from './pages/Login'
 
 // Web Con layout + pages
 import CTLayout from './pages/ct/CTLayout'
@@ -35,9 +33,14 @@ import CTAIReader from './pages/ct/CTAIReader'
 import CTDanhMuc from './pages/ct/CTDanhMuc'
 import CTImportData from './pages/ct/CTImportData'
 
-// ── Guard: chuyển về /login nếu chưa đăng nhập ───────────────
+// ── Guard: đăng nhập qua SSO hpcore, chặn nếu chưa được cấp quyền ──
 function PrivateRoute({ children }) {
-  const { user, loading } = useAuth()
+  const { user, loading, denied, redirectToHpcoreLogin } = useAuth()
+
+  useEffect(() => {
+    if (!loading && !user && !denied) redirectToHpcoreLogin()
+  }, [loading, user, denied])
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-hp-bg">
@@ -48,17 +51,31 @@ function PrivateRoute({ children }) {
       </div>
     )
   }
-  return user ? children : <Navigate to="/login" replace />
+
+  if (denied) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-hp-bg p-4">
+        <div className="text-center max-w-sm">
+          <p className="text-hp-text font-semibold text-lg mb-2">Chưa được cấp quyền truy cập</p>
+          <p className="text-sm text-hp-text-muted">
+            Tài khoản của bạn đã đăng nhập hpcore nhưng chưa được cấp quyền vào KhoUNICE Web.
+            Liên hệ quản trị viên để được cấp quyền trong mục "Cài đặt" của hpcore.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user) return null // đang redirect sang hpcore
+
+  return children
 }
 
 export default function App() {
   return (
     <AuthProvider>
       <Routes>
-        {/* ── Trang đăng nhập (public) ── */}
-        <Route path="/login" element={<Login />} />
-
-        {/* ── Web Tong (cần đăng nhập) ── */}
+        {/* ── Web Tong (cần đăng nhập qua SSO hpcore) ── */}
         <Route path="/" element={
           <PrivateRoute>
             <CongTrinhProvider>
@@ -78,7 +95,6 @@ export default function App() {
           <Route path="cai-dat"     element={<CaiDat />} />
           <Route path="canh-bao"    element={<CanhBao />} />
           <Route path="phan-quyen"  element={<PhanQuyen />} />
-          <Route path="nguoi-dung"  element={<NguoiDung />} />
           <Route path="input-data"  element={<ImportData />} />
           <Route path="nhat-ky"    element={<NhatKy />} />
           <Route path="lich-su"    element={<LichSuGiaoDich />} />

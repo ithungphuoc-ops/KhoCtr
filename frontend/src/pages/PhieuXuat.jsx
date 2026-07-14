@@ -5,6 +5,7 @@ import { getPhieuList, getChiTietPhieu, createPhieu, updatePhieu, deletePhieu, d
 import { useCongTrinh } from '../context/CongTrinhContext'
 import { useAuth } from '../context/AuthContext'
 import { exportPhieuList } from '../utils/exportExcel'
+import { CardList, CardListItem, CardListRow } from '../components/ui/CardListItem'
 
 const fmt = (n) => (n ?? 0).toLocaleString('vi-VN')
 function formatVND(n) {
@@ -402,7 +403,7 @@ export default function PhieuXuat() {
       </div>
 
       <div className="bg-hp-card rounded-hp-lg shadow-sm border border-hp-border p-4 flex gap-3 flex-wrap items-center">
-        <div className="relative flex-1 min-w-[200px]">
+        <div className="relative flex-1 min-w-hp-filter-lg">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-hp-text-muted" />
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Tìm số phiếu, người nhận..."
@@ -412,7 +413,7 @@ export default function PhieuXuat() {
         <span className="text-xs text-hp-text-muted">{filtered.length} phiếu</span>
       </div>
 
-      <div className="bg-hp-card rounded-hp-lg shadow-sm border border-hp-border overflow-hidden">
+      <div className="hidden md:block bg-hp-card rounded-hp-lg shadow-sm border border-hp-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-hp-surface border-b border-hp-border">
@@ -437,9 +438,9 @@ export default function PhieuXuat() {
                         <td className="px-4 py-3 font-mono font-semibold text-hp-warning">{p.so_phieu}</td>
                         <td className="px-4 py-3 text-hp-text-secondary text-xs">{p.ngay}</td>
                         {isAdminUser && (
-                          <td className="px-4 py-3 text-hp-text text-xs truncate max-w-[160px]">{ctMap[p.cong_trinh_id] || '—'}</td>
+                          <td className="px-4 py-3 text-hp-text text-xs truncate max-w-hp-filter-md">{ctMap[p.cong_trinh_id] || '—'}</td>
                         )}
-                        <td className="px-4 py-3 text-hp-text-secondary text-xs truncate max-w-[130px]">{p.doi_tac || '—'}</td>
+                        <td className="px-4 py-3 text-hp-text-secondary text-xs truncate max-w-hp-filter-sm">{p.doi_tac || '—'}</td>
                         <td className="px-4 py-3 text-right font-semibold text-hp-warning">{formatVND(p.tong_tien)}</td>
                         <td className="px-4 py-3 text-center whitespace-nowrap">
                           <button onClick={() => openChiTiet(p)} title="Xem chi tiết"
@@ -470,6 +471,47 @@ export default function PhieuXuat() {
             )}
           </table>
         </div>
+      </div>
+
+      {/* Card List — Mobile */}
+      <div className="md:hidden">
+        <CardList loading={loading} empty={filtered.length === 0} emptyMessage="Không có phiếu xuất kho">
+          {filtered.map((p, i) => (
+            <CardListItem key={p.id}>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="text-hp-warning font-mono font-semibold">{p.so_phieu}</div>
+                  <div className="text-hp-text-secondary text-xs">{p.ngay}</div>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <div className="text-hp-warning font-semibold">{formatVND(p.tong_tien)}</div>
+                </div>
+              </div>
+              {isAdminUser && <CardListRow label="Công trình" value={ctMap[p.cong_trinh_id] || '—'} />}
+              <CardListRow label="Người nhận" value={p.doi_tac || '—'} />
+              <div className="flex items-center justify-end gap-1 pt-1 border-t border-hp-divider">
+                <button onClick={() => openChiTiet(p)} aria-label="Xem chi tiết"
+                  className="min-w-11 min-h-11 flex items-center justify-center text-hp-text-muted hover:text-hp-accent hover:bg-hp-accent/10 rounded-hp-md transition-colors">
+                  <Eye className="w-4 h-4" />
+                </button>
+                <button onClick={() => openEdit(p)} disabled={loadingEdit} aria-label="Sửa phiếu"
+                  className="min-w-11 min-h-11 flex items-center justify-center text-hp-text-muted hover:text-hp-warning hover:bg-hp-warning/10 rounded-hp-md transition-colors disabled:opacity-40">
+                  <Pencil className="w-4 h-4" />
+                </button>
+                <button onClick={() => setConfirmDelete(p)} aria-label="Xóa phiếu"
+                  className="min-w-11 min-h-11 flex items-center justify-center text-hp-text-muted hover:text-hp-danger hover:bg-hp-danger/10 rounded-hp-md transition-colors">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </CardListItem>
+          ))}
+        </CardList>
+        {!loading && filtered.length > 0 && (
+          <div className="mt-3 bg-hp-warning/10 border border-hp-border rounded-hp-lg px-4 py-3 flex justify-between items-center text-sm">
+            <span className="font-bold text-hp-text">Tổng cộng ({filtered.length} phiếu)</span>
+            <span className="font-bold text-hp-warning">{formatVND(tongTien)}</span>
+          </div>
+        )}
       </div>
 
       {/* Modal xem chi tiết */}

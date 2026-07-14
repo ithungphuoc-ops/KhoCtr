@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { AlertTriangle, RefreshCw, Package } from 'lucide-react'
 import { getTonKho } from '../api'
 import { useCongTrinh } from '../context/CongTrinhContext'
+import { CardListItem, CardListRow } from '../components/ui/CardListItem'
 
 const MUC_DO = [
   { label: 'Hết hàng',   color: 'bg-hp-danger/15 text-hp-danger',    check: (t) => t <= 0 },
@@ -104,41 +105,66 @@ export default function CanhBao() {
             <div className="text-hp-text-muted text-sm mt-1">Tất cả vật tư đều có tồn kho ổn định</div>
           </div>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-hp-border text-hp-text-secondary text-xs bg-hp-surface">
-                <th className="text-left px-4 py-3 font-medium">#</th>
-                <th className="text-left px-4 py-3 font-medium">Tên vật tư</th>
-                <th className="text-left px-4 py-3 font-medium">Nhóm</th>
-                <th className="text-left px-4 py-3 font-medium">Công trình</th>
-                <th className="text-right px-4 py-3 font-medium">Tồn kho</th>
-                <th className="text-center px-4 py-3 font-medium">Mức độ</th>
-              </tr>
-            </thead>
-            <tbody>
+          <>
+            {/* Table — PC/Tablet */}
+            <table className="hidden md:table w-full text-sm">
+              <thead>
+                <tr className="border-b border-hp-border text-hp-text-secondary text-xs bg-hp-surface">
+                  <th className="text-left px-4 py-3 font-medium">#</th>
+                  <th className="text-left px-4 py-3 font-medium">Tên vật tư</th>
+                  <th className="text-left px-4 py-3 font-medium">Nhóm</th>
+                  <th className="text-left px-4 py-3 font-medium">Công trình</th>
+                  <th className="text-right px-4 py-3 font-medium">Tồn kho</th>
+                  <th className="text-center px-4 py-3 font-medium">Mức độ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((item, i) => {
+                  const ton = item.ton_cuoi ?? 0
+                  const mucDo = getMucDo(ton)
+                  return (
+                    <tr key={i} className="border-b border-hp-border hover:bg-hp-elevated">
+                      <td className="px-4 py-3 text-hp-text-muted">{i + 1}</td>
+                      <td className="px-4 py-3 text-hp-text font-medium">{item.ten_hang}</td>
+                      <td className="px-4 py-3 text-hp-text-secondary text-xs">{item.nhom || '—'}</td>
+                      <td className="px-4 py-3 text-hp-text-secondary text-xs">{item.ma_ct || '—'}</td>
+                      <td className={`px-4 py-3 text-right font-bold ${ton <= 0 ? 'text-hp-danger' : 'text-hp-warning'}`}>
+                        {ton.toLocaleString('vi-VN')}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${mucDo.color}`}>
+                          <AlertTriangle className="w-3 h-3" />
+                          {mucDo.label}
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+
+            {/* Card List — Mobile */}
+            <div className="md:hidden p-3 space-y-3">
               {filtered.map((item, i) => {
                 const ton = item.ton_cuoi ?? 0
                 const mucDo = getMucDo(ton)
                 return (
-                  <tr key={i} className="border-b border-hp-border hover:bg-hp-elevated">
-                    <td className="px-4 py-3 text-hp-text-muted">{i + 1}</td>
-                    <td className="px-4 py-3 text-hp-text font-medium">{item.ten_hang}</td>
-                    <td className="px-4 py-3 text-hp-text-secondary text-xs">{item.nhom || '—'}</td>
-                    <td className="px-4 py-3 text-hp-text-secondary text-xs">{item.ma_ct || '—'}</td>
-                    <td className={`px-4 py-3 text-right font-bold ${ton <= 0 ? 'text-hp-danger' : 'text-hp-warning'}`}>
-                      {ton.toLocaleString('vi-VN')}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${mucDo.color}`}>
+                  <CardListItem key={i} highlight={ton <= 0}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="text-hp-text font-medium min-w-0 truncate">{item.ten_hang}</div>
+                      <span className={`flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${mucDo.color}`}>
                         <AlertTriangle className="w-3 h-3" />
                         {mucDo.label}
                       </span>
-                    </td>
-                  </tr>
+                    </div>
+                    <CardListRow label="Nhóm" value={item.nhom || '—'} />
+                    <CardListRow label="Công trình" value={item.ma_ct || '—'} />
+                    <CardListRow label="Tồn kho" value={ton.toLocaleString('vi-VN')} valueClassName={ton <= 0 ? 'text-hp-danger font-bold' : 'text-hp-warning font-bold'} />
+                  </CardListItem>
                 )
               })}
-            </tbody>
-          </table>
+            </div>
+          </>
         )}
       </div>
     </div>

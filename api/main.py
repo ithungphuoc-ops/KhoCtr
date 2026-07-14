@@ -2,6 +2,10 @@
 main.py — KhoUNICE Backend FastAPI v2.0.0
 Quản lý kho vật liệu xây dựng cho HP Cons Việt Nam
 """
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -69,6 +73,33 @@ def health_supabase():
     return {
         "supabase": "ok" if ok else "error",
         "message": msg,
+    }
+
+
+# ── Test kết nối hpcore (SSO) ─────────────────────────────────
+@app.get("/api/health/hpcore", tags=["system"])
+def health_hpcore():
+    """Kiểm tra Firebase Admin SDK khởi tạo được + đọc được Firestore app_permissions của hpcore."""
+    import hpcore_auth
+    try:
+        app_ref = hpcore_auth._get_hpcore_app()
+        from firebase_admin import firestore
+        db = firestore.client(app=app_ref)
+        # Đọc thử 1 doc bất kỳ để xác nhận kết nối Firestore thật (không cần tồn tại)
+        list(db.collection("app_permissions").limit(1).stream())
+        return {"hpcore": "ok", "firebase_project": app_ref.project_id}
+    except Exception as e:
+        return {"hpcore": "error", "message": str(e)}
+
+
+# ── Danh sách vai trò của app này (hpcore gọi để hiển thị khi phân quyền) ──
+@app.get("/api/roles", tags=["system"])
+def get_roles():
+    return {
+        "roles": [
+            {"key": "admin", "label": "Admin"},
+            {"key": "user", "label": "Thủ kho"},
+        ]
     }
 
 

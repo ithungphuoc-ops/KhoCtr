@@ -13,13 +13,13 @@ Endpoints:
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from fastapi import APIRouter, HTTPException, Header, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, validator
 from typing import Optional
 from datetime import datetime, timezone
 
 import supabase_client as db
-from routers.auth import verify_token
+from routers.auth import get_current_user
 
 router = APIRouter(prefix="/api/ghi-chu", tags=["ghi_chu"])
 
@@ -31,18 +31,15 @@ VALID_TRANG_THAI = {"mo", "dang_lam", "tam_dung", "hoan_thanh", "huy"}
 
 # ── Auth helper ───────────────────────────────────────────────
 
-def _get_user(authorization: Optional[str]) -> dict:
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Cần đăng nhập.")
-    token = authorization.removeprefix("Bearer ").strip()
-    user = verify_token(token)
+def _get_user(request: Request) -> dict:
+    user = get_current_user(request)
     if not user:
-        raise HTTPException(status_code=401, detail="Token không hợp lệ hoặc hết hạn.")
+        raise HTTPException(status_code=401, detail="Cần đăng nhập.")
     return user
 
 
-def _require_admin(authorization: Optional[str]) -> dict:
-    user = _get_user(authorization)
+def _require_admin(request: Request) -> dict:
+    user = _get_user(request)
     if user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Chỉ Admin mới được thực hiện thao tác này.")
     return user
@@ -140,6 +137,7 @@ class GhiChuUpdate(BaseModel):
 
 @router.get("/")
 def list_ghi_chu(
+    request: Request,
     cong_trinh_id:  Optional[int] = Query(None),
     trang_thai:     Optional[str] = Query(None),
     uu_tien:        Optional[str] = Query(None),
@@ -148,14 +146,13 @@ def list_ghi_chu(
     deadline_to:    Optional[str] = Query(None),
     page:           int = Query(1, ge=1),
     limit:          int = Query(50, ge=1, le=200),
-    authorization:  Optional[str] = Header(None),
 ):
     """
     Lấy danh sách ghi chú với filter đầy đủ.
     Admin: xem mọi CT (cong_trinh_id tùy chọn).
     User : phải truyền cong_trinh_id và phải có quyền trên CT đó.
     """
-    user = _get_user(authorization)
+    user = _get_user(request)
     if user.get("role") != "admin":
         if not cong_trinh_id:
             raise HTTPException(status_code=400,
@@ -180,9 +177,9 @@ def list_ghi_chu(
 
 
 @router.post("/")
-def create_ghi_chu(body: GhiChuCreate, authorization: Optional[str] = Header(None)):
+def create_ghi_chu(body: GhiChuCreate, request: Request):
     """Tạo ghi chú mới. User chỉ được tạo cho CT mình có quyền."""
-    user = _get_user(authorization)
+    user = _get_user(request)
     _check_ct_access(user, body.cong_trinh_id)
     try:
         row = db.create_ghi_chu(
@@ -205,9 +202,9 @@ def create_ghi_chu(body: GhiChuCreate, authorization: Optional[str] = Header(Non
 
 
 @router.get("/{ghi_chu_id}")
-def get_ghi_chu(ghi_chu_id: int, authorization: Optional[str] = Header(None)):
+def get_ghi_chu(ghi_chu_id: int, request: Request):
     """Chi tiết 1 ghi chú."""
-    user = _get_user(authorization)
+    user = _get_user(request)
     try:
         row = db.get_ghi_chu_by_id(ghi_chu_id)
         if not row:
@@ -224,10 +221,10 @@ def get_ghi_chu(ghi_chu_id: int, authorization: Optional[str] = Header(None)):
 def update_ghi_chu(
     ghi_chu_id: int,
     body: GhiChuUpdate,
-    authorization: Optional[str] = Header(None),
+    request: Request,
 ):
     """Cập nhật ghi chú. Chỉ cập nhật field được truyền."""
-    user = _get_user(authorization)
+    user = _get_user(request)
     try:
         existing = db.get_ghi_chu_by_id(ghi_chu_id)
         if not existing:
@@ -258,12 +255,12 @@ def update_ghi_chu(
 
 
 @router.delete("/{ghi_chu_id}")
-def delete_ghi_chu(ghi_chu_id: int, authorization: Optional[str] = Header(None)):
+def delete_ghi_chu(ghi_chu_id: int, request: Request):
     """
     Soft delete — chỉ set deleted_at, không xóa row.
     Dữ liệu vẫn còn trong DB để audit.
     """
-    user = _get_user(authorization)
+    user = _get_user(request)
     try:
         existing = db.get_ghi_chu_by_id(ghi_chu_id)
         if not existing:
@@ -280,9 +277,9 @@ def delete_ghi_chu(ghi_chu_id: int, authorization: Optional[str] = Header(None))
 
 
 @router.post("/{ghi_chu_id}/complete")
-def complete_ghi_chu(ghi_chu_id: int, authorization: Optional[str] = Header(None)):
+def complete_ghi_chu(ghi_chu_id: int, request: Request):
     """Đánh dấu hoàn thành — tự động ghi completed_at."""
-    user = _get_user(authorization)
+    user = _get_user(request)
     try:
         existing = db.get_ghi_chu_by_id(ghi_chu_id)
         if not existing:

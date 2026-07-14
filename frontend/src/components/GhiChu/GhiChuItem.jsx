@@ -55,9 +55,9 @@ export default function GhiChuItem({
       : 'bg-hp-surface text-hp-text-muted'
 
   const borderExtra = dlStatus === 'overdue'
-    ? 'border-red-400'
+    ? 'border-hp-danger'
     : dlStatus === 'soon'
-      ? 'border-amber-400'
+      ? 'border-hp-warning'
       : mau.border
 
   return (

@@ -1,7 +1,7 @@
 // HPCons Design System V1.0: Header 60px, chỉ chứa thông tin phụ (08-navigation/header.md)
 import React, { useState, useRef, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Bell, HelpCircle, Calendar, Download, ChevronRight, Home, LogOut, Loader, Sun, Moon } from 'lucide-react'
+import { Bell, HelpCircle, Calendar, Download, ChevronRight, Home, LogOut, Loader, Sun, Moon, Menu } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useCongTrinh } from '../../context/CongTrinhContext'
@@ -37,7 +37,7 @@ const PRESETS = [
   { label: 'Tất cả',      from: '2025-01-01', to: new Date().toISOString().split('T')[0] },
 ]
 
-export default function Header() {
+export default function Header({ onMenuClick }) {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuth()
@@ -104,7 +104,6 @@ export default function Header() {
 
   const handleLogout = () => {
     logout()
-    navigate('/login')
   }
 
   const exportLabel = location.pathname === '/phieu-nhap'
@@ -168,20 +167,27 @@ export default function Header() {
     .split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
 
   return (
-    <header className="bg-hp-surface border-b border-hp-border px-6 flex items-center justify-between h-hp-header flex-shrink-0">
+    <header className="bg-hp-surface border-b border-hp-border px-4 md:px-6 flex items-center justify-between h-hp-header flex-shrink-0">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm">
-        <Home className="w-4 h-4 text-hp-text-muted" />
+      <div className="flex items-center gap-2 text-sm min-w-0">
+        <button
+          onClick={onMenuClick}
+          aria-label="Mở menu điều hướng"
+          className="md:hidden min-w-11 min-h-11 -ml-2 flex items-center justify-center text-hp-text-secondary hover:text-hp-text flex-shrink-0"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+        <Home className="w-4 h-4 text-hp-text-muted flex-shrink-0 hidden sm:block" />
         <span className="text-hp-text-muted">Trang chủ</span>
         <ChevronRight className="w-3 h-3 text-hp-text-disabled" />
         <span className="text-hp-text font-medium">{pageName}</span>
       </div>
 
       {/* Right side */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-1.5 md:gap-3">
 
-        {/* ── Date Range Picker ── */}
-        <div className="relative" ref={pickerRef}>
+        {/* ── Date Range Picker — ẩn trên mobile, không đủ chỗ cạnh hamburger ── */}
+        <div className="relative hidden md:block" ref={pickerRef}>
           <button
             onClick={openPicker}
             className={`flex items-center gap-2 px-3 min-h-10 border rounded-hp-md text-sm transition-colors bg-hp-card
@@ -261,14 +267,14 @@ export default function Header() {
         <button
           onClick={handleExport}
           disabled={exporting}
-          className="flex items-center gap-2 px-4 min-h-10 bg-hp-primary text-white rounded-hp-md text-sm font-medium hover:bg-hp-primary/90 transition-colors disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent">
+          className="hidden md:flex items-center gap-2 px-4 min-h-10 bg-hp-primary text-white rounded-hp-md text-sm font-medium hover:bg-hp-primary/90 transition-colors disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent">
           {exporting
             ? <Loader className="w-4 h-4 animate-spin" />
             : <Download className="w-4 h-4" />}
           <span>{exporting ? 'Đang xuất...' : exportLabel}</span>
         </button>
 
-        <div className="w-px h-6 bg-hp-border" />
+        <div className="hidden md:block w-px h-6 bg-hp-border" />
 
         <button
           onClick={handleBellClick}
@@ -291,7 +297,7 @@ export default function Header() {
 
         <button
           title="Trợ giúp"
-          className="p-2.5 rounded-hp-md hover:bg-hp-elevated text-hp-text-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent">
+          className="hidden md:flex p-2.5 rounded-hp-md hover:bg-hp-elevated text-hp-text-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent">
           <HelpCircle className="w-5 h-5" />
         </button>
 
@@ -301,10 +307,10 @@ export default function Header() {
             onClick={() => setShowMenu(!showMenu)}
             className="flex items-center gap-2 pl-2 hover:bg-hp-elevated rounded-hp-md px-2 py-1 min-h-10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent"
           >
-            <div className="w-8 h-8 bg-hp-accent rounded-full flex items-center justify-center text-white text-sm font-bold">
+            <div className="w-8 h-8 bg-hp-accent rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
               {initials}
             </div>
-            <div className="text-left">
+            <div className="text-left hidden md:block">
               <div className="text-sm font-medium text-hp-text leading-tight">{user?.ten || 'Admin'}</div>
               <div className="text-xs text-hp-text-muted leading-tight capitalize">{user?.role || 'admin'}</div>
             </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Search, RefreshCw, Eye, X } from 'lucide-react'
 import { getPhieuList, getChiTietPhieu } from '../api'
 import { useCongTrinh } from '../context/CongTrinhContext'
+import { CardList, CardListItem, CardListRow } from '../components/ui/CardListItem'
 
 const fmt = (n) => (n ?? 0).toLocaleString('vi-VN')
 function formatVND(n) {
@@ -141,7 +142,7 @@ export default function BaoCao() {
           <input type="date" value={denNgay} onChange={e => setDenNgay(e.target.value)}
             className="border border-hp-border rounded-hp-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-hp-accent bg-hp-elevated text-hp-text" />
         </div>
-        <div className="relative flex-1 min-w-[180px]">
+        <div className="relative flex-1 min-w-hp-filter-lg">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-hp-text-muted" />
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Tìm số phiếu, đối tác / NCC..."
@@ -150,8 +151,8 @@ export default function BaoCao() {
         <span className="text-xs text-hp-text-muted bg-hp-elevated px-3 py-2 rounded-hp-md font-medium">{filtered.length} kết quả</span>
       </div>
 
-      {/* Table */}
-      <div className="bg-hp-card rounded-hp-lg border border-hp-border overflow-hidden">
+      {/* Table — PC/Tablet */}
+      <div className="hidden md:block bg-hp-card rounded-hp-lg border border-hp-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-hp-surface border-b border-hp-border">
@@ -181,10 +182,10 @@ export default function BaoCao() {
                             p.loai === 'NK' ? 'bg-hp-primary/15 text-hp-primary' : 'bg-hp-warning/15 text-hp-warning'
                           }`}>{p.loai === 'NK' ? 'Nhập kho' : 'Xuất kho'}</span>
                         </td>
-                        <td className="px-4 py-3 text-hp-text-secondary text-xs truncate max-w-[150px]" title={ctMap[p.cong_trinh_id]}>
+                        <td className="px-4 py-3 text-hp-text-secondary text-xs truncate max-w-hp-filter-md" title={ctMap[p.cong_trinh_id]}>
                           {ctMap[p.cong_trinh_id] || '—'}
                         </td>
-                        <td className="px-4 py-3 text-hp-text-secondary text-xs truncate max-w-[120px]" title={p.doi_tac}>
+                        <td className="px-4 py-3 text-hp-text-secondary text-xs truncate max-w-hp-filter-sm" title={p.doi_tac}>
                           {p.doi_tac || '—'}
                         </td>
                         <td className={`px-4 py-3 text-right font-semibold ${p.loai === 'NK' ? 'text-hp-primary' : 'text-hp-warning'}`}>
@@ -216,6 +217,37 @@ export default function BaoCao() {
             )}
           </table>
         </div>
+      </div>
+
+      {/* Card List — Mobile */}
+      <div className="md:hidden">
+        <CardList loading={loading} empty={filtered.length === 0} emptyMessage="Không có dữ liệu trong khoảng thời gian này">
+          {filtered.map((p, i) => (
+            <CardListItem key={p.id} onClick={() => openChiTiet(p)}>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className={`font-mono font-semibold ${p.loai === 'NK' ? 'text-hp-primary' : 'text-hp-warning'}`}>{p.so_phieu}</div>
+                  <div className="text-hp-text-secondary text-xs">{p.ngay}</div>
+                </div>
+                <span className={`flex-shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full ${
+                  p.loai === 'NK' ? 'bg-hp-primary/15 text-hp-primary' : 'bg-hp-warning/15 text-hp-warning'
+                }`}>{p.loai === 'NK' ? 'Nhập kho' : 'Xuất kho'}</span>
+              </div>
+              <CardListRow label="Công trình" value={ctMap[p.cong_trinh_id] || '—'} />
+              <CardListRow label="Đối tác / NCC" value={p.doi_tac || '—'} />
+              <CardListRow label="Tổng tiền" value={formatVND(p.tong_tien)} valueClassName={p.loai === 'NK' ? 'text-hp-primary font-bold' : 'text-hp-warning font-bold'} />
+            </CardListItem>
+          ))}
+        </CardList>
+        {!loading && filtered.length > 0 && (
+          <div className="mt-3 bg-hp-surface border border-hp-border rounded-hp-lg px-4 py-3 text-sm">
+            <div className="font-bold text-hp-text mb-1">Tổng cộng ({filtered.length} phiếu)</div>
+            <div className="flex justify-between text-xs font-bold">
+              <span className="text-hp-primary">NK: {formatVND(tongNK)}</span>
+              <span className="text-hp-warning">XK: {formatVND(tongXK)}</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Modal chi tiết */}

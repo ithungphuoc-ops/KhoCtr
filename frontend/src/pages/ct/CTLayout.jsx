@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { NavLink, Outlet, useParams, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Download, Upload, Package,
-  Cpu, ChevronLeft, ChevronRight, ArrowLeft, Warehouse, BookOpen, FileUp, StickyNote
+  Cpu, ChevronLeft, ChevronRight, ArrowLeft, Warehouse, BookOpen, FileUp, StickyNote, Menu, X
 } from 'lucide-react'
 import { getCongTrinh } from '../../api'
 
@@ -21,7 +21,11 @@ export default function CTLayout() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [collapsed, setCollapsed] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
   const [congTrinh, setCongTrinh] = useState(null)
+
+  const showLabels = !collapsed || mobileOpen
+  const closeOnMobile = () => { if (mobileOpen) setMobileOpen(false) }
 
   useEffect(() => {
     getCongTrinh().then(res => {
@@ -31,18 +35,32 @@ export default function CTLayout() {
     }).catch(() => {})
   }, [id])
 
+  // Khóa cuộn nền khi Drawer mobile đang mở
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [mobileOpen])
+
   const base = `/ct/${id}`
 
   return (
     <div className="flex h-screen overflow-hidden bg-hp-bg">
+      {/* Backdrop — Drawer mobile */}
+      {mobileOpen && (
+        <div className="md:hidden fixed inset-0 bg-hp-overlay z-40" onClick={() => setMobileOpen(false)} aria-hidden="true" />
+      )}
+
       {/* Sidebar */}
       <aside
-        className="flex flex-col h-screen bg-hp-nav border-r border-hp-border transition-all duration-300 overflow-hidden flex-shrink-0"
-        style={{ width: collapsed ? 72 : 260, minWidth: collapsed ? 72 : 260 }}
+        className={`flex flex-col h-screen bg-hp-nav border-r border-hp-border transition-all duration-300 overflow-hidden flex-shrink-0
+          fixed inset-y-0 left-0 z-50 w-hp-sidebar min-w-hp-sidebar
+          ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
+          md:static md:z-auto md:translate-x-0
+          ${collapsed ? 'md:w-hp-sidebar-collapsed md:min-w-hp-sidebar-collapsed' : 'md:w-hp-sidebar md:min-w-hp-sidebar'}`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-3 py-4 border-b border-hp-border" style={{ minHeight: 64 }}>
-          {!collapsed && (
+        <div className="flex items-center justify-between px-3 py-4 border-b border-hp-border min-h-[64px]">
+          {showLabels && (
             <div className="flex items-center gap-2 min-w-0">
               <div className="w-8 h-8 bg-hp-primary rounded-hp-md flex items-center justify-center flex-shrink-0">
                 <Warehouse className="w-4 h-4 text-white" />
@@ -55,14 +73,23 @@ export default function CTLayout() {
               </div>
             </div>
           )}
-          {collapsed && (
+          {!showLabels && (
             <div className="w-8 h-8 bg-hp-primary rounded-hp-md flex items-center justify-center mx-auto">
               <Warehouse className="w-4 h-4 text-white" />
             </div>
           )}
+          {/* Đóng Drawer — chỉ mobile */}
+          <button
+            onClick={() => setMobileOpen(false)}
+            aria-label="Đóng menu"
+            className="md:hidden min-w-11 min-h-11 flex items-center justify-center rounded-hp-sm hover:bg-white/5 text-hp-text-muted flex-shrink-0"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          {/* Thu gọn/mở rộng — chỉ desktop */}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className={`p-1 rounded-hp-sm hover:bg-white/5 text-hp-text-muted flex-shrink-0 ${collapsed ? 'mx-auto' : ''}`}
+            className={`hidden md:flex p-1 rounded-hp-sm hover:bg-white/5 text-hp-text-muted flex-shrink-0 ${collapsed ? 'mx-auto' : ''}`}
           >
             {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </button>
@@ -78,7 +105,8 @@ export default function CTLayout() {
                 key={item.label}
                 to={to}
                 end={item.path === ''}
-                title={collapsed ? item.label : undefined}
+                onClick={closeOnMobile}
+                title={!showLabels ? item.label : undefined}
                 className={({ isActive }) =>
                   `flex items-center gap-3 mx-2 px-3 py-2.5 min-h-11 rounded-hp-md text-sm transition-all duration-150 relative group
                   ${isActive
@@ -88,8 +116,8 @@ export default function CTLayout() {
                 }
               >
                 <Icon className="w-4 h-4 flex-shrink-0" />
-                {!collapsed && <span className="truncate">{item.label}</span>}
-                {collapsed && (
+                {showLabels && <span className="truncate">{item.label}</span>}
+                {!showLabels && (
                   <div className="absolute left-full ml-2 px-2 py-1 bg-hp-elevated border border-hp-border text-hp-text text-xs rounded-hp-sm whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-50">
                     {item.label}
                   </div>
@@ -103,11 +131,11 @@ export default function CTLayout() {
         <div className="p-3 border-t border-hp-border">
           <button
             onClick={() => navigate('/')}
-            title={collapsed ? 'Về Web Tổng' : undefined}
+            title={!showLabels ? 'Về Web Tổng' : undefined}
             className="flex items-center gap-2 w-full px-3 py-2 min-h-11 rounded-hp-md text-sm text-hp-text-secondary hover:bg-white/5 hover:text-hp-text transition-colors"
           >
             <ArrowLeft className="w-4 h-4 flex-shrink-0" />
-            {!collapsed && <span>Về Web Tổng</span>}
+            {showLabels && <span>Về Web Tổng</span>}
           </button>
         </div>
       </aside>
@@ -115,16 +143,23 @@ export default function CTLayout() {
       {/* Main content */}
       <div className="flex flex-col flex-1 overflow-hidden">
         {/* Top bar */}
-        <div className="bg-hp-surface border-b border-hp-border h-hp-header px-6 flex items-center gap-3 flex-shrink-0">
-          <div className="w-2 h-2 rounded-full bg-hp-primary" />
-          <span className="text-sm font-semibold text-hp-text">
+        <div className="bg-hp-surface border-b border-hp-border h-hp-header px-4 md:px-6 flex items-center gap-3 flex-shrink-0">
+          <button
+            onClick={() => setMobileOpen(true)}
+            aria-label="Mở menu điều hướng"
+            className="md:hidden min-w-11 min-h-11 -ml-2 flex items-center justify-center text-hp-text-secondary hover:text-hp-text flex-shrink-0"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+          <div className="w-2 h-2 rounded-full bg-hp-primary flex-shrink-0 hidden sm:block" />
+          <span className="text-sm font-semibold text-hp-text truncate">
             {congTrinh?.ten_ct || 'Đang tải...'}
           </span>
           {congTrinh?.dia_chi && (
-            <span className="text-xs text-hp-text-muted">&nbsp;·&nbsp; {congTrinh.dia_chi}</span>
+            <span className="text-xs text-hp-text-muted truncate hidden sm:inline">&nbsp;·&nbsp; {congTrinh.dia_chi}</span>
           )}
         </div>
-        <main className="flex-1 overflow-y-auto p-6 bg-hp-bg">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-hp-bg">
           <Outlet context={{ congTrinh, ctId: id }} />
         </main>
       </div>

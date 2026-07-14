@@ -75,7 +75,7 @@ export default function ImportData() {
   if (!isAdmin) return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-hp-text">IMPORT DỮ LIỆU</h1>
-      <div className="bg-hp-card rounded-xl border border-hp-border p-16 text-center text-hp-text-muted">
+      <div className="bg-hp-card rounded-hp-xl border border-hp-border p-16 text-center text-hp-text-muted">
         Chỉ admin mới truy cập được trang này.
       </div>
     </div>
@@ -116,7 +116,7 @@ export default function ImportData() {
 
       {/* STEP 1: Upload */}
       {step === 'upload' && (
-        <div className="bg-hp-card rounded-xl border border-hp-border p-6 space-y-5">
+        <div className="bg-hp-card rounded-hp-xl border border-hp-border p-6 space-y-5">
           <div>
             <label className="block text-sm font-medium text-hp-text mb-1.5">
               Công trình đích <span className="text-hp-danger">*</span>
@@ -124,7 +124,7 @@ export default function ImportData() {
             <select
               value={ctId}
               onChange={e => setCtId(e.target.value)}
-              className="w-full border border-hp-border rounded-lg px-3 py-2 text-sm bg-hp-elevated text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent"
+              className="w-full border border-hp-border rounded-hp-lg px-3 py-2 text-sm bg-hp-elevated text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent"
             >
               <option value="">-- Chọn công trình --</option>
               {congTrinhs.map(ct => (
@@ -142,7 +142,7 @@ export default function ImportData() {
               onDragLeave={() => setDragging(false)}
               onDrop={e => { e.preventDefault(); setDragging(false); handleFile(e.dataTransfer.files[0]) }}
               onClick={() => fileRef.current?.click()}
-              className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all ${
+              className={`border-2 border-dashed rounded-hp-xl p-10 text-center cursor-pointer transition-all ${
                 dragging ? 'border-hp-accent bg-hp-accent/10'
                 : file   ? 'border-hp-primary bg-hp-primary/10'
                 : 'border-hp-border hover:border-hp-accent hover:bg-hp-elevated'
@@ -166,7 +166,7 @@ export default function ImportData() {
               onChange={e => handleFile(e.target.files[0])} />
           </div>
 
-          <div className="bg-hp-warning/10 border border-hp-warning/30 rounded-xl p-4 text-sm text-hp-warning space-y-1">
+          <div className="bg-hp-warning/10 border border-hp-warning/30 rounded-hp-xl p-4 text-sm text-hp-warning space-y-1">
             <p className="font-semibold">Lưu ý trước khi import:</p>
             <p>• File phải có sheet tên chính xác là <strong>QLTK</strong></p>
             <p>• Cột A:B = Danh mục, Cột H:L = Nhập kho, Cột N:R = Xuất kho</p>
@@ -175,7 +175,7 @@ export default function ImportData() {
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 text-hp-danger text-sm bg-hp-danger/10 p-3 rounded-lg">
+            <div className="flex items-center gap-2 text-hp-danger text-sm bg-hp-danger/10 p-3 rounded-hp-lg">
               <XCircle className="w-4 h-4 flex-shrink-0" /> {error}
             </div>
           )}
@@ -183,7 +183,7 @@ export default function ImportData() {
           <button
             onClick={handlePreview}
             disabled={loading || !file || !ctId}
-            className="w-full py-3 bg-hp-primary text-white rounded-xl font-semibold text-sm hover:bg-hp-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+            className="w-full py-3 bg-hp-primary text-white rounded-hp-xl font-semibold text-sm hover:bg-hp-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
           >
             {loading
               ? <><Loader className="w-4 h-4 animate-spin" /> Đang đọc file...</>
@@ -194,7 +194,7 @@ export default function ImportData() {
 
       {/* STEP 2: Preview */}
       {step === 'preview' && preview && (
-        <div className="bg-hp-card rounded-xl border border-hp-border p-6 space-y-5">
+        <div className="bg-hp-card rounded-hp-xl border border-hp-border p-6 space-y-5">
           <div>
             <h2 className="font-semibold text-hp-text text-lg">Kết quả đọc file</h2>
             <p className="text-sm text-hp-text-secondary mt-0.5">
@@ -204,41 +204,41 @@ export default function ImportData() {
           </div>
 
           <div className="grid grid-cols-3 gap-4">
-            <div className="bg-hp-elevated rounded-xl p-4 text-center">
+            <div className="bg-hp-elevated rounded-hp-xl p-4 text-center">
               <div className="text-3xl font-bold text-hp-accent">{preview.hang_hoa?.toLocaleString()}</div>
               <div className="text-sm text-hp-accent mt-1">Mặt hàng (danh mục)</div>
             </div>
-            <div className="bg-hp-primary/10 rounded-xl p-4 text-center">
+            <div className="bg-hp-primary/10 rounded-hp-xl p-4 text-center">
               <div className="text-3xl font-bold text-hp-primary">{preview.phieu_nk?.toLocaleString()}</div>
               <div className="text-sm text-hp-primary mt-1">Phiếu Nhập kho</div>
               <div className="text-xs text-hp-text-muted mt-0.5">{preview.dong_nk?.toLocaleString()} dòng hàng</div>
             </div>
-            <div className="bg-hp-warning/10 rounded-xl p-4 text-center">
+            <div className="bg-hp-warning/10 rounded-hp-xl p-4 text-center">
               <div className="text-3xl font-bold text-hp-warning">{preview.phieu_xk?.toLocaleString()}</div>
               <div className="text-sm text-hp-warning mt-1">Phiếu Xuất kho</div>
               <div className="text-xs text-hp-text-muted mt-0.5">{preview.dong_xk?.toLocaleString()} dòng hàng</div>
             </div>
           </div>
 
-          <div className="bg-hp-accent/15 border border-hp-accent/30 rounded-xl p-4 text-sm text-hp-accent">
+          <div className="bg-hp-accent/15 border border-hp-accent/30 rounded-hp-xl p-4 text-sm text-hp-accent">
             <AlertTriangle className="w-4 h-4 inline mr-1.5" />
             Quá trình import có thể mất <strong>5–15 phút</strong> tùy theo kích thước file.
             Không đóng tab này trong khi import.
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 text-hp-danger text-sm bg-hp-danger/10 p-3 rounded-lg">
+            <div className="flex items-center gap-2 text-hp-danger text-sm bg-hp-danger/10 p-3 rounded-hp-lg">
               <XCircle className="w-4 h-4 flex-shrink-0" /> {error}
             </div>
           )}
 
           <div className="flex gap-3">
             <button onClick={reset}
-              className="flex-1 py-3 border border-hp-border text-hp-text-secondary rounded-xl font-medium text-sm hover:bg-hp-elevated flex items-center justify-center gap-2">
+              className="flex-1 py-3 border border-hp-border text-hp-text-secondary rounded-hp-xl font-medium text-sm hover:bg-hp-elevated flex items-center justify-center gap-2">
               <RotateCcw className="w-4 h-4" /> Chọn lại file
             </button>
             <button onClick={handleImport}
-              className="flex-1 py-3 bg-hp-primary text-white rounded-xl font-semibold text-sm hover:bg-hp-primary/90 flex items-center justify-center gap-2">
+              className="flex-1 py-3 bg-hp-primary text-white rounded-hp-xl font-semibold text-sm hover:bg-hp-primary/90 flex items-center justify-center gap-2">
               <CheckCircle className="w-4 h-4" /> Xác nhận Import
             </button>
           </div>
@@ -247,7 +247,7 @@ export default function ImportData() {
 
       {/* STEP 3: Importing */}
       {step === 'importing' && (
-        <div className="bg-hp-card rounded-xl border border-hp-border p-12 text-center space-y-4">
+        <div className="bg-hp-card rounded-hp-xl border border-hp-border p-12 text-center space-y-4">
           <Loader className="w-14 h-14 text-hp-accent animate-spin mx-auto" />
           <p className="text-lg font-semibold text-hp-text">Đang import dữ liệu...</p>
           <p className="text-sm text-hp-text-muted">
@@ -259,7 +259,7 @@ export default function ImportData() {
 
       {/* STEP 4: Done */}
       {step === 'done' && result && (
-        <div className="bg-hp-card rounded-xl border border-hp-border p-6 space-y-5">
+        <div className="bg-hp-card rounded-hp-xl border border-hp-border p-6 space-y-5">
           <div className="text-center">
             <CheckCircle className="w-14 h-14 text-hp-primary mx-auto mb-3" />
             <h2 className="text-xl font-bold text-hp-text">Import hoàn tất!</h2>
@@ -269,17 +269,17 @@ export default function ImportData() {
           </div>
 
           <div className="grid grid-cols-3 gap-4">
-            <div className="bg-hp-elevated rounded-xl p-4 text-center">
+            <div className="bg-hp-elevated rounded-hp-xl p-4 text-center">
               <div className="text-2xl font-bold text-hp-accent">{result.hang_hoa?.thanh_cong}</div>
               <div className="text-xs text-hp-accent mt-1">Mặt hàng thêm mới</div>
               {result.hang_hoa?.loi > 0 && <div className="text-xs text-hp-danger">{result.hang_hoa.loi} lỗi</div>}
             </div>
-            <div className="bg-hp-primary/10 rounded-xl p-4 text-center">
+            <div className="bg-hp-primary/10 rounded-hp-xl p-4 text-center">
               <div className="text-2xl font-bold text-hp-primary">{result.nhap_kho?.thanh_cong}</div>
               <div className="text-xs text-hp-primary mt-1">Phiếu Nhập kho</div>
               {result.nhap_kho?.loi > 0 && <div className="text-xs text-hp-danger">{result.nhap_kho.loi} lỗi</div>}
             </div>
-            <div className="bg-hp-warning/10 rounded-xl p-4 text-center">
+            <div className="bg-hp-warning/10 rounded-hp-xl p-4 text-center">
               <div className="text-2xl font-bold text-hp-warning">{result.xuat_kho?.thanh_cong}</div>
               <div className="text-xs text-hp-warning mt-1">Phiếu Xuất kho</div>
               {result.xuat_kho?.loi > 0 && <div className="text-xs text-hp-danger">{result.xuat_kho.loi} lỗi</div>}
@@ -288,11 +288,11 @@ export default function ImportData() {
 
           <div className="flex gap-3">
             <button onClick={reset}
-              className="flex-1 py-3 border border-hp-border text-hp-text-secondary rounded-xl font-medium text-sm hover:bg-hp-elevated flex items-center justify-center gap-2">
+              className="flex-1 py-3 border border-hp-border text-hp-text-secondary rounded-hp-xl font-medium text-sm hover:bg-hp-elevated flex items-center justify-center gap-2">
               <Upload className="w-4 h-4" /> Import file khác
             </button>
             <a href="/"
-              className="flex-1 py-3 bg-hp-primary text-white rounded-xl font-semibold text-sm hover:bg-hp-primary/90 flex items-center justify-center gap-2 text-center">
+              className="flex-1 py-3 bg-hp-primary text-white rounded-hp-xl font-semibold text-sm hover:bg-hp-primary/90 flex items-center justify-center gap-2 text-center">
               Xem Báo cáo tổng hợp →
             </a>
           </div>

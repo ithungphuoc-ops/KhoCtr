@@ -3,6 +3,7 @@ import { Shield, RefreshCw, CheckCircle, XCircle, Save, X } from 'lucide-react'
 import { api } from '../api'
 import { useCongTrinh } from '../context/CongTrinhContext'
 import { useAuth } from '../context/AuthContext'
+import { CardListItem } from '../components/ui/CardListItem'
 
 export default function PhanQuyen() {
   const { user: currentUser } = useAuth()
@@ -128,13 +129,13 @@ export default function PhanQuyen() {
           Chưa có tài khoản nào. Tạo tài khoản trước trong trang Người dùng.
         </div>
       ) : (
-        <div className="bg-hp-card rounded-hp-md border border-hp-border overflow-x-auto">
+        <div className="hidden md:block bg-hp-card rounded-hp-md border border-hp-border overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-hp-surface border-b border-hp-border">
               <tr>
                 <th className="text-left px-4 py-3 text-hp-text-secondary font-medium w-48">Người dùng</th>
                 {congTrinhs.map(ct => (
-                  <th key={ct.id} className="text-center px-3 py-3 text-hp-text-secondary font-medium text-xs max-w-[120px]">
+                  <th key={ct.id} className="text-center px-3 py-3 text-hp-text-secondary font-medium text-xs max-w-hp-filter-sm">
                     <div className="truncate" title={ct.ten_ct}>{ct.ten_ct}</div>
                   </th>
                 ))}
@@ -169,6 +170,42 @@ export default function PhanQuyen() {
               })}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Card List — Mobile: 1 thẻ / người dùng, công trình dạng danh sách tick */}
+      {!loading && users.length > 0 && (
+        <div className="md:hidden space-y-3">
+          {users.map(u => {
+            const userPerms = perms[u.id] || new Set()
+            const isCurrentAdmin = u.role === 'admin'
+            return (
+              <CardListItem key={u.id}>
+                <div>
+                  <div className="font-medium text-hp-text text-sm flex items-center gap-2">
+                    {u.ten}
+                    {isCurrentAdmin && (
+                      <span className="text-xs bg-hp-primary/15 text-hp-primary px-1.5 py-0.5 rounded font-semibold">ADMIN</span>
+                    )}
+                  </div>
+                  <div className="text-xs text-hp-text-muted">{u.email}</div>
+                </div>
+                <div className="pt-1 border-t border-hp-divider space-y-1">
+                  {congTrinhs.map(ct => (
+                    <label key={ct.id} className="flex items-center justify-between gap-3 min-h-11 text-sm cursor-pointer">
+                      <span className="text-hp-text-secondary truncate">{ct.ten_ct}</span>
+                      <input type="checkbox"
+                        checked={isCurrentAdmin || userPerms.has(ct.id)}
+                        disabled={isCurrentAdmin}
+                        onChange={() => togglePerm(u.id, ct.id)}
+                        className="w-5 h-5 accent-hp-primary cursor-pointer disabled:cursor-default flex-shrink-0"
+                      />
+                    </label>
+                  ))}
+                </div>
+              </CardListItem>
+            )
+          })}
         </div>
       )}
     </div>

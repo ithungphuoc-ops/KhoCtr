@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Package, Search, RefreshCw, AlertCircle, CheckCircle } from 'lucide-react'
 import { getTonKho } from '../api'
 import { useCongTrinh } from '../context/CongTrinhContext'
+import { CardList, CardListItem, CardListRow } from '../components/ui/CardListItem'
 
 const fmt = (n) => (n ?? 0).toLocaleString('vi-VN')
 
@@ -88,7 +89,7 @@ export default function TonKho() {
 
       {/* Filters */}
       <div className="bg-hp-card rounded-hp-lg shadow-sm border border-hp-border p-4 flex gap-3 flex-wrap items-center">
-        <div className="relative flex-1 min-w-[200px]">
+        <div className="relative flex-1 min-w-hp-filter-lg">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-hp-text-muted" />
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Tìm tên hàng hóa, nhóm..."
@@ -103,8 +104,8 @@ export default function TonKho() {
         <span className="text-xs text-hp-text-muted">{filtered.length} dòng</span>
       </div>
 
-      {/* Table */}
-      <div className="bg-hp-card rounded-hp-lg shadow-sm border border-hp-border overflow-hidden">
+      {/* Table — PC/Tablet */}
+      <div className="hidden md:block bg-hp-card rounded-hp-lg shadow-sm border border-hp-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-hp-surface border-b border-hp-border">
@@ -156,6 +157,36 @@ export default function TonKho() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Card List — Mobile */}
+      <div className="md:hidden">
+        <CardList loading={loading} empty={filtered.length === 0} emptyMessage="Không có dữ liệu tồn kho">
+          {filtered.map((r, i) => {
+            const hetHang = (r.ton_cuoi ?? 0) <= 0
+            return (
+              <CardListItem key={i} highlight={hetHang}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="text-hp-text font-medium truncate">{r.ten_hang}</div>
+                    <div className="text-hp-accent font-mono text-xs">{r.ma_hang || '—'}</div>
+                  </div>
+                  <span className={`flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                    hetHang ? 'bg-hp-danger/15 text-hp-danger' : 'bg-hp-primary/15 text-hp-primary'
+                  }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${hetHang ? 'bg-hp-danger' : 'bg-hp-primary'}`} />
+                    {hetHang ? 'Hết hàng' : 'Còn hàng'}
+                  </span>
+                </div>
+                <CardListRow label="Nhóm" value={r.nhom || '—'} />
+                <CardListRow label="Công trình" value={r.ma_ct || '—'} />
+                <CardListRow label="Tổng nhập" value={fmt(r.tong_nhap)} valueClassName="text-hp-primary" />
+                <CardListRow label="Tổng xuất" value={fmt(r.tong_xuat)} valueClassName="text-hp-warning" />
+                <CardListRow label="Tồn cuối" value={`${fmt(r.ton_cuoi)} ${r.dvt || ''}`} valueClassName={hetHang ? 'text-hp-danger font-bold' : 'text-hp-text font-bold'} />
+              </CardListItem>
+            )
+          })}
+        </CardList>
       </div>
 
     </div>

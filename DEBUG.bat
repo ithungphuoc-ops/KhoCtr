@@ -22,7 +22,7 @@ npm --version
 echo.
 
 echo === CAI THU VIEN PYTHON ===
-cd /d "%~dp0backend"
+cd /d "%~dp0api"
 pip install fastapi "uvicorn[standard]" python-multipart python-dotenv pypdf
 echo Ket qua pip: %errorlevel%
 echo.

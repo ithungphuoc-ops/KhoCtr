@@ -221,7 +221,7 @@ export default function ThietLapAPI() {
       {/* Header */}
       <div className="bg-hp-card border-b border-hp-border px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-hp-accent/20 rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 bg-hp-accent/20 rounded-hp-lg flex items-center justify-center">
             <Cpu className="w-4 h-4 text-hp-accent" />
           </div>
           <div>
@@ -231,7 +231,7 @@ export default function ThietLapAPI() {
         </div>
         <button
           onClick={loadConfigs}
-          className="flex items-center gap-1.5 text-xs text-hp-text-secondary hover:text-hp-text px-3 py-1.5 rounded-lg hover:bg-hp-elevated transition-colors"
+          className="flex items-center gap-1.5 text-xs text-hp-text-secondary hover:text-hp-text px-3 py-1.5 rounded-hp-lg hover:bg-hp-elevated transition-colors"
         >
           <RefreshCw className="w-3.5 h-3.5" />
           Làm mới
@@ -304,7 +304,7 @@ export default function ThietLapAPI() {
             <div className="max-w-2xl mx-auto space-y-4">
 
               {/* CT header */}
-              <div className="bg-hp-card rounded-xl border border-hp-border p-5">
+              <div className="bg-hp-card rounded-hp-xl border border-hp-border p-5">
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
@@ -335,7 +335,7 @@ export default function ThietLapAPI() {
 
               {/* Thông báo */}
               {msg && (
-                <div className={`rounded-lg px-4 py-3 text-sm flex items-start gap-2
+                <div className={`rounded-hp-lg px-4 py-3 text-sm flex items-start gap-2
                   ${msg.type === 'ok'
                     ? 'bg-hp-primary/10 text-hp-primary border border-hp-primary/30'
                     : 'bg-hp-danger/10 text-hp-danger border border-hp-danger/30'}`}>
@@ -347,7 +347,7 @@ export default function ThietLapAPI() {
 
               {/* Config hiện tại */}
               {currentCfg?.api_key_set ? (
-                <div className="bg-hp-card rounded-xl border border-hp-border p-5 space-y-3">
+                <div className="bg-hp-card rounded-hp-xl border border-hp-border p-5 space-y-3">
                   <h3 className="text-sm font-semibold text-hp-text-secondary flex items-center gap-2">
                     <Settings className="w-4 h-4 text-hp-text-muted" />Cấu hình hiện tại
                   </h3>
@@ -396,7 +396,7 @@ export default function ThietLapAPI() {
                   </div>
                 </div>
               ) : (
-                <div className="bg-hp-warning/10 border border-hp-warning/30 rounded-xl p-5 flex gap-3">
+                <div className="bg-hp-warning/10 border border-hp-warning/30 rounded-hp-xl p-5 flex gap-3">
                   <Info className="w-5 h-5 text-hp-warning flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-hp-warning">Công trình này chưa được cấu hình API AI</p>
@@ -411,7 +411,7 @@ export default function ThietLapAPI() {
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={openForm}
-                  className="flex items-center gap-2 px-4 py-2 bg-hp-accent text-white text-sm rounded-lg hover:bg-hp-accent/90 transition-colors font-medium"
+                  className="flex items-center gap-2 px-4 py-2 bg-hp-accent text-white text-sm rounded-hp-lg hover:bg-hp-accent/90 transition-colors font-medium"
                 >
                   <Settings className="w-4 h-4" />
                   {currentCfg?.api_key_set ? 'Cập nhật cấu hình' : 'Thêm cấu hình'}
@@ -422,7 +422,7 @@ export default function ThietLapAPI() {
                     <button
                       onClick={handleTest}
                       disabled={testing}
-                      className="flex items-center gap-2 px-4 py-2 bg-hp-primary text-white text-sm rounded-lg hover:bg-hp-primary/90 transition-colors font-medium disabled:opacity-50"
+                      className="flex items-center gap-2 px-4 py-2 bg-hp-primary text-white text-sm rounded-hp-lg hover:bg-hp-primary/90 transition-colors font-medium disabled:opacity-50"
                     >
                       <Play className={`w-4 h-4 ${testing ? 'animate-pulse' : ''}`} />
                       {testing ? 'Đang kiểm tra...' : 'Kiểm tra kết nối'}
@@ -432,7 +432,7 @@ export default function ThietLapAPI() {
                       <button
                         onClick={handleDisable}
                         disabled={actionLoading}
-                        className="flex items-center gap-2 px-4 py-2 bg-hp-elevated text-hp-text text-sm rounded-lg hover:bg-hp-surface transition-colors font-medium disabled:opacity-50"
+                        className="flex items-center gap-2 px-4 py-2 bg-hp-elevated text-hp-text text-sm rounded-hp-lg hover:bg-hp-surface transition-colors font-medium disabled:opacity-50"
                       >
                         <ZapOff className="w-4 h-4" />Tắt tạm
                       </button>
@@ -440,7 +440,7 @@ export default function ThietLapAPI() {
                       <button
                         onClick={handleEnable}
                         disabled={actionLoading}
-                        className="flex items-center gap-2 px-4 py-2 bg-hp-primary/20 text-hp-primary text-sm rounded-lg hover:bg-hp-primary/30 transition-colors font-medium disabled:opacity-50"
+                        className="flex items-center gap-2 px-4 py-2 bg-hp-primary/20 text-hp-primary text-sm rounded-hp-lg hover:bg-hp-primary/30 transition-colors font-medium disabled:opacity-50"
                       >
                         <Zap className="w-4 h-4" />Bật lại
                       </button>
@@ -448,7 +448,7 @@ export default function ThietLapAPI() {
 
                     <button
                       onClick={() => setShowDeleteConfirm(true)}
-                      className="flex items-center gap-2 px-4 py-2 bg-hp-danger/10 text-hp-danger text-sm rounded-lg hover:bg-hp-danger/20 transition-colors font-medium"
+                      className="flex items-center gap-2 px-4 py-2 bg-hp-danger/10 text-hp-danger text-sm rounded-hp-lg hover:bg-hp-danger/20 transition-colors font-medium"
                     >
                       <Trash2 className="w-4 h-4" />Xóa API Key
                     </button>
@@ -458,7 +458,7 @@ export default function ThietLapAPI() {
 
               {/* Confirm xóa key */}
               {showDeleteConfirm && (
-                <div className="bg-hp-danger/10 border border-hp-danger/30 rounded-xl p-4">
+                <div className="bg-hp-danger/10 border border-hp-danger/30 rounded-hp-xl p-4">
                   <p className="text-sm font-medium text-hp-danger mb-1">Xác nhận xóa API Key?</p>
                   <p className="text-xs text-hp-danger mb-3">
                     Key sẽ bị xóa vĩnh viễn khỏi hệ thống. Lịch sử kiểm tra kết nối vẫn được giữ lại.
@@ -468,13 +468,13 @@ export default function ThietLapAPI() {
                     <button
                       onClick={handleDeleteKey}
                       disabled={actionLoading}
-                      className="px-3 py-1.5 bg-hp-danger text-white text-xs rounded-lg hover:bg-hp-danger/90 font-medium disabled:opacity-50"
+                      className="px-3 py-1.5 bg-hp-danger text-white text-xs rounded-hp-lg hover:bg-hp-danger/90 font-medium disabled:opacity-50"
                     >
                       {actionLoading ? 'Đang xóa...' : 'Xác nhận xóa'}
                     </button>
                     <button
                       onClick={() => setShowDeleteConfirm(false)}
-                      className="px-3 py-1.5 bg-hp-elevated text-hp-text-secondary text-xs rounded-lg border border-hp-border hover:bg-hp-surface font-medium"
+                      className="px-3 py-1.5 bg-hp-elevated text-hp-text-secondary text-xs rounded-hp-lg border border-hp-border hover:bg-hp-surface font-medium"
                     >
                       Hủy
                     </button>
@@ -484,7 +484,7 @@ export default function ThietLapAPI() {
 
               {/* Form cập nhật cấu hình */}
               {showForm && (
-                <div className="bg-hp-card rounded-xl border border-hp-accent/30 p-5">
+                <div className="bg-hp-card rounded-hp-xl border border-hp-accent/30 p-5">
                   <h3 className="text-sm font-semibold text-hp-text-secondary mb-4 flex items-center gap-2">
                     <Settings className="w-4 h-4 text-hp-accent" />
                     {currentCfg?.api_key_set ? 'Cập nhật cấu hình API' : 'Thêm cấu hình API'}
@@ -497,7 +497,7 @@ export default function ThietLapAPI() {
                       <select
                         value={form.provider}
                         onChange={e => setForm(f => ({ ...f, provider: e.target.value, model: '' }))}
-                        className="w-full border border-hp-border rounded-lg px-3 py-2 text-sm bg-hp-elevated text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent"
+                        className="w-full border border-hp-border rounded-hp-lg px-3 py-2 text-sm bg-hp-elevated text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent"
                       >
                         {providers.map(p => (
                           <option key={p.name} value={p.name}>{p.label} — {p.description}</option>
@@ -513,7 +513,7 @@ export default function ThietLapAPI() {
                       <select
                         value={form.model}
                         onChange={e => setForm(f => ({ ...f, model: e.target.value }))}
-                        className="w-full border border-hp-border rounded-lg px-3 py-2 text-sm bg-hp-elevated text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent"
+                        className="w-full border border-hp-border rounded-hp-lg px-3 py-2 text-sm bg-hp-elevated text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent"
                       >
                         <option value="">— Mặc định ({currentProv?.default_model}) —</option>
                         {(currentProv?.models || []).map(m => (
@@ -537,7 +537,7 @@ export default function ThietLapAPI() {
                           placeholder={currentCfg?.api_key_masked
                             ? `Hiện tại: ${currentCfg.api_key_masked}`
                             : 'Nhập API Key...'}
-                          className="w-full border border-hp-border rounded-lg px-3 py-2 pr-10 text-sm bg-hp-elevated text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent font-mono"
+                          className="w-full border border-hp-border rounded-hp-lg px-3 py-2 pr-10 text-sm bg-hp-elevated text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent font-mono"
                           autoComplete="new-password"
                         />
                         <button
@@ -558,7 +558,7 @@ export default function ThietLapAPI() {
                         value={form.max_tokens}
                         onChange={e => setForm(f => ({ ...f, max_tokens: parseInt(e.target.value) || 4096 }))}
                         min={512} max={32768} step={512}
-                        className="w-full border border-hp-border rounded-lg px-3 py-2 text-sm bg-hp-elevated text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent"
+                        className="w-full border border-hp-border rounded-hp-lg px-3 py-2 text-sm bg-hp-elevated text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent"
                       />
                     </div>
 
@@ -567,7 +567,7 @@ export default function ThietLapAPI() {
                       <button
                         type="submit"
                         disabled={actionLoading}
-                        className="flex items-center gap-2 px-4 py-2 bg-hp-accent text-white text-sm rounded-lg hover:bg-hp-accent/90 transition-colors font-medium disabled:opacity-50"
+                        className="flex items-center gap-2 px-4 py-2 bg-hp-accent text-white text-sm rounded-hp-lg hover:bg-hp-accent/90 transition-colors font-medium disabled:opacity-50"
                       >
                         <Save className="w-4 h-4" />
                         {actionLoading ? 'Đang lưu...' : 'Lưu cấu hình'}
@@ -575,7 +575,7 @@ export default function ThietLapAPI() {
                       <button
                         type="button"
                         onClick={() => { setShowForm(false); setMsg(null) }}
-                        className="px-4 py-2 bg-hp-elevated text-hp-text-secondary text-sm rounded-lg hover:bg-hp-surface transition-colors font-medium"
+                        className="px-4 py-2 bg-hp-elevated text-hp-text-secondary text-sm rounded-hp-lg hover:bg-hp-surface transition-colors font-medium"
                       >
                         Hủy
                       </button>

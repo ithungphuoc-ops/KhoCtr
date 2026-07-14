@@ -269,29 +269,44 @@ export default function AIReader() {
 
               {/* Bảng hàng hóa */}
               {items.length > 0 && (
-                <div className="overflow-auto max-h-44 rounded-hp-lg border border-hp-border">
-                  <table className="w-full text-xs">
-                    <thead className="bg-hp-surface sticky top-0">
-                      <tr>
-                        <th className="text-left p-2 text-hp-text-muted">#</th>
-                        <th className="text-left p-2 text-hp-text-muted">Tên hàng</th>
-                        <th className="text-right p-2 text-hp-text-muted">SL</th>
-                        <th className="text-left p-2 text-hp-text-muted">DVT</th>
-                        <th className="text-right p-2 text-hp-text-muted">Đơn giá</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {items.map((it, i) => (
-                        <tr key={i} className="border-t border-hp-border hover:bg-hp-elevated">
-                          <td className="p-2 text-hp-text-muted">{i + 1}</td>
-                          <td className="p-2 text-hp-text">{it.ten_hang || it.ten}</td>
-                          <td className="p-2 text-right text-hp-text">{fmt(it.so_luong)}</td>
-                          <td className="p-2 text-hp-text-muted">{it.dvt}</td>
-                          <td className="p-2 text-right text-hp-text-secondary">{formatVND(it.don_gia)}</td>
+                <div className="rounded-hp-lg border border-hp-border overflow-hidden">
+                  {/* Table — PC/Tablet */}
+                  <div className="hidden md:block overflow-auto max-h-44">
+                    <table className="w-full text-xs">
+                      <thead className="bg-hp-surface sticky top-0">
+                        <tr>
+                          <th className="text-left p-2 text-hp-text-muted">#</th>
+                          <th className="text-left p-2 text-hp-text-muted">Tên hàng</th>
+                          <th className="text-right p-2 text-hp-text-muted">SL</th>
+                          <th className="text-left p-2 text-hp-text-muted">DVT</th>
+                          <th className="text-right p-2 text-hp-text-muted">Đơn giá</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {items.map((it, i) => (
+                          <tr key={i} className="border-t border-hp-border hover:bg-hp-elevated">
+                            <td className="p-2 text-hp-text-muted">{i + 1}</td>
+                            <td className="p-2 text-hp-text">{it.ten_hang || it.ten}</td>
+                            <td className="p-2 text-right text-hp-text">{fmt(it.so_luong)}</td>
+                            <td className="p-2 text-hp-text-muted">{it.dvt}</td>
+                            <td className="p-2 text-right text-hp-text-secondary">{formatVND(it.don_gia)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {/* Card List — Mobile */}
+                  <div className="md:hidden max-h-44 overflow-y-auto divide-y divide-hp-border">
+                    {items.map((it, i) => (
+                      <div key={i} className="p-2 text-xs">
+                        <div className="text-hp-text">{it.ten_hang || it.ten}</div>
+                        <div className="flex justify-between text-hp-text-muted mt-0.5">
+                          <span>{fmt(it.so_luong)} {it.dvt}</span>
+                          <span className="text-hp-text-secondary">{formatVND(it.don_gia)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 

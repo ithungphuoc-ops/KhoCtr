@@ -2,7 +2,7 @@
 routers/ai_routes.py — API endpoints cho AI đọc phiếu + Fuzzy Match
 """
 import os, tempfile, shutil
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Header, Query
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Header, Query, Request
 from pydantic import BaseModel
 from typing import Optional, List, Any
 import sys
@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 import ai_reader
 import supabase_client as db
 from config import get_settings
-from routers.auth import verify_token
+from routers.auth import get_current_user
 
 router = APIRouter(prefix="/api/ai", tags=["ai"])
 
@@ -308,20 +308,17 @@ def _get_thresholds(cong_trinh_id: int) -> tuple[int, int]:
     return DEFAULT_GREEN, DEFAULT_YELLOW
 
 
-def _require_auth_routes(authorization: Optional[str]) -> dict:
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Cần đăng nhập.")
-    token = authorization.removeprefix("Bearer ").strip()
-    user = verify_token(token)
+def _require_auth_routes(request: Request) -> dict:
+    user = get_current_user(request)
     if not user:
-        raise HTTPException(status_code=401, detail="Token không hợp lệ hoặc đã hết hạn.")
+        raise HTTPException(status_code=401, detail="Cần đăng nhập.")
     return user
 
 
 @router.post("/match-items")
 def match_items(
     body: MatchItemsRequest,
-    authorization: Optional[str] = Header(None),
+    request: Request,
 ):
     """
     Nhận list items từ AI đọc PDF, phân loại theo 3 tab (🟢/🟡/🔴).
@@ -333,7 +330,7 @@ def match_items(
 
     Không ghi DB — chỉ phân loại. DB ghi sau khi popup confirm.
     """
-    _require_auth_routes(authorization)
+    _require_auth_routes(request)
 
     try:
         from mapping_service import process_items_batch
@@ -361,7 +358,7 @@ def match_items(
 @router.post("/confirm-match")
 def confirm_match(
     body: ConfirmMatchRequest,
-    authorization: Optional[str] = Header(None),
+    request: Request,
 ):
     """
     Sau khi người dùng bấm Xác nhận trên popup:
@@ -371,7 +368,7 @@ def confirm_match(
 
     Không ghi phiếu nhập/xuất — bước đó do CTNhapKho/CTXuatKho tự xử lý sau.
     """
-    user = _require_auth_routes(authorization)
+    user = _require_auth_routes(request)
 
     from mapping_service import upsert_name_mapping, log_match_history
 

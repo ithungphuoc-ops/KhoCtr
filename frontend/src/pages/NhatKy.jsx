@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { ClipboardList, RefreshCw, Search, Filter } from 'lucide-react'
 import { getNhatKy } from '../api'
 import { useCongTrinh } from '../context/CongTrinhContext'
+import { CardList, CardListItem, CardListRow } from '../components/ui/CardListItem'
 
 const ACTION_LABELS = {
   create_nk:    { label: 'Tạo phiếu NK',  color: 'bg-hp-primary/15 text-hp-primary' },
@@ -78,7 +79,7 @@ export default function NhatKy() {
 
       {/* Filter bar */}
       <div className="bg-hp-card rounded-hp-lg border border-hp-border p-4 flex gap-3 flex-wrap items-center">
-        <div className="relative flex-1 min-w-[200px]">
+        <div className="relative flex-1 min-w-hp-filter-lg">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-hp-text-muted" />
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Tìm người dùng, chi tiết..."
@@ -98,8 +99,8 @@ export default function NhatKy() {
         <span className="text-xs text-hp-text-muted">{filtered.length} bản ghi</span>
       </div>
 
-      {/* Table */}
-      <div className="bg-hp-card rounded-hp-lg border border-hp-border overflow-hidden">
+      {/* Table — PC/Tablet */}
+      <div className="hidden md:block bg-hp-card rounded-hp-lg border border-hp-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-hp-surface border-b border-hp-border">
@@ -132,8 +133,8 @@ export default function NhatKy() {
                               {act.label}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-hp-text-secondary text-xs max-w-[280px] truncate" title={log.details}>{log.details || '—'}</td>
-                          <td className="px-4 py-3 text-hp-text-secondary text-xs truncate max-w-[120px]">
+                          <td className="px-4 py-3 text-hp-text-secondary text-xs max-w-hp-filter-xl truncate" title={log.details}>{log.details || '—'}</td>
+                          <td className="px-4 py-3 text-hp-text-secondary text-xs truncate max-w-hp-filter-sm">
                             {log.cong_trinh_id ? (ctMap[log.cong_trinh_id] || `CT #${log.cong_trinh_id}`) : '—'}
                           </td>
                         </tr>
@@ -143,6 +144,26 @@ export default function NhatKy() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Card List — Mobile */}
+      <div className="md:hidden">
+        <CardList loading={loading} empty={filtered.length === 0} emptyMessage="Chưa có nhật ký nào">
+          {filtered.map((log, i) => {
+            const act = fmtAction(log.action)
+            return (
+              <CardListItem key={log.id || i}>
+                <div className="flex items-start justify-between gap-2">
+                  <span className="text-hp-text-secondary text-xs">{fmtTime(log.created_at)}</span>
+                  <span className={`flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-medium ${act.color}`}>{act.label}</span>
+                </div>
+                <CardListRow label="Người dùng" value={log.user_email || '—'} />
+                {log.details && <div className="text-sm text-hp-text-secondary">{log.details}</div>}
+                <CardListRow label="Công trình" value={log.cong_trinh_id ? (ctMap[log.cong_trinh_id] || `CT #${log.cong_trinh_id}`) : '—'} />
+              </CardListItem>
+            )
+          })}
+        </CardList>
       </div>
 
       {/* Pagination */}

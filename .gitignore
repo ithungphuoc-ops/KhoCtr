@@ -1,5 +1,5 @@
 # Secrets — KHÔNG bao giờ commit
-backend/.env
+api/.env
 *.env
 
 # Python
@@ -29,3 +29,7 @@ frontend/dist/
 .DS_Store
 Thumbs.db
 frontend/package-lock.json
+
+.vercel
+
+.vercel

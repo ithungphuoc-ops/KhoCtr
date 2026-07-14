@@ -122,7 +122,7 @@ export default function GhiChuModule({
       <div className="bg-hp-card rounded-hp-lg border border-hp-border shadow-sm p-4">
         <div className="flex flex-wrap gap-3 items-end">
           {/* Search */}
-          <div className="flex-1 min-w-[180px]">
+          <div className="flex-1 min-w-hp-filter-lg">
             <div className="relative">
               <Search className="w-4 h-4 absolute left-3 top-3 text-hp-text-muted" />
               <input

@@ -43,9 +43,18 @@ export default {
       width: {
         'hp-sidebar':           '260px',
         'hp-sidebar-collapsed': '72px',
+        // Thang chiều rộng ô lọc/select — thay cho các giá trị w-[Npx] tùy ý rải rác nhiều trang
+        'hp-filter-sm':         '120px',
+        'hp-filter-md':         '160px',
+        'hp-filter-lg':         '200px',
+        'hp-filter-xl':         '280px',
       },
       minHeight: {
         'hp-header': '60px',
+      },
+      minWidth: {
+        'hp-sidebar':           '260px',
+        'hp-sidebar-collapsed': '72px',
       },
       fontFamily: {
         sans: ['Inter', 'Roboto', 'Arial', 'sans-serif'],

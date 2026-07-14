@@ -11,7 +11,7 @@ import os, sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 import urllib.request, urllib.error, json as _json
-from fastapi import APIRouter, HTTPException, Header
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, validator
 from typing import Optional
 
@@ -21,34 +21,28 @@ from ai_providers import (
     validate_api_key_format, list_providers_info,
     get_provider, is_valid_provider, list_providers,
 )
-from routers.auth import verify_token
+from routers.auth import get_current_user
 
 router = APIRouter(prefix="/api/ai-config", tags=["ai_config"])
 
 
 # ── Auth helpers ──────────────────────────────────────────────
 
-def _require_admin(authorization: Optional[str]) -> dict:
-    """Kiểm tra token hợp lệ + role=admin. Raise 401/403 nếu không đủ quyền."""
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Cần đăng nhập.")
-    token = authorization.removeprefix("Bearer ").strip()
-    user = verify_token(token)
+def _require_admin(request: Request) -> dict:
+    """Kiểm tra session hpcore hợp lệ + role=admin. Raise 401/403 nếu không đủ quyền."""
+    user = get_current_user(request)
     if not user:
-        raise HTTPException(status_code=401, detail="Token không hợp lệ hoặc đã hết hạn.")
+        raise HTTPException(status_code=401, detail="Cần đăng nhập.")
     if user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Chỉ Admin mới được thao tác cấu hình AI.")
     return user
 
 
-def _require_auth(authorization: Optional[str]) -> dict:
-    """Kiểm tra token hợp lệ (mọi role)."""
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Cần đăng nhập.")
-    token = authorization.removeprefix("Bearer ").strip()
-    user = verify_token(token)
+def _require_auth(request: Request) -> dict:
+    """Kiểm tra session hpcore hợp lệ (mọi role)."""
+    user = get_current_user(request)
     if not user:
-        raise HTTPException(status_code=401, detail="Token không hợp lệ hoặc đã hết hạn.")
+        raise HTTPException(status_code=401, detail="Cần đăng nhập.")
     return user
 
 
@@ -116,9 +110,9 @@ def get_providers():
 
 
 @router.get("/")
-def list_all_configs(authorization: Optional[str] = Header(None)):
+def list_all_configs(request: Request):
     """[Admin] Xem cấu hình AI của tất cả công trình."""
-    _require_admin(authorization)
+    _require_admin(request)
     try:
         rows = db.get_all_ai_configs()
         return {"data": [_safe_config(r) for r in rows], "total": len(rows)}
@@ -127,13 +121,13 @@ def list_all_configs(authorization: Optional[str] = Header(None)):
 
 
 @router.get("/{cong_trinh_id}")
-def get_config(cong_trinh_id: int, authorization: Optional[str] = Header(None)):
+def get_config(cong_trinh_id: int, request: Request):
     """
     Lấy cấu hình AI của 1 công trình.
     Admin: thấy api_key_masked + đầy đủ thông tin.
     User : chỉ thấy trạng thái (configured, provider, is_active).
     """
-    user = _require_auth(authorization)
+    user = _require_auth(request)
     try:
         row = db.get_ai_config_by_ct(cong_trinh_id)
         if not row:
@@ -165,14 +159,14 @@ def get_config(cong_trinh_id: int, authorization: Optional[str] = Header(None)):
 def create_or_update_config(
     cong_trinh_id: int,
     body: AIConfigCreate,
-    authorization: Optional[str] = Header(None),
+    request: Request,
 ):
     """
     [Admin] Tạo hoặc cập nhật cấu hình AI cho 1 công trình.
     api_key nhận plaintext → validate format → encrypt → lưu DB.
     Khi đổi key → is_active reset về False (cần test lại).
     """
-    _require_admin(authorization)
+    _require_admin(request)
 
     # Validate format key trước khi lưu (nhanh, offline)
     if body.api_key:
@@ -226,10 +220,10 @@ def create_or_update_config(
 def update_config(
     cong_trinh_id: int,
     body: AIConfigUpdate,
-    authorization: Optional[str] = Header(None),
+    request: Request,
 ):
     """[Admin] Cập nhật một phần cấu hình (PATCH-style)."""
-    _require_admin(authorization)
+    _require_admin(request)
 
     if body.api_key and body.provider:
         ok, msg = validate_api_key_format(body.provider, body.api_key)
@@ -265,7 +259,7 @@ def update_config(
 
 
 @router.delete("/{cong_trinh_id}")
-def delete_config(cong_trinh_id: int, authorization: Optional[str] = Header(None)):
+def delete_config(cong_trinh_id: int, request: Request):
     """
     [Admin] Xóa cấu hình API Key của công trình.
 
@@ -278,7 +272,7 @@ def delete_config(cong_trinh_id: int, authorization: Optional[str] = Header(None
 
     Khác với /disable: /disable chỉ tạm ngưng, vẫn giữ key để bật lại nhanh.
     """
-    _require_admin(authorization)
+    _require_admin(request)
     try:
         if not db.get_ai_config_by_ct(cong_trinh_id):
             raise HTTPException(status_code=404, detail="Không tìm thấy cấu hình.")
@@ -298,14 +292,14 @@ def delete_config(cong_trinh_id: int, authorization: Optional[str] = Header(None
 
 
 @router.post("/{cong_trinh_id}/disable")
-def disable_config(cong_trinh_id: int, authorization: Optional[str] = Header(None)):
+def disable_config(cong_trinh_id: int, request: Request):
     """
     [Admin] Tạm ngưng AI cho công trình này.
 
     Hành vi: is_active=False, GIỮ NGUYÊN api_key_enc.
     Dùng khi muốn tắt tạm thời — bật lại nhanh bằng /enable mà không cần nhập key lại.
     """
-    _require_admin(authorization)
+    _require_admin(request)
     try:
         cfg = db.get_ai_config_by_ct(cong_trinh_id)
         if not cfg:
@@ -326,14 +320,14 @@ def disable_config(cong_trinh_id: int, authorization: Optional[str] = Header(Non
 
 
 @router.post("/{cong_trinh_id}/enable")
-def enable_config(cong_trinh_id: int, authorization: Optional[str] = Header(None)):
+def enable_config(cong_trinh_id: int, request: Request):
     """
     [Admin] Bật lại AI cho công trình (sau khi đã /disable).
 
     Yêu cầu: phải còn api_key_enc trong DB.
     Khuyến nghị: chạy /test-connection sau khi enable để xác nhận key vẫn hợp lệ.
     """
-    _require_admin(authorization)
+    _require_admin(request)
     try:
         cfg = db.get_ai_config_by_ct(cong_trinh_id)
         if not cfg:
@@ -359,7 +353,7 @@ def enable_config(cong_trinh_id: int, authorization: Optional[str] = Header(None
 
 
 @router.post("/{cong_trinh_id}/test-connection")
-def test_connection(cong_trinh_id: int, authorization: Optional[str] = Header(None)):
+def test_connection(cong_trinh_id: int, request: Request):
     """
     [Admin] Kiểm tra kết nối API thật của CT này.
     - Decrypt key từ DB (không bao giờ gửi ra ngoài)
@@ -367,7 +361,7 @@ def test_connection(cong_trinh_id: int, authorization: Optional[str] = Header(No
     - Lưu kết quả: last_test_at / last_test_status / last_error
     - Nếu OK → tự động set is_active=True
     """
-    _require_admin(authorization)
+    _require_admin(request)
 
     try:
         cfg = db.get_ai_config_by_ct(cong_trinh_id)

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Box, Search, RefreshCw, Plus, X, Pencil, Trash2 } from 'lucide-react'
 import { getHangHoa, createHangHoa, updateHangHoa, deleteHangHoa } from '../api'
 import { useCongTrinh } from '../context/CongTrinhContext'
+import { CardList, CardListItem, CardListRow } from '../components/ui/CardListItem'
 
 export default function DanhMuc() {
   const { selectedCT, ctLoading, congTrinhs } = useCongTrinh()
@@ -156,7 +157,7 @@ export default function DanhMuc() {
 
       {/* Filters */}
       <div className="bg-hp-card rounded-hp-lg shadow-sm border border-hp-border p-4 flex gap-3 flex-wrap items-center">
-        <div className="relative flex-1 min-w-[200px]">
+        <div className="relative flex-1 min-w-hp-filter-lg">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-hp-text-muted" />
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Tìm tên hàng, mã hàng..."
@@ -173,8 +174,8 @@ export default function DanhMuc() {
         <span className="text-xs text-hp-text-muted">{filtered.length} dòng</span>
       </div>
 
-      {/* Table */}
-      <div className="bg-hp-card rounded-hp-lg shadow-sm border border-hp-border overflow-hidden">
+      {/* Table — PC/Tablet */}
+      <div className="hidden md:block bg-hp-card rounded-hp-lg shadow-sm border border-hp-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-hp-surface border-b border-hp-border">
@@ -224,6 +225,35 @@ export default function DanhMuc() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Card List — Mobile */}
+      <div className="md:hidden">
+        <CardList loading={loading} empty={filtered.length === 0} emptyMessage="Không có hàng hóa">
+          {filtered.map((r, i) => (
+            <CardListItem key={r.ma_hang || i}>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="text-hp-text font-medium truncate">{r.ten_hang}</div>
+                  <div className="text-hp-accent font-mono text-xs">{r.ma_hang}</div>
+                </div>
+                {r.nhom && <span className="flex-shrink-0 bg-hp-accent/15 text-hp-accent text-xs px-2 py-0.5 rounded-full">{r.nhom}</span>}
+              </div>
+              <CardListRow label="ĐVT" value={r.dvt || '—'} />
+              <CardListRow label="Công trình" value={ctMap[r.cong_trinh_id] || '—'} />
+              <div className="flex items-center justify-end gap-1 pt-1 border-t border-hp-divider">
+                <button onClick={() => openEdit(r)} aria-label="Sửa hàng hóa"
+                  className="min-w-11 min-h-11 flex items-center justify-center text-hp-text-muted hover:text-hp-accent hover:bg-hp-accent/15 rounded-hp-md transition-colors">
+                  <Pencil className="w-4 h-4" />
+                </button>
+                <button onClick={() => handleDelete(r.ma_hang, r.ten_hang)} aria-label="Xóa hàng hóa"
+                  className="min-w-11 min-h-11 flex items-center justify-center text-hp-text-muted hover:text-hp-danger hover:bg-hp-danger/15 rounded-hp-md transition-colors">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </CardListItem>
+          ))}
+        </CardList>
       </div>
 
       {/* Modal tạo hàng hóa */}

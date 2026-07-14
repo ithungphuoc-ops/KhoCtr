@@ -3,6 +3,7 @@ import { useOutletContext, useParams } from 'react-router-dom'
 import { Package, Search, RefreshCw, AlertCircle, CheckCircle, Plus, Pencil, Trash2, X, AlertTriangle } from 'lucide-react'
 import { getTonKho, getHangHoa, themHangTonKho, dieuChinhTonKho, xoaHangTonKho } from '../../api'
 import { useAuth } from '../../context/AuthContext'
+import { CardList, CardListItem, CardListRow } from '../../components/ui/CardListItem'
 
 const fmt = (n) => (n ?? 0).toLocaleString('vi-VN')
 // CRUD ton kho: them hang (phieu TD), dieu chinh (phieu DC), xoa hang
@@ -167,7 +168,7 @@ export default function CTTonKho() {
 
       {/* Filters */}
       <div className="bg-hp-card rounded-hp-lg border border-hp-border p-4 flex gap-3 flex-wrap items-center">
-        <div className="relative flex-1 min-w-[200px]">
+        <div className="relative flex-1 min-w-hp-filter-lg">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-hp-text-muted" />
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Tìm tên hàng hóa..."
@@ -185,8 +186,8 @@ export default function CTTonKho() {
         <span className="text-xs text-hp-text-muted">{filtered.length} dòng</span>
       </div>
 
-      {/* Table */}
-      <div className="bg-hp-card rounded-hp-lg border border-hp-border overflow-hidden">
+      {/* Table — PC/Tablet */}
+      <div className="hidden md:block bg-hp-card rounded-hp-lg border border-hp-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-hp-surface border-b border-hp-border">
@@ -243,6 +244,42 @@ export default function CTTonKho() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Card List — Mobile */}
+      <div className="md:hidden">
+        <CardList loading={loading} empty={filtered.length === 0} emptyMessage="Không có dữ liệu">
+          {filtered.map((r, i) => {
+            const het = (r.ton_cuoi ?? 0) <= 0
+            return (
+              <CardListItem key={i} highlight={het}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="text-hp-text font-medium truncate">{r.ten_hang}</div>
+                    <div className="text-hp-text-secondary text-xs">{r.nhom || '—'}</div>
+                  </div>
+                  <span className={`flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${het ? 'bg-hp-danger/20 text-hp-danger' : 'bg-hp-primary/20 text-hp-primary'}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${het ? 'bg-hp-danger' : 'bg-hp-primary'}`} />
+                    {het ? 'Hết' : 'Còn'}
+                  </span>
+                </div>
+                <CardListRow label="Tổng nhập" value={fmt(r.tong_nhap)} valueClassName="text-hp-primary" />
+                <CardListRow label="Tổng xuất" value={fmt(r.tong_xuat)} valueClassName="text-hp-warning" />
+                <CardListRow label="Tồn cuối" value={`${fmt(r.ton_cuoi)} ${r.dvt || ''}`} valueClassName={het ? 'text-hp-danger font-bold' : 'text-hp-accent font-bold'} />
+                <div className="flex items-center justify-end gap-1 pt-1 border-t border-hp-divider">
+                  <button onClick={() => openSua(r)} aria-label="Điều chỉnh tồn"
+                    className="min-w-11 min-h-11 flex items-center justify-center text-hp-accent hover:bg-hp-accent/10 rounded-hp-md transition-colors">
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => openXoa(r)} aria-label="Xóa hàng khỏi tồn kho"
+                    className="min-w-11 min-h-11 flex items-center justify-center text-hp-danger hover:bg-hp-danger/10 rounded-hp-md transition-colors">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </CardListItem>
+            )
+          })}
+        </CardList>
       </div>
 
       {/* ── Modals ─────────────────────────────────────────── */}

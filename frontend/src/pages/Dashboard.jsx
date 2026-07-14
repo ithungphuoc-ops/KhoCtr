@@ -227,34 +227,55 @@ function TonKhoWidget({ data, loading }) {
         ? <div className="text-hp-text-muted text-sm text-center py-4">Đang tải...</div>
         : filtered.length === 0
           ? <div className="text-hp-text-muted text-sm text-center py-4">Không có dữ liệu</div>
-          : <div className="overflow-x-auto max-h-64 overflow-y-auto">
-              <table className="w-full text-sm">
-                <thead className="sticky top-0 bg-hp-surface">
-                  <tr className="border-b border-hp-border text-hp-text-secondary">
-                    <th className="text-left py-2 font-medium">Tên hàng</th>
-                    <th className="text-right py-2 font-medium">Nhập</th>
-                    <th className="text-right py-2 font-medium">Xuất</th>
-                    <th className="text-right py-2 font-medium">Tồn</th>
-                    <th className="text-right py-2 font-medium">ĐVT</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-hp-border">
-                  {filtered.map((r, i) => {
-                    const ton = r.ton_cuoi ?? 0
-                    const tonColor = ton <= 0 ? 'text-hp-danger font-bold' : ton <= 20 ? 'text-hp-warning font-semibold' : 'text-hp-primary font-semibold'
-                    return (
-                      <tr key={i} className="hover:bg-hp-elevated">
-                        <td className="py-1.5 text-hp-text max-w-[160px] truncate" title={r.ten_hang}>{r.ten_hang}</td>
-                        <td className="py-1.5 text-right text-hp-accent">{fmt(r.tong_nhap)}</td>
-                        <td className="py-1.5 text-right text-hp-warning">{fmt(r.tong_xuat)}</td>
-                        <td className={`py-1.5 text-right ${tonColor}`}>{fmt(ton)}</td>
-                        <td className="py-1.5 text-right text-hp-text-muted">{r.dvt || ''}</td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
+          : <>
+              {/* Table — PC/Tablet */}
+              <div className="hidden md:block overflow-x-auto max-h-64 overflow-y-auto">
+                <table className="w-full text-sm">
+                  <thead className="sticky top-0 bg-hp-surface">
+                    <tr className="border-b border-hp-border text-hp-text-secondary">
+                      <th className="text-left py-2 font-medium">Tên hàng</th>
+                      <th className="text-right py-2 font-medium">Nhập</th>
+                      <th className="text-right py-2 font-medium">Xuất</th>
+                      <th className="text-right py-2 font-medium">Tồn</th>
+                      <th className="text-right py-2 font-medium">ĐVT</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-hp-border">
+                    {filtered.map((r, i) => {
+                      const ton = r.ton_cuoi ?? 0
+                      const tonColor = ton <= 0 ? 'text-hp-danger font-bold' : ton <= 20 ? 'text-hp-warning font-semibold' : 'text-hp-primary font-semibold'
+                      return (
+                        <tr key={i} className="hover:bg-hp-elevated">
+                          <td className="py-1.5 text-hp-text max-w-hp-filter-md truncate" title={r.ten_hang}>{r.ten_hang}</td>
+                          <td className="py-1.5 text-right text-hp-accent">{fmt(r.tong_nhap)}</td>
+                          <td className="py-1.5 text-right text-hp-warning">{fmt(r.tong_xuat)}</td>
+                          <td className={`py-1.5 text-right ${tonColor}`}>{fmt(ton)}</td>
+                          <td className="py-1.5 text-right text-hp-text-muted">{r.dvt || ''}</td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Card List — Mobile */}
+              <div className="md:hidden max-h-64 overflow-y-auto space-y-2">
+                {filtered.map((r, i) => {
+                  const ton = r.ton_cuoi ?? 0
+                  const tonColor = ton <= 0 ? 'text-hp-danger font-bold' : ton <= 20 ? 'text-hp-warning font-semibold' : 'text-hp-primary font-semibold'
+                  return (
+                    <div key={i} className="bg-hp-surface rounded-hp-md p-2.5 text-sm">
+                      <div className="text-hp-text truncate mb-1">{r.ten_hang}</div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-hp-accent">Nhập {fmt(r.tong_nhap)}</span>
+                        <span className="text-hp-warning">Xuất {fmt(r.tong_xuat)}</span>
+                        <span className={tonColor}>Tồn {fmt(ton)} {r.dvt || ''}</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </>
       }
     </div>
   )
@@ -287,7 +308,7 @@ function TopVatTuWidget({ title, data, loading, type }) {
                     <span className="text-xs text-hp-text-muted w-4 flex-shrink-0">{i + 1}</span>
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-center mb-0.5">
-                        <span className="text-xs text-hp-text truncate max-w-[140px]" title={item.ten_hang}>{item.ten_hang}</span>
+                        <span className="text-xs text-hp-text truncate max-w-hp-filter-md" title={item.ten_hang}>{item.ten_hang}</span>
                         <span className={`text-xs font-semibold ${color} ml-2 whitespace-nowrap`}>{label}</span>
                       </div>
                       <div className="w-full bg-hp-elevated rounded-full h-1">
@@ -561,44 +582,76 @@ export default function Dashboard() {
         <h3 className="font-semibold text-hp-text mb-4">Tổng hợp theo công trình</h3>
         {loading
           ? <div className="text-hp-text-muted text-sm text-center py-4">Đang tải...</div>
-          : <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-hp-surface border-b border-hp-border text-hp-text-secondary">
-                    <th className="text-left py-2 font-medium">#</th>
-                    <th className="text-left py-2 font-medium">Công trình</th>
-                    <th className="text-right py-2 font-medium">P.Nhập</th>
-                    <th className="text-right py-2 font-medium">Tiền NK</th>
-                    <th className="text-right py-2 font-medium">P.Xuất</th>
-                    <th className="text-right py-2 font-medium">Tiền XK</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bangCT.length === 0
-                    ? <tr><td colSpan={6} className="py-4 text-center text-hp-text-muted">Chưa có dữ liệu</td></tr>
-                    : bangCT.map((ct, i) => (
-                        <tr key={ct.id || i} className="border-b border-hp-divider hover:bg-hp-elevated">
-                          <td className="py-2 text-hp-text-muted">{i + 1}</td>
-                          <td className="py-2 text-hp-text truncate max-w-[160px]" title={ct.ten_ct}>{ct.ten_ct}</td>
-                          <td className="py-2 text-right text-hp-primary">{ct.so_phieu_nk || 0}</td>
-                          <td className="py-2 text-right text-hp-text">{formatVND(ct.tong_tien_nk)}</td>
-                          <td className="py-2 text-right text-hp-warning">{ct.so_phieu_xk || 0}</td>
-                          <td className="py-2 text-right text-hp-text">{formatVND(ct.tong_tien_xk)}</td>
-                        </tr>
-                      ))
-                  }
-                  {bangCT.length > 0 && (
-                    <tr className="border-t-2 border-hp-border font-bold bg-hp-surface">
-                      <td className="py-2 text-hp-text-secondary" colSpan={2}>Tổng cộng</td>
-                      <td className="py-2 text-right text-hp-primary">{tongCT.so_phieu_nk}</td>
-                      <td className="py-2 text-right text-hp-text">{formatVND(tongCT.tong_tien_nk)}</td>
-                      <td className="py-2 text-right text-hp-warning">{tongCT.so_phieu_xk}</td>
-                      <td className="py-2 text-right text-hp-text">{formatVND(tongCT.tong_tien_xk)}</td>
+          : <>
+              {/* Table — PC/Tablet */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-hp-surface border-b border-hp-border text-hp-text-secondary">
+                      <th className="text-left py-2 font-medium">#</th>
+                      <th className="text-left py-2 font-medium">Công trình</th>
+                      <th className="text-right py-2 font-medium">P.Nhập</th>
+                      <th className="text-right py-2 font-medium">Tiền NK</th>
+                      <th className="text-right py-2 font-medium">P.Xuất</th>
+                      <th className="text-right py-2 font-medium">Tiền XK</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {bangCT.length === 0
+                      ? <tr><td colSpan={6} className="py-4 text-center text-hp-text-muted">Chưa có dữ liệu</td></tr>
+                      : bangCT.map((ct, i) => (
+                          <tr key={ct.id || i} className="border-b border-hp-divider hover:bg-hp-elevated">
+                            <td className="py-2 text-hp-text-muted">{i + 1}</td>
+                            <td className="py-2 text-hp-text truncate max-w-hp-filter-md" title={ct.ten_ct}>{ct.ten_ct}</td>
+                            <td className="py-2 text-right text-hp-primary">{ct.so_phieu_nk || 0}</td>
+                            <td className="py-2 text-right text-hp-text">{formatVND(ct.tong_tien_nk)}</td>
+                            <td className="py-2 text-right text-hp-warning">{ct.so_phieu_xk || 0}</td>
+                            <td className="py-2 text-right text-hp-text">{formatVND(ct.tong_tien_xk)}</td>
+                          </tr>
+                        ))
+                    }
+                    {bangCT.length > 0 && (
+                      <tr className="border-t-2 border-hp-border font-bold bg-hp-surface">
+                        <td className="py-2 text-hp-text-secondary" colSpan={2}>Tổng cộng</td>
+                        <td className="py-2 text-right text-hp-primary">{tongCT.so_phieu_nk}</td>
+                        <td className="py-2 text-right text-hp-text">{formatVND(tongCT.tong_tien_nk)}</td>
+                        <td className="py-2 text-right text-hp-warning">{tongCT.so_phieu_xk}</td>
+                        <td className="py-2 text-right text-hp-text">{formatVND(tongCT.tong_tien_xk)}</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Card List — Mobile */}
+              <div className="md:hidden space-y-2">
+                {bangCT.length === 0
+                  ? <div className="py-4 text-center text-hp-text-muted text-sm">Chưa có dữ liệu</div>
+                  : bangCT.map((ct, i) => (
+                      <div key={ct.id || i} className="bg-hp-surface rounded-hp-md p-2.5 text-sm">
+                        <div className="text-hp-text font-medium truncate mb-1">{ct.ten_ct}</div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-hp-primary">NK: {ct.so_phieu_nk || 0} phiếu · {formatVND(ct.tong_tien_nk)}</span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-hp-warning">XK: {ct.so_phieu_xk || 0} phiếu · {formatVND(ct.tong_tien_xk)}</span>
+                        </div>
+                      </div>
+                    ))
+                }
+                {bangCT.length > 0 && (
+                  <div className="bg-hp-surface rounded-hp-md p-2.5 text-sm border-t-2 border-hp-border">
+                    <div className="text-hp-text-secondary font-bold mb-1">Tổng cộng</div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-hp-primary">NK: {tongCT.so_phieu_nk} · {formatVND(tongCT.tong_tien_nk)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-hp-warning">XK: {tongCT.so_phieu_xk} · {formatVND(tongCT.tong_tien_xk)}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
         }
       </div>
 

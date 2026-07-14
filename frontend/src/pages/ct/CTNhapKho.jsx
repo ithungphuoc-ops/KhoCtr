@@ -6,6 +6,7 @@ import HangHoaInput from '../../components/HangHoaInput'
 import BatchPhieuPopup from '../../components/BatchPhieuPopup'
 import { exportPhieuList } from '../../utils/exportExcel'
 import { useAuth } from '../../context/AuthContext'
+import { CardList, CardListItem, CardListRow } from '../../components/ui/CardListItem'
 
 const fmt = (n) => (n ?? 0).toLocaleString('vi-VN')
 function formatVND(n) {
@@ -279,7 +280,7 @@ export default function CTNhapKho() {
         </div>
         <div className="flex gap-2">
           <button onClick={loadData} disabled={loading}
-            className="flex items-center gap-2 px-3 min-h-10 bg-hp-surface hover:bg-hp-elevated text-hp-text-secondary rounded-lg text-sm disabled:opacity-50">
+            className="flex items-center gap-2 px-3 min-h-10 bg-hp-surface hover:bg-hp-elevated text-hp-text-secondary rounded-hp-lg text-sm disabled:opacity-50">
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
           <button
@@ -291,7 +292,7 @@ export default function CTNhapKho() {
               finally { setExporting(false) }
             }}
             disabled={exporting || filtered.length === 0}
-            className="flex items-center gap-2 px-3 min-h-10 bg-hp-primary/15 hover:bg-hp-primary/25 text-hp-primary rounded-lg text-sm disabled:opacity-50">
+            className="flex items-center gap-2 px-3 min-h-10 bg-hp-primary/15 hover:bg-hp-primary/25 text-hp-primary rounded-hp-lg text-sm disabled:opacity-50">
             <FileDown className={`w-4 h-4 ${exporting ? 'animate-bounce' : ''}`} />
             {exporting ? '...' : 'Excel'}
           </button>
@@ -299,7 +300,7 @@ export default function CTNhapKho() {
           <select
             value={aiProvider}
             onChange={e => setAiProvider(e.target.value)}
-            className="px-2 py-2 border border-hp-border rounded-lg text-xs text-hp-text-secondary bg-hp-card focus:outline-none">
+            className="px-2 py-2 border border-hp-border rounded-hp-lg text-xs text-hp-text-secondary bg-hp-card focus:outline-none">
             <option value="gemini">🆓 Gemini</option>
             <option value="openai">🤖 ChatGPT</option>
             <option value="claude">⚡ Claude</option>
@@ -307,7 +308,7 @@ export default function CTNhapKho() {
           <button
             onClick={() => aiFileRef.current?.click()}
             disabled={aiLoading}
-            className="flex items-center gap-2 px-4 min-h-10 bg-hp-accent hover:bg-hp-accent/90 text-white rounded-lg text-sm font-medium disabled:opacity-50">
+            className="flex items-center gap-2 px-4 min-h-10 bg-hp-accent hover:bg-hp-accent/90 text-white rounded-hp-lg text-sm font-medium disabled:opacity-50">
             {aiLoading
               ? <><Loader className="w-4 h-4 animate-spin" /> {aiProgress || 'AI đang đọc...'}</>
               : <><Bot className="w-4 h-4" /> AI đọc PDF</>
@@ -322,30 +323,30 @@ export default function CTNhapKho() {
             onChange={e => handleAiReadBatch(e.target.files)}
           />
           <button onClick={() => { if (hangHoaList.length === 0) loadHangHoa(); setShowForm(true); setSaveMsg(null) }}
-            className="flex items-center gap-2 px-4 min-h-10 bg-hp-primary hover:bg-hp-primary/90 text-white rounded-lg text-sm font-medium">
+            className="flex items-center gap-2 px-4 min-h-10 bg-hp-primary hover:bg-hp-primary/90 text-white rounded-hp-lg text-sm font-medium">
             <Plus className="w-4 h-4" /> Tạo phiếu NK
           </button>
         </div>
       </div>
 
       {saveMsg && (
-        <div className={`p-3 rounded-xl text-sm font-medium ${saveMsg.type === 'ok' ? 'bg-hp-primary/15 text-hp-primary' : 'bg-hp-danger/15 text-hp-danger'}`}>
+        <div className={`p-3 rounded-hp-xl text-sm font-medium ${saveMsg.type === 'ok' ? 'bg-hp-primary/15 text-hp-primary' : 'bg-hp-danger/15 text-hp-danger'}`}>
           {saveMsg.text}
         </div>
       )}
 
       {/* Filter */}
-      <div className="bg-hp-card rounded-xl border border-hp-border p-4">
+      <div className="bg-hp-card rounded-hp-xl border border-hp-border p-4">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-hp-text-muted" />
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Tìm số phiếu, NCC..."
-            className="w-full pl-9 pr-4 py-2 border border-hp-border rounded-lg text-sm bg-hp-card text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
+            className="w-full pl-9 pr-4 py-2 border border-hp-border rounded-hp-lg text-sm bg-hp-card text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-hp-card rounded-xl border border-hp-border overflow-hidden">
+      {/* Table — PC/Tablet */}
+      <div className="hidden md:block bg-hp-card rounded-hp-xl border border-hp-border overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-hp-surface border-b border-hp-border">
             <tr>
@@ -367,11 +368,11 @@ export default function CTNhapKho() {
                       <td className="px-4 py-3 text-hp-text-muted text-xs">{i + 1}</td>
                       <td className="px-4 py-3 font-mono font-semibold text-hp-primary">{p.so_phieu}</td>
                       <td className="px-4 py-3 text-hp-text-secondary text-xs">{p.ngay}</td>
-                      <td className="px-4 py-3 text-hp-text-secondary text-xs truncate max-w-[120px]">{p.doi_tac || '—'}</td>
+                      <td className="px-4 py-3 text-hp-text-secondary text-xs truncate max-w-hp-filter-sm">{p.doi_tac || '—'}</td>
                       <td className="px-4 py-3 text-right font-semibold text-hp-primary">{formatVND(p.tong_tien)}</td>
                       <td className="px-4 py-3 text-center">
                         <button onClick={() => openChiTiet(p)}
-                          className="p-1.5 hover:bg-hp-primary/10 text-hp-text-muted hover:text-hp-primary rounded-lg">
+                          className="p-1.5 hover:bg-hp-primary/10 text-hp-text-muted hover:text-hp-primary rounded-hp-lg">
                           <Eye className="w-4 h-4" />
                         </button>
                       </td>
@@ -393,17 +394,41 @@ export default function CTNhapKho() {
         </table>
       </div>
 
+      {/* Card List — Mobile */}
+      <div className="md:hidden">
+        <CardList loading={loading} empty={filtered.length === 0} emptyMessage="Chưa có phiếu nhập kho">
+          {filtered.map((p, i) => (
+            <CardListItem key={p.id} onClick={() => openChiTiet(p)}>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="text-hp-primary font-mono font-semibold">{p.so_phieu}</div>
+                  <div className="text-hp-text-secondary text-xs">{p.ngay}</div>
+                </div>
+                <div className="text-hp-primary font-semibold flex-shrink-0">{formatVND(p.tong_tien)}</div>
+              </div>
+              <CardListRow label="NCC" value={p.doi_tac || '—'} />
+            </CardListItem>
+          ))}
+        </CardList>
+        {!loading && filtered.length > 0 && (
+          <div className="mt-3 bg-hp-primary/10 border border-hp-border rounded-hp-xl px-4 py-3 flex justify-between items-center text-sm">
+            <span className="font-bold text-hp-text">Tổng ({filtered.length} phiếu)</span>
+            <span className="font-bold text-hp-primary">{formatVND(filtered.reduce((s, p) => s + (p.tong_tien || 0), 0))}</span>
+          </div>
+        )}
+      </div>
+
       {/* Modal chi tiet */}
       {selectedPhieu && (
         <div className="fixed inset-0 bg-hp-overlay flex items-center justify-center z-50 p-4"
           onClick={e => { if (e.target === e.currentTarget) setSelectedPhieu(null) }}>
-          <div className="bg-hp-elevated rounded-xl shadow-md w-full max-w-2xl max-h-[80vh] flex flex-col">
+          <div className="bg-hp-elevated rounded-hp-xl shadow-md w-full max-w-2xl max-h-[80vh] flex flex-col">
             <div className="flex items-center justify-between p-5 border-b border-hp-border">
               <div>
                 <h3 className="font-bold text-hp-primary">{selectedPhieu.so_phieu}</h3>
                 <p className="text-xs text-hp-text-secondary">{selectedPhieu.ngay}{selectedPhieu.doi_tac ? ` · ${selectedPhieu.doi_tac}` : ''}</p>
               </div>
-              <button onClick={() => setSelectedPhieu(null)} className="p-1 hover:bg-hp-elevated rounded-lg"><X className="w-5 h-5 text-hp-text-muted" /></button>
+              <button onClick={() => setSelectedPhieu(null)} className="p-1 hover:bg-hp-elevated rounded-hp-lg"><X className="w-5 h-5 text-hp-text-muted" /></button>
             </div>
             <div className="overflow-auto flex-1 p-5">
               {loadingCT
@@ -445,7 +470,7 @@ export default function CTNhapKho() {
       {/* Modal tao phieu */}
       {showForm && (
         <div className="fixed inset-0 bg-hp-overlay flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-hp-elevated rounded-xl shadow-md w-full max-w-4xl my-4">
+          <div className="bg-hp-elevated rounded-hp-xl shadow-md w-full max-w-4xl my-4">
             <div className="flex items-center justify-between p-5 border-b border-hp-border bg-hp-surface rounded-t-xl">
               <div>
                 <h3 className="font-bold text-hp-text text-lg">Tạo phiếu nhập kho mới</h3>
@@ -453,7 +478,7 @@ export default function CTNhapKho() {
                   {hangHoaList.length > 0 ? `${hangHoaList.length} mặt hàng trong danh mục` : 'Danh mục chưa tải'}
                 </p>
               </div>
-              <button onClick={() => setShowForm(false)} className="p-1 hover:bg-hp-card rounded-lg"><X className="w-5 h-5 text-hp-text-muted" /></button>
+              <button onClick={() => setShowForm(false)} className="p-1 hover:bg-hp-card rounded-hp-lg"><X className="w-5 h-5 text-hp-text-muted" /></button>
             </div>
             <div className="p-5 space-y-4">
               {/* Form header */}
@@ -462,28 +487,28 @@ export default function CTNhapKho() {
                   <label className="text-xs text-hp-text-secondary font-medium">Số phiếu *</label>
                   <input value={form.so_phieu} onChange={e => setForm({...form, so_phieu: e.target.value})}
                     placeholder="VD: NK-001"
-                    className="mt-1 w-full border border-hp-border rounded-lg px-3 py-2 text-sm bg-hp-card text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
+                    className="mt-1 w-full border border-hp-border rounded-hp-lg px-3 py-2 text-sm bg-hp-card text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
                 </div>
                 <div>
                   <label className="text-xs text-hp-text-secondary font-medium">Ngày *</label>
                   <input type="date" value={form.ngay} onChange={e => setForm({...form, ngay: e.target.value})}
-                    className="mt-1 w-full border border-hp-border rounded-lg px-3 py-2 text-sm bg-hp-card text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
+                    className="mt-1 w-full border border-hp-border rounded-hp-lg px-3 py-2 text-sm bg-hp-card text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
                 </div>
                 <div>
                   <label className="text-xs text-hp-text-secondary font-medium">NCC / Đối tác</label>
                   <input value={form.doi_tac} onChange={e => setForm({...form, doi_tac: e.target.value})}
                     placeholder="Tên nhà cung cấp"
-                    className="mt-1 w-full border border-hp-border rounded-lg px-3 py-2 text-sm bg-hp-card text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
+                    className="mt-1 w-full border border-hp-border rounded-hp-lg px-3 py-2 text-sm bg-hp-card text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
                 </div>
                 <div>
                   <label className="text-xs text-hp-text-secondary font-medium">Ghi chú</label>
                   <input value={form.ghi_chu} onChange={e => setForm({...form, ghi_chu: e.target.value})}
-                    className="mt-1 w-full border border-hp-border rounded-lg px-3 py-2 text-sm bg-hp-card text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
+                    className="mt-1 w-full border border-hp-border rounded-hp-lg px-3 py-2 text-sm bg-hp-card text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
                 </div>
               </div>
 
               {/* Items table */}
-              <div className="border border-hp-border rounded-xl overflow-hidden">
+              <div className="border border-hp-border rounded-hp-xl overflow-hidden">
                 <table className="w-full text-sm">
                   <thead className="bg-hp-surface">
                     <tr>
@@ -552,18 +577,18 @@ export default function CTNhapKho() {
               </div>
 
               {saveMsg && (
-                <div className={`p-3 rounded-xl text-sm ${saveMsg.type === 'ok' ? 'bg-hp-primary/15 text-hp-primary' : 'bg-hp-danger/15 text-hp-danger'}`}>
+                <div className={`p-3 rounded-hp-xl text-sm ${saveMsg.type === 'ok' ? 'bg-hp-primary/15 text-hp-primary' : 'bg-hp-danger/15 text-hp-danger'}`}>
                   {saveMsg.text}
                 </div>
               )}
 
               <div className="flex justify-end gap-3 pt-2">
                 <button onClick={() => setShowForm(false)}
-                  className="px-5 min-h-10 border border-hp-border rounded-lg text-sm text-hp-text-secondary hover:bg-hp-elevated">
+                  className="px-5 min-h-10 border border-hp-border rounded-hp-lg text-sm text-hp-text-secondary hover:bg-hp-elevated">
                   Hủy
                 </button>
                 <button onClick={handleSave} disabled={saving}
-                  className="px-6 min-h-10 bg-hp-primary hover:bg-hp-primary/90 text-white rounded-lg text-sm font-medium disabled:opacity-50 flex items-center gap-2">
+                  className="px-6 min-h-10 bg-hp-primary hover:bg-hp-primary/90 text-white rounded-hp-lg text-sm font-medium disabled:opacity-50 flex items-center gap-2">
                   {saving ? <><RefreshCw className="w-4 h-4 animate-spin" /> Đang lưu...</> : 'Lưu phiếu NK'}
                 </button>
               </div>
