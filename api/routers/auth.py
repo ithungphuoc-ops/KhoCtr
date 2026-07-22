@@ -28,7 +28,8 @@ def get_hpcore_session(request: Request) -> Optional[dict]:
 def get_current_user(request: Request) -> Optional[dict]:
     """
     Verify cookie session hpcore + lấy vai trò từ app_permissions + đồng bộ app_users nội bộ.
-    Trả về {"uid": <id nội bộ, int>, "email": str, "ten": str, "role": "admin"|"user"} hoặc None.
+    Trả về {"uid": <id nội bộ, int>, "email": str, "ten": str, "role": "admin"|"user",
+    "avatar": str|None} hoặc None.
     Giữ đúng shape cũ (uid = id nội bộ) để user_congtrinh/permissions không phải đổi gì.
     """
     session = get_hpcore_session(request)
@@ -38,25 +39,35 @@ def get_current_user(request: Request) -> Optional[dict]:
     if not role:
         return None  # có đăng nhập hpcore nhưng chưa được cấp quyền cho app này
 
+    # Đọc avatar mới nhất từ app tổng (hpcore) — app tổng chỉ lưu avatar ở Firestore
+    # users/{uid}.avatarUrl, KHÔNG có trong session cookie, nên phải đọc live mỗi lần.
+    avatar_url = hpcore_auth.get_avatar_url(session["uid"])
+
     email = session["email"]
     email_enc = _url_quote(email, safe="")
     existing = db.select("app_users", filters=f"email=eq.{email_enc}")
     ten = email.split("@")[0]
     if existing:
         user = existing[0]
-        if user.get("role") != role or not user.get("active"):
-            rows = db.update("app_users", {"role": role, "active": True}, filters=f"email=eq.{email_enc}")
+        # avatar app tổng luôn thắng khi có; chỉ giữ avatar cũ trong app này nếu
+        # app tổng hiện không có avatar nào (tránh xóa mất avatar đã đồng bộ trước đó).
+        avatar = avatar_url if avatar_url else user.get("avatar")
+        if user.get("role") != role or not user.get("active") or user.get("avatar") != avatar:
+            rows = db.update("app_users", {"role": role, "active": True, "avatar": avatar},
+                              filters=f"email=eq.{email_enc}")
             user = rows[0] if rows else user
     else:
+        avatar = avatar_url
         # password_hash không còn dùng (đăng nhập qua SSO hpcore) nhưng cột DB đang NOT NULL —
         # điền giá trị cố định để tránh lỗi ràng buộc, không phải mật khẩu thật.
         rows = db.insert("app_users", {
-            "email": email, "ten": ten, "role": role, "active": True,
+            "email": email, "ten": ten, "role": role, "active": True, "avatar": avatar,
             "password_hash": "SSO_HPCORE_NO_PASSWORD",
         })
-        user = rows[0] if rows else {"id": None, "email": email, "ten": ten, "role": role}
+        user = rows[0] if rows else {"id": None, "email": email, "ten": ten, "role": role, "avatar": avatar}
 
-    return {"uid": user["id"], "email": email, "ten": user.get("ten", ten), "role": role}
+    return {"uid": user["id"], "email": email, "ten": user.get("ten", ten), "role": role,
+            "avatar": user.get("avatar", avatar_url)}
 
 
 def require_user(request: Request) -> dict:

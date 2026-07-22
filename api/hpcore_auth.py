@@ -49,3 +49,24 @@ def get_app_role(uid: str) -> str | None:
     data = doc.to_dict() or {}
     role = data.get(HPCORE_APP_ID)
     return role if isinstance(role, str) else None
+
+
+def get_avatar_url(uid: str) -> str | None:
+    """
+    Đọc avatar hiện tại của user từ users/{uid}.avatarUrl trên Firestore của
+    hpcons-portal (app tổng). App tổng chỉ lưu avatar ở Firestore (không ghi vào
+    Firebase Auth photoURL), nên phải đọc trực tiếp collection "users" ở đây —
+    session cookie/ID token KHÔNG mang theo avatar mới. Đọc "live" (không cache)
+    mỗi lần đăng nhập/đồng bộ để avatar mới cập nhật ở app tổng lan sang app này.
+    """
+    try:
+        app = _get_hpcore_app()
+        db = firestore.client(app=app)
+        doc = db.collection("users").document(uid).get()
+        if not doc.exists:
+            return None
+        data = doc.to_dict() or {}
+        avatar = data.get("avatarUrl")
+        return avatar if isinstance(avatar, str) and avatar else None
+    except Exception:
+        return None

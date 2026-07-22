@@ -307,9 +307,18 @@ export default function Header({ onMenuClick }) {
             onClick={() => setShowMenu(!showMenu)}
             className="flex items-center gap-2 pl-2 hover:bg-hp-elevated rounded-hp-md px-2 py-1 min-h-10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent"
           >
-            <div className="w-8 h-8 bg-hp-accent rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-              {initials}
-            </div>
+            {user?.avatar ? (
+              <img
+                src={user.avatar}
+                alt={user?.ten || user?.email || 'Avatar'}
+                referrerPolicy="no-referrer"
+                className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+              />
+            ) : (
+              <div className="w-8 h-8 bg-hp-accent rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                {initials}
+              </div>
+            )}
             <div className="text-left hidden md:block">
               <div className="text-sm font-medium text-hp-text leading-tight">{user?.ten || 'Admin'}</div>
               <div className="text-xs text-hp-text-muted leading-tight capitalize">{user?.role || 'admin'}</div>
