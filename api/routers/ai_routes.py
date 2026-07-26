@@ -28,7 +28,6 @@ def _resolve_api_key(provider: str,
     Trả về (api_key, model_to_use).
     KHÔNG bao giờ log plaintext key.
     """
-    import supabase_client as db
     from crypto_utils import decrypt_api_key
 
     # ── Ưu tiên 1: CT config từ DB ────────────────────────────

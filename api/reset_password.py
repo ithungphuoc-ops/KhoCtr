@@ -5,7 +5,7 @@ import hashlib, secrets, sys, os
 from dotenv import load_dotenv
 load_dotenv()
 
-import supabase_client as db
+import firestore_client as db
 
 EMAIL    = "nguyenhuuphuoc@hpcons.com.vn"
 NEW_PASS = "hpcons2026"

@@ -14,8 +14,6 @@ load_dotenv(dotenv_path=_env_path, override=True)
 
 class Settings:
     def __init__(self):
-        self.SUPABASE_URL: str  = os.getenv("SUPABASE_URL", "")
-        self.SUPABASE_KEY: str  = os.getenv("SUPABASE_KEY", "")
         self.CLAUDE_API_KEY: str  = os.getenv("CLAUDE_API_KEY", "")
         self.GEMINI_API_KEY: str  = os.getenv("GEMINI_API_KEY", "")
         self.GEMINI_MODEL: str    = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
@@ -23,10 +21,6 @@ class Settings:
         self.OPENAI_MODEL: str    = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
         self.ENCRYPTION_KEY: str  = os.getenv("ENCRYPTION_KEY", "")
 
-        if not self.SUPABASE_URL:
-            raise ValueError("Thiếu SUPABASE_URL trong .env")
-        if not self.SUPABASE_KEY:
-            raise ValueError("Thiếu SUPABASE_KEY trong .env")
         if not self.ENCRYPTION_KEY:
             raise ValueError(
                 "[config] ENCRYPTION_KEY chưa được cấu hình!\n"
