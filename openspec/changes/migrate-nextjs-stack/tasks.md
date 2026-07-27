@@ -40,11 +40,11 @@
 
 ## 4. GĐ4 — AI đọc phiếu (cấu hình)
 
-- [ ] 4.1 Quyết định cùng Sếp: giữ thuật toán mã hoá tương đương (AES-GCM) hay đổi hẳn — xem Open Question trong design.md
-- [ ] 4.2 Port `ai_config.py` (475 dòng) — cấu hình + mã hoá API key theo công trình
-- [ ] 4.3 Nếu đổi thuật toán mã hoá: viết script giải mã ciphertext cũ (Python) + mã hoá lại (Node) 1 lần, verify giải mã đúng trước khi xoá bản cũ
-- [ ] 4.4 Port `ai_routes.py` (412 dòng) — gọi Gemini/Claude
-- [ ] 4.5 Test đọc/ghi config + gọi AI thật theo từng công trình
+- [x] 4.1 Quyết định: GIỮ NGUYÊN thuật toán Fernet (AES-128-CBC + HMAC-SHA256), cài lại bằng Node `crypto` thuần (`lib/crypto/fernet.ts`) — dùng chung `ENCRYPTION_KEY`, KHÔNG cần script migrate. Verify round-trip 2 chiều với Python `cryptography` thật (Python encrypt → Node decrypt, và ngược lại) — khớp 100%.
+- [x] 4.2 Port `ai_config.py` (475 dòng) — `lib/data/ai-config.ts`, `lib/ai/providers.ts`, `lib/ai/safe-config.ts` + Route Handlers `/api/ai-config/*` (providers, list, get/post/put/delete theo CT, disable, enable, test-connection) + trang `thiet-lap-api`
+- [ ] 4.3 (Không cần — quyết định giữ nguyên thuật toán ở 4.1)
+- [ ] 4.4 Port `ai_routes.py` (412 dòng) — gọi Gemini/Claude/OpenAI đọc phiếu
+- [ ] 4.5 Test đọc/ghi config + gọi AI thật theo từng công trình — cần Sếp cấp API key thật để test runtime (chưa test được, mới verify build tĩnh)
 
 ## 5. GĐ5 — Tách PDF bằng AI (rủi ro cao nhất — làm sau cùng)
 

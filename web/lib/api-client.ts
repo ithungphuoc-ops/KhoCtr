@@ -98,11 +98,22 @@ export const getPermissions = () => request("GET", "/auth/permissions");
 export const savePermissions = (permissions: unknown[]) => request("POST", "/auth/permissions", { body: { permissions } });
 export const getUsers = () => request("GET", "/auth/users");
 
-// AI đọc phiếu — Route Handler /api/ai/* chưa port (GĐ4, xem openspec/changes/migrate-nextjs-stack).
-// Khai báo sẵn để trang PhieuNhap/PhieuXuat port được ngay, nút "Đọc bảng AI" sẽ 404 tới khi GĐ4 xong.
+// AI đọc phiếu
 export const docPhieu = (formData: FormData) => request("POST", "/ai/doc-phieu", { body: formData });
 export const docPhieuMulti = (formData: FormData) => request("POST", "/ai/doc-phieu-multi", { body: formData });
 export const splitPdf = (formData: FormData) => request("POST", "/files/split-pdf", { body: formData });
+export const matchItems = (data: unknown) => request("POST", "/ai/match-items", { body: data });
+export const confirmMatch = (data: unknown) => request("POST", "/ai/confirm-match", { body: data });
+
+// Cau hinh AI theo cong trinh (ai-config)
+export const getAiProviders = () => request("GET", "/ai-config/providers");
+export const getAiConfigs = () => request("GET", "/ai-config/");
+export const getAiConfig = (ctId: number) => request("GET", `/ai-config/${ctId}`);
+export const saveAiConfig = (ctId: number, data: unknown) => request("POST", `/ai-config/${ctId}`, { body: data });
+export const testAiConnection = (ctId: number) => request("POST", `/ai-config/${ctId}/test-connection`);
+export const disableAiConfig = (ctId: number) => request("POST", `/ai-config/${ctId}/disable`);
+export const enableAiConfig = (ctId: number) => request("POST", `/ai-config/${ctId}/enable`);
+export const deleteAiConfig = (ctId: number) => request("DELETE", `/ai-config/${ctId}`);
 
 // Import Excel hàng loạt (sheet QLTK)
 export const previewImport = (formData: FormData) => request("POST", "/import/preview", { body: formData });

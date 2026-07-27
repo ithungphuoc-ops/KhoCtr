@@ -1,6 +1,7 @@
 import "server-only";
 import { select, insert, update, del } from "@/lib/firestore/client";
 import type { Session } from "@/lib/session";
+import { ensureAiConfigExists } from "@/lib/data/ai-config";
 
 export interface CongTrinh {
   id: number;
@@ -70,8 +71,7 @@ export async function createCongTrinh(input: {
     });
     row = rows[0] as CongTrinh;
   }
-  // TODO(GĐ4): port ensure_ai_config_exists(ct_id) — tự tạo config AI rỗng cho CT mới.
-  // Bản Python bọc try/except nuốt lỗi (không ảnh hưởng luồng tạo CT), giữ nguyên khi port ai_config.ts.
+  await ensureAiConfigExists(row.id as number);
   return row;
 }
 
