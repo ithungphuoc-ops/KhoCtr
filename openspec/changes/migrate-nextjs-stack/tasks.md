@@ -9,33 +9,33 @@
 - [x] 1.1 Scaffold Next.js 15 App Router + TypeScript + Tailwind trong `web/` (khớp stack `hpcons-quatang`/`pkd_crm-next`) — build + type-check sạch
 - [x] 1.2 Copy pattern SSO từ `hpcons-quatang` (`web/lib/hpcore.ts`, `web/lib/session.ts`) — adapt `HPCORE_APP_ID = "warehouse"`, đọc `app_permissions/{uid}.warehouse`, port nguyên `get_current_user()` (đồng bộ `app_users`, giữ `uid` = id nội bộ)
 - [x] 1.3 Viết `web/lib/firestore/client.ts` — port `_try_native_query`, `_native_prefilter`, `_row_matches`, cache TTL riêng theo bảng từ `api/firestore_client.py` (bản đã vá 2026-07-27, KHÔNG port bản gốc chưa vá)
-- [ ] 1.4 Port các hàm nghiệp vụ tầng data layer: `getAllCongTrinh`, `getPhieuList`, `getAllHangHoa`, `computeTonKho`, `getActivityLog`, `getGhiChuList`, `getAiConfig` (để dùng dần khi port từng trang ở GĐ2)
+- [x] 1.4 Port các hàm nghiệp vụ tầng data layer: `getAllCongTrinh`, `getPhieuList`, `getAllHangHoa`, `computeTonKho`, `getActivityLog`, `getGhiChuList` (`lib/data/*.ts`) — `getAiConfig` để dành GĐ4
 - [x] 1.5 `web/vercel.json`: `regions: ["sin1"]` ngay từ đầu (không lặp lại lỗi lệch vùng miền)
 - [x] 1.6 Layout/menu chung (AppShell) — port `Sidebar`, `Header` (rút gọn, chưa nối date-range/xuất Excel/số cảnh báo — phụ thuộc data layer GĐ2), `AppLauncher` (port nguyên, tự chứa), design tokens V1.1 (`globals.css`, đúng màu/dark-mode theo `CLAUDE.md`). Phân biệt đúng 2 trường hợp không có phiên (401 redirect / 403 hiện thông báo tại chỗ, không redirect vòng lặp) — khớp `PrivateRoute` cũ. Build + type-check + lint sạch.
 - [ ] 1.7 Deploy Preview (project Vercel riêng hoặc nhánh của `khounice-web` — cần quyết định), xác nhận đăng nhập SSO thật + đọc thử 1 collection. **Đang chặn**: cần Sếp cấp `HPCORE_FIREBASE_SERVICE_ACCOUNT`/`KHOCTR_FIREBASE_SERVICE_ACCOUNT` vào `web/.env.local` để test cục bộ trước — chưa test runtime thật với credential thật, mới chỉ verify qua build tĩnh.
 
 ## 2. GĐ2 — Trang CRUD thường (thứ tự đề xuất theo tần suất dùng — cần Sếp xác nhận)
 
-- [ ] 2.1 Dashboard
-- [ ] 2.2 Công trình (CRUD + cascade delete + stats)
-- [ ] 2.3 Danh mục hàng hóa (`DanhMuc.jsx`, `ct/CTDanhMuc.jsx`)
-- [ ] 2.4 Phiếu nhập (`PhieuNhap.jsx`, `ct/CTNhapKho.jsx`)
-- [ ] 2.5 Phiếu xuất (`PhieuXuat.jsx`, `ct/CTXuatKho.jsx`)
-- [ ] 2.6 Tồn kho (`TonKho.jsx`, `ct/CTTonKho.jsx`)
-- [ ] 2.7 Báo cáo (`BaoCao.jsx`) — bao gồm biểu đồ (chart.js → giữ nguyên hoặc tương đương React)
-- [ ] 2.8 Ghi chú công việc (`GhiChu.jsx`, soft-delete)
-- [ ] 2.9 Nhật ký hoạt động (`NhatKy.jsx`)
-- [ ] 2.10 Phân quyền (`PhanQuyen.jsx`)
-- [ ] 2.11 Lịch sử giao dịch (`LichSuGiaoDich.jsx`)
-- [ ] 2.12 Cảnh báo (`CanhBao.jsx`)
-- [ ] 2.13 Nhà cung cấp (`NhaCungCap.jsx`)
-- [ ] 2.14 Cài đặt (`CaiDat.jsx`)
-- [ ] 2.15 Mỗi trang: test qua giao diện thật (click tay) trước khi sang trang kế, không chỉ dựa vào build sạch
+- [x] 2.1 Dashboard (App Tổng + App Con `ct/[id]`)
+- [x] 2.2 Công trình (CRUD + cascade delete + stats)
+- [x] 2.3 Danh mục hàng hóa (`DanhMuc.jsx`, `ct/CTDanhMuc.jsx`)
+- [x] 2.4 Phiếu nhập (`PhieuNhap.jsx`, `ct/CTNhapKho.jsx` — bản manual-only, AI đọc PDF hàng loạt để GĐ4/GĐ5)
+- [x] 2.5 Phiếu xuất (`PhieuXuat.jsx`, `ct/CTXuatKho.jsx` — bản manual-only, cùng lý do trên)
+- [x] 2.6 Tồn kho (`TonKho.jsx`, `ct/CTTonKho.jsx`)
+- [x] 2.7 Báo cáo (`BaoCao.jsx`) — bao gồm biểu đồ (chart.js/react-chartjs-2)
+- [x] 2.8 Ghi chú công việc (`GhiChu.jsx`, soft-delete) — kanban + list, module dùng chung
+- [x] 2.9 Nhật ký hoạt động (`NhatKy.jsx`)
+- [x] 2.10 Phân quyền (`PhanQuyen.jsx`)
+- [x] 2.11 Lịch sử giao dịch (`LichSuGiaoDich.jsx`)
+- [x] 2.12 Cảnh báo (`CanhBao.jsx`)
+- [x] 2.13 Nhà cung cấp (`NhaCungCap.jsx`)
+- [x] 2.14 Cài đặt (`CaiDat.jsx`)
+- [ ] 2.15 Mỗi trang: test qua giao diện thật (click tay) trước khi sang trang kế, không chỉ dựa vào build sạch — **chưa làm**, mới verify qua `tsc`/`eslint`/`next build`, chưa có credential thật để chạy runtime (xem 1.7)
 
 ## 3. GĐ3 — Import Excel
 
-- [ ] 3.1 Port `import_data.py` (`openpyxl`) → `exceljs`/`xlsx`
-- [ ] 3.2 Test với file Excel thật đã dùng trước đó (không phải file mẫu tự tạo)
+- [x] 3.1 Port `import_data.py` (`openpyxl`) → gói `xlsx` (SheetJS 0.20.3, cài từ CDN chính thức thay vì bản `0.18.5` có CVE trên npm registry) — cả App Tổng (`input-data`) và App Con (`ct/[id]/import-data`); đã thêm `requireAdmin()` ở 2 Route Handler (`/api/import/preview`, `/api/import/execute`) — bản Python gốc thiếu kiểm tra quyền này
+- [ ] 3.2 Test với file Excel thật đã dùng trước đó (không phải file mẫu tự tạo) — **chưa làm**, cần Sếp cấp file mẫu hoặc credential để test runtime
 
 ## 4. GĐ4 — AI đọc phiếu (cấu hình)
 

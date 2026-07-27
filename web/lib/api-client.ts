@@ -104,4 +104,8 @@ export const docPhieu = (formData: FormData) => request("POST", "/ai/doc-phieu",
 export const docPhieuMulti = (formData: FormData) => request("POST", "/ai/doc-phieu-multi", { body: formData });
 export const splitPdf = (formData: FormData) => request("POST", "/files/split-pdf", { body: formData });
 
+// Import Excel hàng loạt (sheet QLTK)
+export const previewImport = (formData: FormData) => request("POST", "/import/preview", { body: formData });
+export const executeImport = (formData: FormData) => request("POST", "/import/execute", { body: formData });
+
 // Nha cung cap — chưa có bảng riêng ở bản gốc (trang tĩnh), giữ chỗ cho GĐ2 sau.
