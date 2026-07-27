@@ -22,6 +22,11 @@ export async function getCongTrinhById(id: number): Promise<CongTrinh | null> {
   return (rows[0] as CongTrinh) ?? null;
 }
 
+export async function getCongTrinhByMa(maCt: string): Promise<CongTrinh | null> {
+  const rows = await select("cong_trinh", { filters: `ma_ct=eq.${maCt}` });
+  return (rows[0] as CongTrinh) ?? null;
+}
+
 /**
  * Port từ api/routers/auth.py::my_congtrinh — admin thấy toàn bộ công trình,
  * user (thủ kho) chỉ thấy công trình được cấp quyền qua user_congtrinh.
