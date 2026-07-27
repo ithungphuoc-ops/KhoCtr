@@ -166,6 +166,39 @@ def _try_native_query(table: str, filters: str):
     return None
 
 
+def _native_prefilter(table: str, filters: str):
+    """
+    Fallback cho trường hợp filters có 2+ điều kiện (vd cong_trinh_id=eq.X kèm
+    tìm kiếm or=(...)) — _try_native_query() bỏ qua case này vì đòi ĐÚNG 1 điều
+    kiện. Ở đây tìm 1 điều kiện eq/in bất kỳ trong filters để dùng where() thật
+    thu hẹp trước (vd theo cong_trinh_id), sau đó chỉ lọc Python phần CÒN LẠI
+    (vd ilike tìm kiếm) trên tập đã thu hẹp — thay vì quét nguyên collection rồi
+    lọc hết bằng Python. Trả (rows, remaining_parts) nếu tìm được, None nếu
+    không có điều kiện eq/in nào để tận dụng (rơi về quét toàn bộ như cũ).
+    """
+    parts = [p for p in filters.split("&") if p and not p.startswith(("limit=", "offset="))]
+    for i, part in enumerate(parts):
+        if part.startswith("or=("):
+            continue
+        field, op, value = _parse_condition(part)
+        try:
+            if op == "eq":
+                docs = _db().collection(table).where(filter=FieldFilter(field, "==", _coerce(field, value))).stream()
+            elif op == "in":
+                opts = list(_in_opts(value))
+                if not opts or len(opts) > 30:
+                    continue
+                docs = _db().collection(table).where(filter=FieldFilter(field, "in", [_coerce(field, v) for v in opts])).stream()
+            else:
+                continue
+        except Exception:
+            continue  # field chưa có index/lỗi khác -> thử điều kiện khác hoặc fallback
+        rows = [_doc_to_row(d) for d in docs]
+        remaining_parts = parts[:i] + parts[i + 1:]
+        return rows, remaining_parts
+    return None
+
+
 def _match_value(row_val, op: str, value: str, field: str = "") -> bool:
     # 'id=gte.0' trong codebase này chỉ có 1 ý nghĩa thực tế: xoá/khớp TOÀN BỘ bản ghi
     # (vd save_permissions xoá sạch user_congtrinh trước khi ghi lại). Với các bảng
@@ -251,11 +284,17 @@ def _order_key(field_spec: str):
 _COLLECTION_CACHE: dict = {}
 _CACHE_TTL_SECONDS = 8
 
+# Bảng ít ghi (chỉ đổi khi admin sửa danh mục/công trình, không đổi liên tục
+# theo thao tác nhập/xuất như phieu/chi_tiet_phieu) — TTL dài hơn để tăng tỉ lệ
+# cache hit khi người dùng bấm qua lại tab Danh mục (gây chậm thật, 2026-07-27).
+_CACHE_TTL_OVERRIDES = {"hang_hoa": 60, "cong_trinh": 60, "project_ai_config": 60}
+
 
 def _fetch_collection_rows(table: str) -> list:
     now = time.time()
+    ttl = _CACHE_TTL_OVERRIDES.get(table, _CACHE_TTL_SECONDS)
     cached = _COLLECTION_CACHE.get(table)
-    if cached and (now - cached[0]) < _CACHE_TTL_SECONDS:
+    if cached and (now - cached[0]) < ttl:
         return [dict(r) for r in cached[1]]
     docs = _db().collection(table).stream()
     rows = [_doc_to_row(d) for d in docs]
@@ -274,8 +313,14 @@ def select(table: str, query: str = "*", filters: str = "", order: str = "") -> 
     if native_rows is not None:
         rows = native_rows
     else:
-        rows = _fetch_collection_rows(table)
-        rows = [r for r in rows if _row_matches(r, filters)]
+        prefiltered = _native_prefilter(table, filters)
+        if prefiltered is not None:
+            rows, remaining_parts = prefiltered
+            if remaining_parts:
+                rows = [r for r in rows if _row_matches(r, "&".join(remaining_parts))]
+        else:
+            rows = _fetch_collection_rows(table)
+            rows = [r for r in rows if _row_matches(r, filters)]
 
     if order:
         for field_spec in reversed(order.split(",")):
