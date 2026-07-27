@@ -49,11 +49,11 @@
 
 ## 5. GĐ5 — Tách PDF bằng AI (rủi ro cao nhất — làm sau cùng)
 
-- [ ] 5.1 Khảo sát `pdf-lib`/`pdfjs-dist` khả năng thay thế `pymupdf`/`pypdf` cho việc tách trang PDF
-- [ ] 5.2 Viết lại thuật toán tách phiếu (298 dòng gốc `pdf_splitter.py`) — không dịch cơ học, thiết kế lại cho Node
-- [ ] 5.3 Test đối chiếu output (số file tách, ranh giới trang, metadata phiếu nhận diện) với bản Python cũ trên nhiều mẫu PDF thật
-- [ ] 5.4 Quyết định cùng Sếp: có giữ song song endpoint Python cũ tạm thời trong lúc kiểm chứng không (xem Open Question)
-- [ ] 5.5 Chỉ cutover khi kết quả khớp bản cũ trên toàn bộ mẫu test
+- [x] 5.1 Khảo sát: `pdf-lib` (tách/copy trang, giữ nguyên vector — thay `pypdf`) + `pdfjs-dist` bản `legacy` (trích xuất text từng trang, không cần canvas/DOM — thay phần đọc text của `pypdf`) + `jszip` (nén nhiều file — thay `zipfile`). Verify bằng smoke test thật (build PDF 2 trang bằng pdf-lib → đọc text bằng pdfjs-dist → cắt lại 1 trang bằng pdf-lib) — cả 3 bước chạy đúng.
+- [x] 5.2 Viết lại `pdf_splitter.py` (298 dòng) → `lib/pdf/splitter.ts`. Phát hiện quan trọng khi đọc kỹ code gốc: toàn bộ bước ghi file ra thư mục tạm theo năm/tháng/ngày/đối tác (`_make_folder`) chỉ là bookkeeping nội bộ — khi nén zip (`routers/files.py`), cấu trúc thư mục đó bị bỏ hoàn toàn (`zf.write(path, os.path.basename(path))`, chỉ giữ tên file phẳng). Vậy nên port bỏ hẳn bước ghi đĩa, xử lý 100% trong bộ nhớ (Vercel-safe, không cần `/tmp`). Phần nhận diện trang cần AI khi không đọc được từ khoá dùng đúng nhánh fallback-không-fitz đã có sẵn trong code gốc (gửi PDF 1 trang dạng "document" cho Claude) — không phải suy diễn, là hành vi đã tồn tại.
+- [x] 5.3 Test đối chiếu: dựng PDF tổng hợp 5 trang giả lập (PNK+PGH+PNK+PGH+trang lạ) bằng pdf-lib, chạy cả bản Python gốc (`split_and_save`, cài `pypdf` để test) và bản Node port trên CÙNG file — **kết quả khớp 100%**: cùng summary ("Tách 5 trang → 2 phiếu NK + 2 phiếu PGH"), cùng số file, cùng tên file, cùng `so_phieu`, cùng số trang mỗi file (PGH gộp đúng 2 trang). Test thêm case XK (mỗi trang tách riêng, 5/5 đúng). **Giới hạn của test này**: chỉ xác nhận đúng logic ghép nhóm/đặt tên/copy trang qua nhận diện từ khoá — nhánh gọi AI phân loại trang (khi từ khoá không nhận diện được) chưa test với key thật/PDF viết tay thật.
+- [ ] 5.4 Quyết định cùng Sếp: có giữ song song endpoint Python cũ tạm thời trong lúc kiểm chứng không (xem Open Question) — vẫn treo, cần thêm: endpoint `/api/files/split-pdf` này thực ra KHÔNG có nút gọi nào trong toàn bộ frontend gốc (`splitPdf` khai báo trong `api/index.js` nhưng không trang nào import) — port giữ nguyên hiện trạng "endpoint mồ côi", không tự thêm UI mới.
+- [ ] 5.5 Chỉ cutover khi kết quả khớp bản cũ trên toàn bộ mẫu test — còn thiếu: test với PDF viết tay/scan thật + nhánh AI phân loại trang (cần Sếp cấp mẫu thật + API key Claude)
 
 ## 6. Cutover & Rollback
 
