@@ -6,13 +6,13 @@
 
 ## 1. GĐ1 — Nền tảng (data layer + auth)
 
-- [ ] 1.1 Scaffold Next.js 15 App Router + TypeScript + Tailwind (khớp stack `hpcons-quatang`/`pkd_crm-next`)
-- [ ] 1.2 Copy pattern SSO từ `hpcons-quatang` (`lib/hpcore.ts`, `lib/session.ts`) — adapt `HPCORE_APP_ID = "warehouse"`, đọc `app_permissions/{uid}.warehouse`
-- [ ] 1.3 Viết `lib/firestore/client.ts` — port `_try_native_query`, `_native_prefilter`, `_row_matches`, cache TTL riêng theo bảng từ `api/firestore_client.py` (bản đã vá 2026-07-27, KHÔNG port bản gốc chưa vá)
-- [ ] 1.4 Port các hàm nghiệp vụ tầng data layer: `getAllCongTrinh`, `getPhieuList`, `getAllHangHoa`, `computeTonKho`, `getActivityLog`, `getGhiChuList`, `getAiConfig`
-- [ ] 1.5 `vercel.json`/config: `regions: ["sin1"]` ngay từ đầu (không lặp lại lỗi lệch vùng miền)
+- [x] 1.1 Scaffold Next.js 15 App Router + TypeScript + Tailwind trong `web/` (khớp stack `hpcons-quatang`/`pkd_crm-next`) — build + type-check sạch
+- [x] 1.2 Copy pattern SSO từ `hpcons-quatang` (`web/lib/hpcore.ts`, `web/lib/session.ts`) — adapt `HPCORE_APP_ID = "warehouse"`, đọc `app_permissions/{uid}.warehouse`, port nguyên `get_current_user()` (đồng bộ `app_users`, giữ `uid` = id nội bộ)
+- [x] 1.3 Viết `web/lib/firestore/client.ts` — port `_try_native_query`, `_native_prefilter`, `_row_matches`, cache TTL riêng theo bảng từ `api/firestore_client.py` (bản đã vá 2026-07-27, KHÔNG port bản gốc chưa vá)
+- [ ] 1.4 Port các hàm nghiệp vụ tầng data layer: `getAllCongTrinh`, `getPhieuList`, `getAllHangHoa`, `computeTonKho`, `getActivityLog`, `getGhiChuList`, `getAiConfig` (để dùng dần khi port từng trang ở GĐ2)
+- [x] 1.5 `web/vercel.json`: `regions: ["sin1"]` ngay từ đầu (không lặp lại lỗi lệch vùng miền)
 - [ ] 1.6 Layout/menu chung (AppShell) khớp giao diện hiện có
-- [ ] 1.7 Deploy Preview, xác nhận đăng nhập SSO thật + đọc thử 1 collection (chỉ đọc, chưa có trang nghiệp vụ)
+- [ ] 1.7 Deploy Preview (project Vercel riêng hoặc nhánh của `khounice-web` — cần quyết định), xác nhận đăng nhập SSO thật + đọc thử 1 collection (chỉ đọc, chưa có trang nghiệp vụ). Cần Sếp cấp `HPCORE_FIREBASE_SERVICE_ACCOUNT`/`KHOCTR_FIREBASE_SERVICE_ACCOUNT` vào `.env.local` để test cục bộ trước.
 
 ## 2. GĐ2 — Trang CRUD thường (thứ tự đề xuất theo tần suất dùng — cần Sếp xác nhận)
 
