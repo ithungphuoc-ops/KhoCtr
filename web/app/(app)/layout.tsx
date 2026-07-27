@@ -3,6 +3,7 @@ import { hpcoreLoginUrl } from "@/lib/hpcore";
 import { resolveSession } from "@/lib/session";
 import { getMyCongTrinh } from "@/lib/data/cong-trinh";
 import { CongTrinhProvider } from "@/components/CongTrinhProvider";
+import { SessionProvider } from "@/components/SessionProvider";
 import { AppShell } from "@/components/AppShell";
 
 /**
@@ -36,8 +37,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const { congTrinhs, isAdmin } = await getMyCongTrinh(session);
 
   return (
-    <CongTrinhProvider initialCongTrinhs={congTrinhs} initialIsAdmin={isAdmin}>
-      <AppShell session={session}>{children}</AppShell>
-    </CongTrinhProvider>
+    <SessionProvider session={session}>
+      <CongTrinhProvider initialCongTrinhs={congTrinhs} initialIsAdmin={isAdmin}>
+        <AppShell session={session}>{children}</AppShell>
+      </CongTrinhProvider>
+    </SessionProvider>
   );
 }

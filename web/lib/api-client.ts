@@ -22,10 +22,11 @@ function toQuery(params?: FetchOpts["params"]): string {
 }
 
 async function request<T = unknown>(method: string, path: string, opts: FetchOpts & { body?: unknown } = {}): Promise<{ data: T }> {
+  const isFormData = typeof FormData !== "undefined" && opts.body instanceof FormData;
   const res = await fetch(`/api${path}${toQuery(opts.params)}`, {
     method,
-    headers: opts.body ? { "Content-Type": "application/json" } : undefined,
-    body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
+    headers: opts.body && !isFormData ? { "Content-Type": "application/json" } : undefined,
+    body: isFormData ? (opts.body as FormData) : opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
   });
   const json = await res.json().catch(() => ({}));
   if (!res.ok) {
@@ -96,5 +97,11 @@ export const getMyCongTrinh = () => request("GET", "/auth/my-congtrinh");
 export const getPermissions = () => request("GET", "/auth/permissions");
 export const savePermissions = (permissions: unknown[]) => request("POST", "/auth/permissions", { body: { permissions } });
 export const getUsers = () => request("GET", "/auth/users");
+
+// AI đọc phiếu — Route Handler /api/ai/* chưa port (GĐ4, xem openspec/changes/migrate-nextjs-stack).
+// Khai báo sẵn để trang PhieuNhap/PhieuXuat port được ngay, nút "Đọc bảng AI" sẽ 404 tới khi GĐ4 xong.
+export const docPhieu = (formData: FormData) => request("POST", "/ai/doc-phieu", { body: formData });
+export const docPhieuMulti = (formData: FormData) => request("POST", "/ai/doc-phieu-multi", { body: formData });
+export const splitPdf = (formData: FormData) => request("POST", "/files/split-pdf", { body: formData });
 
 // Nha cung cap — chưa có bảng riêng ở bản gốc (trang tĩnh), giữ chỗ cho GĐ2 sau.
