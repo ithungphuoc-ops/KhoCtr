@@ -1,23 +1,19 @@
 "use client";
 
-/**
- * Port từ frontend/src/pages/ct/CTNhapKho.jsx — CHỈ port phần nhập tay + danh sách +
- * xem chi tiết + xuất Excel. Phần "AI đọc PDF hàng loạt" (matchItems/confirmMatch +
- * BatchPhieuPopup — fuzzy-match AI với danh mục) CHƯA port, thuộc phạm vi GĐ4/GĐ5
- * (xem openspec/changes/migrate-nextjs-stack) — rủi ro cao nhất, cần review riêng
- * mapping_service.py trước khi làm. Nút "AI đọc PDF" tạm hiện thông báo thay vì gọi
- * endpoint chưa tồn tại, tránh lỗi im lặng khó hiểu cho người dùng.
- */
-import { useState, useEffect } from "react";
-import { Search, RefreshCw, Eye, Plus, X, Trash2, FileDown, Bot } from "lucide-react";
-import { getPhieuList, getChiTietPhieu, createPhieu, getHangHoa } from "@/lib/api-client";
+// Port từ frontend/src/pages/ct/CTNhapKho.jsx (gồm cả phần "AI đọc PDF hàng loạt" —
+// docPhieu/docPhieuMulti + matchItems + BatchPhieuPopup — nay đã port đầy đủ).
+import { useState, useEffect, useRef } from "react";
+import { Search, RefreshCw, Eye, Plus, X, Trash2, FileDown, Bot, Loader } from "lucide-react";
+import { getPhieuList, getChiTietPhieu, createPhieu, getHangHoa, docPhieu, docPhieuMulti, matchItems } from "@/lib/api-client";
 import HangHoaInput from "@/components/HangHoaInput";
+import { BatchPhieuPopup, type BatchPhieuInput, type SavedBatchPhieu, type MatchResult } from "@/components/BatchPhieuPopup";
 import { exportPhieuList } from "@/lib/export-excel";
 import { useAuth } from "@/components/SessionProvider";
 import { useCT } from "@/components/ct/CTProvider";
 import { CardList, CardListItem, CardListRow } from "@/components/ui/CardListItem";
 import type { Phieu, ChiTietPhieu } from "@/lib/data/phieu";
 import type { HangHoa } from "@/lib/data/hang-hoa";
+import type { PhieuData } from "@/lib/ai/reader";
 
 const fmt = (n: number | undefined | null) => (n ?? 0).toLocaleString("vi-VN");
 function formatVND(n: number | undefined | null) {
@@ -83,6 +79,130 @@ export default function CTNhapKhoPage() {
     getHangHoa({ limit: 2000, cong_trinh_id: parseInt(ctId) })
       .then((res) => setHangHoaList((res.data as { data?: HangHoa[] })?.data || []))
       .catch(() => {});
+
+  // AI đọc PDF hàng loạt
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiProvider, setAiProvider] = useState("gemini");
+  const [aiProgress, setAiProgress] = useState("");
+  const [batchPhieus, setBatchPhieus] = useState<BatchPhieuInput[]>([]);
+  const [showBatchPopup, setShowBatchPopup] = useState(false);
+  const [savingBatch, setSavingBatch] = useState(false);
+  const [batchMsg, setBatchMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const aiFileRef = useRef<HTMLInputElement>(null);
+
+  const handleAiReadBatch = async (files: FileList | null) => {
+    if (!files?.length) return;
+    setAiLoading(true);
+    setAiProgress("");
+    const collected: BatchPhieuInput[] = [];
+    const t0 = Date.now();
+    try {
+      let fileCount = 0;
+      for (const file of Array.from(files)) {
+        fileCount++;
+        setAiProgress(`Đang đọc file ${fileCount}/${files.length}: ${file.name}`);
+        const fd = new FormData();
+        fd.append("file", file);
+        fd.append("loai", "NK");
+        fd.append("provider", aiProvider);
+        if (ctId) fd.append("cong_trinh_id", ctId);
+
+        const isPdf = file.name.toLowerCase().endsWith(".pdf");
+        let phieuList: PhieuData[] = [];
+        if (isPdf) {
+          const res = await docPhieuMulti(fd);
+          phieuList = ((res.data as { phieu_list?: PhieuData[] })?.phieu_list) || [];
+          if (phieuList.length === 0) phieuList = [(res.data as PhieuData) || ({} as PhieuData)];
+        } else {
+          const res = await docPhieu(fd);
+          phieuList = [(res.data as PhieuData) || ({} as PhieuData)];
+        }
+
+        let phieuCount = 0;
+        for (const data of phieuList) {
+          phieuCount++;
+          if (phieuList.length > 1) setAiProgress(`File ${fileCount}/${files.length} — phiếu ${phieuCount}/${phieuList.length}`);
+          const rawItems = (data.items || []).map((it) => ({
+            ten_hang: it.ten_hang || "",
+            dvt: it.dvt || "cái",
+            so_luong: it.so_luong || 0,
+            don_gia: it.don_gia || 0,
+            thanh_tien: (it.so_luong || 0) * (it.don_gia || 0),
+          }));
+          const processingMs = Date.now() - t0;
+          const matchRes = await matchItems({
+            cong_trinh_id: parseInt(ctId),
+            loai_phieu: "nhap",
+            file_name: file.name,
+            items: rawItems,
+            ai_provider: aiProvider,
+            processing_time_ms: processingMs,
+          });
+          collected.push({
+            header: {
+              so_phieu: data.so_phieu || "",
+              ngay: data.ngay || today(),
+              doi_tac: data.doi_tac || "",
+              ghi_chu: data.ghi_chu || "",
+            },
+            matchResult: matchRes.data as MatchResult,
+          });
+        }
+      }
+      setBatchPhieus(collected);
+      setShowBatchPopup(true);
+      if (hangHoaList.length === 0) loadHangHoa();
+    } catch (e) {
+      alert(errDetail(e, "Lỗi AI đọc phiếu. Vui lòng thử lại."));
+    } finally {
+      setAiLoading(false);
+      setAiProgress("");
+      if (aiFileRef.current) aiFileRef.current.value = "";
+    }
+  };
+
+  const handleSaveBatch = async (localPhieus: SavedBatchPhieu[]) => {
+    setSavingBatch(true);
+    setBatchMsg(null);
+    let savedCount = 0;
+    const errors: string[] = [];
+    for (const p of localPhieus) {
+      if (!p.header.so_phieu || !p.header.ngay) {
+        errors.push(`Thiếu số phiếu/ngày: ${p.header.so_phieu || "(trống)"}`);
+        continue;
+      }
+      const validItems = p.items.filter((it) => it.ten_hang && it.so_luong > 0);
+      if (validItems.length === 0) {
+        errors.push(`Phiếu ${p.header.so_phieu}: không có dòng hàng hợp lệ`);
+        continue;
+      }
+      try {
+        await createPhieu({
+          cong_trinh_id: parseInt(ctId),
+          loai: "NK",
+          so_phieu: p.header.so_phieu,
+          ngay: p.header.ngay,
+          doi_tac: p.header.doi_tac,
+          ghi_chu: p.header.ghi_chu,
+          tong_tien: validItems.reduce((s, it) => s + (it.thanh_tien || 0), 0),
+          user_email: user?.email || "",
+          items: validItems.map((it) => ({ ten_hang: it.ten_hang, dvt: it.dvt || "cái", so_luong: it.so_luong, don_gia: it.don_gia, thanh_tien: it.thanh_tien })),
+        });
+        savedCount++;
+      } catch (e) {
+        errors.push(`Phiếu ${p.header.so_phieu}: ${errDetail(e, "Lỗi không xác định")}`);
+      }
+    }
+    setSavingBatch(false);
+    if (errors.length > 0) {
+      setBatchMsg({ type: "err", text: `Lưu ${savedCount}/${localPhieus.length} phiếu. Lỗi: ${errors.join(" | ")}` });
+    } else {
+      setShowBatchPopup(false);
+      setBatchPhieus([]);
+      setSaveMsg({ type: "ok", text: `Đã lưu ${savedCount} phiếu nhập kho!` });
+      loadData();
+    }
+  };
 
   useEffect(() => {
     loadData();
@@ -189,12 +309,27 @@ export default function CTNhapKhoPage() {
             <FileDown className={`w-4 h-4 ${exporting ? "animate-bounce" : ""}`} />
             {exporting ? "..." : "Excel"}
           </button>
+          <select value={aiProvider} onChange={(e) => setAiProvider(e.target.value)} className="px-2 py-2 border border-hp-border rounded-hp-lg text-xs text-hp-text-secondary bg-hp-card focus:outline-none">
+            <option value="gemini">🆓 Gemini</option>
+            <option value="openai">🤖 ChatGPT</option>
+            <option value="claude">⚡ Claude</option>
+          </select>
           <button
-            onClick={() => alert("Tính năng AI đọc PDF hàng loạt đang được port sang Next.js, sẽ có trong bản cập nhật tiếp theo.")}
-            className="flex items-center gap-2 px-4 min-h-10 bg-hp-accent hover:bg-hp-accent/90 text-white rounded-hp-lg text-sm font-medium"
+            onClick={() => aiFileRef.current?.click()}
+            disabled={aiLoading}
+            className="flex items-center gap-2 px-4 min-h-10 bg-hp-accent hover:bg-hp-accent/90 text-white rounded-hp-lg text-sm font-medium disabled:opacity-50"
           >
-            <Bot className="w-4 h-4" /> AI đọc PDF
+            {aiLoading ? (
+              <>
+                <Loader className="w-4 h-4 animate-spin" /> {aiProgress || "AI đang đọc..."}
+              </>
+            ) : (
+              <>
+                <Bot className="w-4 h-4" /> AI đọc PDF
+              </>
+            )}
           </button>
+          <input ref={aiFileRef} type="file" multiple accept=".jpg,.jpeg,.png,.pdf" className="hidden" onChange={(e) => handleAiReadBatch(e.target.files)} />
           <button
             onClick={() => {
               if (hangHoaList.length === 0) loadHangHoa();
@@ -468,6 +603,25 @@ export default function CTNhapKhoPage() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      <BatchPhieuPopup
+        isOpen={showBatchPopup}
+        onClose={() => {
+          setShowBatchPopup(false);
+          setBatchMsg(null);
+        }}
+        phieus={batchPhieus}
+        saving={savingBatch}
+        onSaveAll={handleSaveBatch}
+      />
+      {batchMsg && (
+        <div className={`fixed bottom-4 right-4 z-50 max-w-md p-4 rounded-hp-lg shadow-md text-sm font-medium ${batchMsg.type === "ok" ? "bg-hp-success text-white" : "bg-hp-danger text-white"}`}>
+          {batchMsg.text}
+          <button onClick={() => setBatchMsg(null)} className="ml-3 underline text-white/80">
+            Đóng
+          </button>
         </div>
       )}
     </div>
