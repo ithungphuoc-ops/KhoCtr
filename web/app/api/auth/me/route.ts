@@ -8,11 +8,11 @@ import { resolveSession } from "@/lib/session";
 export async function GET() {
   const result = await resolveSession();
   if (result.status === "unauthenticated") {
-    return NextResponse.json({ error: "Chua dang nhap" }, { status: 401 });
+    return NextResponse.json({ detail: "Chua dang nhap" }, { status: 401 });
   }
   if (result.status === "denied") {
     return NextResponse.json(
-      { error: "Chua duoc cap quyen truy cap KhoCtr. Lien he quan tri vien." },
+      { detail: "Chua duoc cap quyen truy cap KhoCtr. Lien he quan tri vien." },
       { status: 403 },
     );
   }

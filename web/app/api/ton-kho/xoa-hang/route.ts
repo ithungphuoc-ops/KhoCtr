@@ -10,7 +10,7 @@ export async function DELETE(req: NextRequest) {
     const tenHang = sp.get("ten_hang");
     const congTrinhId = sp.get("cong_trinh_id");
     if (!tenHang || !congTrinhId) {
-      return NextResponse.json({ error: "Thiếu ten_hang hoặc cong_trinh_id" }, { status: 400 });
+      return NextResponse.json({ detail: "Thiếu ten_hang hoặc cong_trinh_id" }, { status: 400 });
     }
     const deleted = await xoaHangTonKho({
       congTrinhId: Number(congTrinhId),

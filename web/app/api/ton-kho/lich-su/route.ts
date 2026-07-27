@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
     await requireSession();
     const sp = req.nextUrl.searchParams;
     const tenHang = sp.get("ten_hang");
-    if (!tenHang) return NextResponse.json({ error: "Thiếu ten_hang" }, { status: 400 });
+    if (!tenHang) return NextResponse.json({ detail: "Thiếu ten_hang" }, { status: 400 });
     const result = await getLichSuHang({
       tenHang,
       congTrinhId: sp.get("cong_trinh_id") ? Number(sp.get("cong_trinh_id")) : undefined,

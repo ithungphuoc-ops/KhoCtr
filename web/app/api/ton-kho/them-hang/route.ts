@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, so_phieu: result.soPhieu, phieu_id: result.phieuId });
   } catch (err) {
     if (err instanceof Error && (err.message.includes("Chưa nhập") || err.message.includes("lớn hơn 0"))) {
-      return NextResponse.json({ error: err.message }, { status: 400 });
+      return NextResponse.json({ detail: err.message }, { status: 400 });
     }
     return apiError(err);
   }

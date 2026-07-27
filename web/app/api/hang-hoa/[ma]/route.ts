@@ -10,10 +10,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ ma: 
     const body = await req.json();
     const data = Object.fromEntries(Object.entries(body).filter(([, v]) => v !== null && v !== undefined));
     if (Object.keys(data).length === 0) {
-      return NextResponse.json({ error: "Không có trường nào để cập nhật" }, { status: 400 });
+      return NextResponse.json({ detail: "Không có trường nào để cập nhật" }, { status: 400 });
     }
     const row = await updateHangHoa(ma, data);
-    if (!row) return NextResponse.json({ error: `Không tìm thấy mã hàng: ${ma}` }, { status: 404 });
+    if (!row) return NextResponse.json({ detail: `Không tìm thấy mã hàng: ${ma}` }, { status: 404 });
     return NextResponse.json(row);
   } catch (err) {
     return apiError(err);

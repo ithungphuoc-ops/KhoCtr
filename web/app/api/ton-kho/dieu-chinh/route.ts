@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, ...result });
   } catch (err) {
     if (err instanceof Error && err.message.includes("Chưa có tên hàng")) {
-      return NextResponse.json({ error: err.message }, { status: 400 });
+      return NextResponse.json({ detail: err.message }, { status: 400 });
     }
     return apiError(err);
   }

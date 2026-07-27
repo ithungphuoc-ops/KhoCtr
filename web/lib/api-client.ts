@@ -29,12 +29,20 @@ async function request<T = unknown>(method: string, path: string, opts: FetchOpt
   });
   const json = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const err = new Error(json?.error || json?.detail || `Lỗi ${res.status}`) as Error & { response?: { status: number; data: unknown } };
+    const err = new Error(json?.detail || json?.error || `Lỗi ${res.status}`) as Error & { response?: { status: number; data: unknown } };
     err.response = { status: res.status, data: json };
     throw err;
   }
   return { data: json as T };
 }
+
+/** Đối tượng kiểu axios (api.get/post/put/delete) — 1 số trang gốc gọi thẳng thay vì qua hàm đặt tên. */
+export const api = {
+  get: <T = unknown>(path: string, opts?: FetchOpts) => request<T>("GET", path, opts),
+  post: <T = unknown>(path: string, body?: unknown, opts?: FetchOpts) => request<T>("POST", path, { ...opts, body }),
+  put: <T = unknown>(path: string, body?: unknown, opts?: FetchOpts) => request<T>("PUT", path, { ...opts, body }),
+  delete: <T = unknown>(path: string, opts?: FetchOpts) => request<T>("DELETE", path, opts),
+};
 
 // Cong trinh
 export const getCongTrinh = () => request("GET", "/cong-trinh");

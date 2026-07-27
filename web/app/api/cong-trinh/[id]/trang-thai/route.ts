@@ -9,7 +9,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const { id } = await params;
     const body = await req.json();
     if (body.trang_thai !== "hoat_dong" && body.trang_thai !== "hoan_thanh") {
-      return NextResponse.json({ error: "trang_thai phai la 'hoat_dong' hoac 'hoan_thanh'" }, { status: 400 });
+      return NextResponse.json({ detail: "trang_thai phai la 'hoat_dong' hoac 'hoan_thanh'" }, { status: 400 });
     }
     await updateTrangThaiCongTrinh(Number(id), body.trang_thai);
     return NextResponse.json({ success: true, id: Number(id), trang_thai: body.trang_thai });

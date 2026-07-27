@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, phieu_id: phieuId, phieu, so_items: body.items?.length || 0 });
   } catch (err) {
     if (err instanceof Error && err.message.includes("đã tồn tại")) {
-      return NextResponse.json({ error: err.message }, { status: 409 });
+      return NextResponse.json({ detail: err.message }, { status: 409 });
     }
     return apiError(err);
   }

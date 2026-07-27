@@ -8,7 +8,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     await requireSession();
     const { id } = await params;
     const row = await getGhiChuById(Number(id));
-    if (!row) return NextResponse.json({ error: "Không tìm thấy ghi chú." }, { status: 404 });
+    if (!row) return NextResponse.json({ detail: "Không tìm thấy ghi chú." }, { status: 404 });
     return NextResponse.json(row);
   } catch (err) {
     return apiError(err);

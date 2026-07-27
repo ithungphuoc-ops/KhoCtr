@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
       data.ma_hang = `${slug}-${Date.now() % 100000}`;
     }
     const row = await createHangHoa(data);
-    if (!row) return NextResponse.json({ error: "Không thể tạo mặt hàng" }, { status: 500 });
+    if (!row) return NextResponse.json({ detail: "Không thể tạo mặt hàng" }, { status: 500 });
     return NextResponse.json(row);
   } catch (err) {
     return apiError(err);

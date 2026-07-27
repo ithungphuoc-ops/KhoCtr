@@ -8,7 +8,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     await requireSession();
     const { id } = await params;
     const row = await getCongTrinhById(Number(id));
-    if (!row) return NextResponse.json({ error: `Khong tim thay id=${id}` }, { status: 404 });
+    if (!row) return NextResponse.json({ detail: `Khong tim thay id=${id}` }, { status: 404 });
     return NextResponse.json(row);
   } catch (err) {
     return apiError(err);
