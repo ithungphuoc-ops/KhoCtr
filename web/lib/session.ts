@@ -80,12 +80,30 @@ async function fetchCurrentUser(hpcoreUid: string, email: string): Promise<Sessi
   };
 }
 
-/** Phiên hiện tại, hoặc null nếu chưa đăng nhập hpcore / chưa được cấp quyền app này. */
-export async function getSession(): Promise<Session | null> {
+export type SessionResult =
+  | { status: "ok"; session: Session }
+  | { status: "unauthenticated" } // chưa đăng nhập hpcore (401 ở bản Python — frontend redirect)
+  | { status: "denied" }; // đã đăng nhập hpcore nhưng chưa được cấp quyền app này (403 — KHÔNG redirect)
+
+/**
+ * Phân biệt rõ 2 trường hợp không có phiên — khớp đúng App.jsx::PrivateRoute
+ * (401 → redirect sang hpcore login; 403 → hiện thông báo "chưa được cấp quyền",
+ * KHÔNG redirect, tránh vòng lặp redirect vô hạn cho user đã đăng nhập hpcore
+ * nhưng chưa được admin cấp quyền app "warehouse").
+ */
+export async function resolveSession(): Promise<SessionResult> {
   const jar = await cookies();
   const identity = await verifyHpcore(jar.get(SSO_COOKIE_NAME)?.value);
-  if (!identity) return null;
-  return fetchCurrentUser(identity.uid, identity.email);
+  if (!identity) return { status: "unauthenticated" };
+  const session = await fetchCurrentUser(identity.uid, identity.email);
+  if (!session) return { status: "denied" };
+  return { status: "ok", session };
+}
+
+/** Phiên hiện tại, hoặc null nếu chưa đăng nhập hpcore / chưa được cấp quyền app này. */
+export async function getSession(): Promise<Session | null> {
+  const result = await resolveSession();
+  return result.status === "ok" ? result.session : null;
 }
 
 export class AuthError extends Error {}
@@ -104,7 +122,12 @@ export async function requireAdmin(): Promise<Session> {
   return session;
 }
 
-/** Dùng trong Server Component (trang): chuyển hướng về hpcore nếu chưa đăng nhập. */
+/**
+ * Dùng trong Server Component (trang) khi KHÔNG cần phân biệt denied/unauthenticated
+ * — cả 2 trường hợp đều redirect về hpcore login. Nơi cần hiện thông báo "chưa được
+ * cấp quyền" riêng (không redirect, tránh vòng lặp) phải gọi resolveSession() trực
+ * tiếp thay vì hàm này — xem app/(app)/layout.tsx.
+ */
 export async function requireSessionForPage(returnPath: string): Promise<Session> {
   const session = await getSession();
   if (session) return session;

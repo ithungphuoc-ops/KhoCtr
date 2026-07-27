@@ -11,8 +11,8 @@
 - [x] 1.3 Viết `web/lib/firestore/client.ts` — port `_try_native_query`, `_native_prefilter`, `_row_matches`, cache TTL riêng theo bảng từ `api/firestore_client.py` (bản đã vá 2026-07-27, KHÔNG port bản gốc chưa vá)
 - [ ] 1.4 Port các hàm nghiệp vụ tầng data layer: `getAllCongTrinh`, `getPhieuList`, `getAllHangHoa`, `computeTonKho`, `getActivityLog`, `getGhiChuList`, `getAiConfig` (để dùng dần khi port từng trang ở GĐ2)
 - [x] 1.5 `web/vercel.json`: `regions: ["sin1"]` ngay từ đầu (không lặp lại lỗi lệch vùng miền)
-- [ ] 1.6 Layout/menu chung (AppShell) khớp giao diện hiện có
-- [ ] 1.7 Deploy Preview (project Vercel riêng hoặc nhánh của `khounice-web` — cần quyết định), xác nhận đăng nhập SSO thật + đọc thử 1 collection (chỉ đọc, chưa có trang nghiệp vụ). Cần Sếp cấp `HPCORE_FIREBASE_SERVICE_ACCOUNT`/`KHOCTR_FIREBASE_SERVICE_ACCOUNT` vào `.env.local` để test cục bộ trước.
+- [x] 1.6 Layout/menu chung (AppShell) — port `Sidebar`, `Header` (rút gọn, chưa nối date-range/xuất Excel/số cảnh báo — phụ thuộc data layer GĐ2), `AppLauncher` (port nguyên, tự chứa), design tokens V1.1 (`globals.css`, đúng màu/dark-mode theo `CLAUDE.md`). Phân biệt đúng 2 trường hợp không có phiên (401 redirect / 403 hiện thông báo tại chỗ, không redirect vòng lặp) — khớp `PrivateRoute` cũ. Build + type-check + lint sạch.
+- [ ] 1.7 Deploy Preview (project Vercel riêng hoặc nhánh của `khounice-web` — cần quyết định), xác nhận đăng nhập SSO thật + đọc thử 1 collection. **Đang chặn**: cần Sếp cấp `HPCORE_FIREBASE_SERVICE_ACCOUNT`/`KHOCTR_FIREBASE_SERVICE_ACCOUNT` vào `web/.env.local` để test cục bộ trước — chưa test runtime thật với credential thật, mới chỉ verify qua build tĩnh.
 
 ## 2. GĐ2 — Trang CRUD thường (thứ tự đề xuất theo tần suất dùng — cần Sếp xác nhận)
 
