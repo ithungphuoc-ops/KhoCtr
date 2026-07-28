@@ -58,9 +58,24 @@ Database: Firestore project `hpcons-khoctr`, **không đổi** ở change này �
 5. **GĐ5 — Tách PDF bằng AI**: viết lại bằng `pdf-lib`/`pdfjs-dist`, test đối chiếu nhiều mẫu PDF thật với bản Python cũ, chỉ cutover khi kết quả khớp.
 6. **Cutover**: merge `migrate-nextjs` → `main`, deploy production, giữ khả năng rollback (revert commit, code Python cũ vẫn còn trong lịch sử git) tối thiểu vài tuần.
 
-## Open Questions
+## Trạng thái hiện tại (cập nhật 2026-07-28)
 
-- Vercel gói Hobby hay Pro — ảnh hưởng timeout cho luồng AI đọc phiếu/tách PDF (cần biết trước GĐ4/GĐ5).
-- Giữ nguyên thuật toán mã hoá API key hay đổi hẳn sang chuẩn Node (ảnh hưởng cách xử lý ciphertext cũ ở GĐ4) — cần Sếp quyết định khi tới GĐ4.
-- Có cần giữ song song endpoint Python cũ cho riêng tính năng tách-PDF (GĐ5) trong lúc kiểm chứng, hay chấp nhận downtime ngắn cho tính năng này khi cutover?
-- Thứ tự ưu tiên cụ thể giữa các trang ở GĐ2 — mặc định đề xuất theo tần suất dùng hàng ngày (Phiếu nhập/xuất, Tồn kho trước; Cài đặt/Nhà cung cấp sau) — cần Sếp xác nhận có đúng thứ tự ưu tiên thực tế không.
+**Toàn bộ GĐ1 → GĐ5 đã port xong về mặt code**, build + type-check + lint sạch (`npx tsc --noEmit`, `npx eslint .`, `npm run build`), tất cả đã commit + push lên nhánh `migrate-nextjs` trên GitHub (`https://github.com/ithungphuoc-ops/KhoCtr/tree/migrate-nextjs`). Chi tiết từng mục xem `tasks.md` (file này ghi quyết định/kiến trúc, `tasks.md` ghi tiến độ chi tiết theo dòng).
+
+**Chưa làm** (chặn bởi thiếu credential/mẫu thật, không phải thiếu code):
+- Chưa test runtime thật lần nào — cần `HPCORE_FIREBASE_SERVICE_ACCOUNT`, `KHOCTR_FIREBASE_SERVICE_ACCOUNT` (xem `web/.env.local.example`) để chạy thử SSO + đọc Firestore thật.
+- Chưa test gọi AI thật (đọc phiếu, tách PDF) — cần `ENCRYPTION_KEY` (bắt buộc trùng giá trị trong `api/.env` cũ) + ít nhất 1 trong `GEMINI_API_KEY`/`CLAUDE_API_KEY`/`OPENAI_API_KEY`.
+- Chưa test tách PDF với file viết tay/scan thật (mới verify bằng PDF giả lập tự tạo, xem `tasks.md` mục 5.3).
+- Chưa quyết định thời điểm cutover (`main` vẫn là bản Python/Vite, chưa đụng tới).
+
+**Nếu bàn giao cho máy khác/người khác làm tiếp**: `git checkout migrate-nextjs` (đã có trên GitHub), đọc `openspec/changes/migrate-nextjs-stack/` (`proposal.md` → `design.md` → `tasks.md`) để nắm bối cảnh, copy `web/.env.local.example` → `web/.env.local` rồi điền giá trị thật lấy từ `api/.env` hiện có (không đổi giá trị, chỉ copy sang biến môi trường Next.js), sau đó `cd web && npm install && npm run dev`.
+
+## Open Questions (đã giải quyết)
+
+- ~~Giữ nguyên thuật toán mã hoá API key hay đổi hẳn sang chuẩn Node~~ → **Đã quyết định**: giữ nguyên Fernet, cài lại bằng Node `crypto` thuần, verify round-trip 2 chiều với Python thật — khớp 100%, không cần migrate ciphertext cũ. Xem `tasks.md` mục 4.1.
+- ~~Có cần giữ song song endpoint Python cũ cho tách-PDF~~ → Phát hiện thêm khi port: endpoint tách PDF (`/api/files/split-pdf`) không có nút gọi nào trong toàn bộ frontend gốc (mồ côi, chỉ khai báo hàm client không ai import) — rủi ro cutover với tính năng này thấp hơn dự kiến ban đầu vì hiện chưa ai dùng qua UI. Vẫn cần Sếp xác nhận trước khi merge `main`.
+
+## Open Questions (còn treo)
+
+- Vercel gói Hobby hay Pro — ảnh hưởng timeout cho luồng AI đọc phiếu/tách PDF.
+- Thứ tự ưu tiên cụ thể giữa các trang ở GĐ2 đã port hết (không còn ý nghĩa chặn tiến độ), nhưng vẫn cần Sếp xác nhận **thứ tự test qua giao diện thật** (tasks.md mục 2.15) khi có credential.
