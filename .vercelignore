@@ -1,14 +1,6 @@
-api/.env
 *.env
 *firebase-adminsdk*.json
 *service-account*.json
-api/__pycache__/
-api/routers/__pycache__/
-*.pyc
-.venv/
-venv/
-frontend/node_modules/
-frontend/dist/
 .git/
 openspec/
 docs/
