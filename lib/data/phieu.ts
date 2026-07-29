@@ -12,6 +12,7 @@ export interface Phieu {
   ghi_chu: string;
   tong_tien: number;
   nguon: string;
+  anh_urls?: string[];
   [key: string]: unknown;
 }
 
@@ -277,6 +278,29 @@ export async function createPhieuForAdjustment(input: {
     tong_tien: input.tongTien || 0,
     nguon: input.nguon,
   });
+  return rows[0] as Phieu;
+}
+
+export async function getPhieuById(id: number): Promise<Phieu | null> {
+  const rows = await select("phieu", { filters: `id=eq.${id}` });
+  return (rows[0] as Phieu) ?? null;
+}
+
+/** Gắn thêm ảnh chứng từ (nhập kho) vào phiếu — cộng dồn vào danh sách hiện có. */
+export async function addAnhPhieu(id: number, urls: string[]): Promise<Phieu> {
+  const phieu = await getPhieuById(id);
+  if (!phieu) throw new Error(`Không tìm thấy phiếu id=${id}`);
+  const anhUrls = [...(phieu.anh_urls || []), ...urls];
+  const rows = await update("phieu", { anh_urls: anhUrls }, `id=eq.${id}`);
+  return rows[0] as Phieu;
+}
+
+/** Gỡ 1 ảnh chứng từ khỏi phiếu (chỉ cập nhật Firestore — xóa file thật do route gọi riêng). */
+export async function removeAnhPhieu(id: number, url: string): Promise<Phieu> {
+  const phieu = await getPhieuById(id);
+  if (!phieu) throw new Error(`Không tìm thấy phiếu id=${id}`);
+  const anhUrls = (phieu.anh_urls || []).filter((u) => u !== url);
+  const rows = await update("phieu", { anh_urls: anhUrls }, `id=eq.${id}`);
   return rows[0] as Phieu;
 }
 

@@ -61,6 +61,12 @@ export const createPhieu = (data: unknown) => request("POST", "/phieu/", { body:
 export const deletePhieu = (id: number, userEmail = "") => request("DELETE", `/phieu/${id}`, { params: { user_email: userEmail } });
 export const updatePhieu = (id: number, data: unknown) => request("PUT", `/phieu/${id}`, { body: data });
 export const getLichSuGiaoDich = (params?: FetchOpts["params"]) => request("GET", "/phieu/lich-su", { params });
+export const uploadAnhPhieu = (id: number, files: File[]) => {
+  const fd = new FormData();
+  files.forEach((f) => fd.append("files", f));
+  return request<{ anh_urls: string[] }>("POST", `/phieu/${id}/anh`, { body: fd });
+};
+export const deleteAnhPhieu = (id: number, url: string) => request<{ anh_urls: string[] }>("DELETE", `/phieu/${id}/anh`, { params: { url } });
 
 // Hang hoa
 export const getHangHoa = (params?: FetchOpts["params"]) => request("GET", "/hang-hoa/", { params });

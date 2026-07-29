@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from "react";
 import { Search, RefreshCw, Eye, Plus, X, Trash2, FileDown, Bot, Loader } from "lucide-react";
 import { getPhieuList, getChiTietPhieu, createPhieu, getHangHoa, docPhieu, docPhieuMulti, matchItems } from "@/lib/api-client";
 import HangHoaInput from "@/components/HangHoaInput";
+import AnhChungTuPhieu from "@/components/AnhChungTuPhieu";
 import { BatchPhieuPopup, type BatchPhieuInput, type SavedBatchPhieu, type MatchResult } from "@/components/BatchPhieuPopup";
 import { exportPhieuList } from "@/lib/export-excel";
 import { useAuth } from "@/components/SessionProvider";
@@ -480,6 +481,14 @@ export default function CTNhapKhoPage() {
                   </tbody>
                 </table>
               )}
+
+              <div className="mt-4 pt-4 border-t border-hp-border">
+                <AnhChungTuPhieu
+                  phieuId={selectedPhieu.id}
+                  anhUrls={selectedPhieu.anh_urls || []}
+                  onChange={(urls) => setSelectedPhieu((prev) => (prev ? { ...prev, anh_urls: urls } : prev))}
+                />
+              </div>
             </div>
             <div className="p-4 border-t border-hp-border bg-hp-surface flex justify-between text-sm">
               <span className="text-hp-text-secondary">{chiTiet.length} dòng</span>

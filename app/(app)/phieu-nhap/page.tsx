@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Download, Search, RefreshCw, Eye, X, Plus, Trash2, Pencil, Bot, Loader, FileText, FileDown, AlertTriangle } from "lucide-react";
 import HangHoaInput from "@/components/HangHoaInput";
+import AnhChungTuPhieu from "@/components/AnhChungTuPhieu";
 import { getPhieuList, getChiTietPhieu, createPhieu, updatePhieu, deletePhieu, docPhieu, docPhieuMulti, getHangHoa } from "@/lib/api-client";
 import { useCongTrinh } from "@/components/CongTrinhProvider";
 import { useAuth } from "@/components/SessionProvider";
@@ -578,6 +579,14 @@ export default function PhieuNhapPage() {
                   </tbody>
                 </table>
               )}
+
+              <div className="mt-4 pt-4 border-t border-hp-border">
+                <AnhChungTuPhieu
+                  phieuId={selectedPhieu.id}
+                  anhUrls={selectedPhieu.anh_urls || []}
+                  onChange={(urls) => setSelectedPhieu((prev) => (prev ? { ...prev, anh_urls: urls } : prev))}
+                />
+              </div>
             </div>
             <div className="p-4 border-t border-hp-border bg-hp-surface flex justify-between items-center text-sm">
               <span className="text-hp-text-secondary">{chiTiet.length} dòng hàng</span>
