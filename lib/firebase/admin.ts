@@ -1,7 +1,6 @@
 import "server-only";
 import { cert, getApps, initializeApp, type App } from "firebase-admin/app";
 import { getFirestore, type Firestore } from "firebase-admin/firestore";
-import { getStorage, type Storage } from "firebase-admin/storage";
 
 /**
  * App Admin SDK MẶC ĐỊNH của KhoCtr (Firestore nghiệp vụ kho: cong_trinh,
@@ -25,12 +24,7 @@ function getAdminApp(): App {
   if (!raw) {
     throw new Error("Thiếu KHOCTR_FIREBASE_SERVICE_ACCOUNT trong environment");
   }
-  const credentials = JSON.parse(raw);
-  // Admin SDK không tự suy ra bucket từ project_id như client SDK — phải khai
-  // báo rõ. Cho phép override bằng KHOCTR_STORAGE_BUCKET nếu tên bucket thật
-  // (xem Firebase Console > Storage) khác quy ước mặc định của project mới.
-  const storageBucket = process.env.KHOCTR_STORAGE_BUCKET || `${credentials.project_id}.firebasestorage.app`;
-  app = initializeApp({ credential: cert(credentials), storageBucket });
+  app = initializeApp({ credential: cert(JSON.parse(raw)) });
   return app;
 }
 
@@ -64,15 +58,3 @@ function getAdminFirestore(): Firestore {
 }
 
 export const adminDb: Firestore = lazyProxy(getAdminFirestore);
-
-let storageInstance: Storage | undefined;
-
-function getAdminStorage(): Storage {
-  if (!storageInstance) {
-    storageInstance = getStorage(getAdminApp());
-  }
-  return storageInstance;
-}
-
-/** Bucket ảnh chứng từ phiếu, tài liệu đính kèm... — cùng project `hpcons-khoctr`. */
-export const adminStorage: Storage = lazyProxy(getAdminStorage);
