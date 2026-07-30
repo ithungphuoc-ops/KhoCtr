@@ -7,6 +7,7 @@ import { Search, RefreshCw, Eye, Plus, X, Trash2, FileDown, Bot, Loader } from "
 import { getPhieuList, getChiTietPhieu, createPhieu, getHangHoa, docPhieu, docPhieuMulti, matchItems } from "@/lib/api-client";
 import HangHoaInput from "@/components/HangHoaInput";
 import AnhChungTuPhieu from "@/components/AnhChungTuPhieu";
+import AnhLinkList from "@/components/AnhLinkList";
 import { BatchPhieuPopup, type BatchPhieuInput, type SavedBatchPhieu, type MatchResult } from "@/components/BatchPhieuPopup";
 import { exportPhieuList } from "@/lib/export-excel";
 import { useAuth } from "@/components/SessionProvider";
@@ -361,6 +362,7 @@ export default function CTNhapKhoPage() {
               <th className="text-left px-4 py-3 text-hp-text-secondary font-medium">Số phiếu</th>
               <th className="text-left px-4 py-3 text-hp-text-secondary font-medium">Ngày</th>
               <th className="text-left px-4 py-3 text-hp-text-secondary font-medium">NCC</th>
+              <th className="text-left px-4 py-3 text-hp-text-secondary font-medium">Hình ảnh</th>
               <th className="text-right px-4 py-3 text-hp-text-secondary font-medium">Tổng tiền</th>
               <th className="text-center px-4 py-3 text-hp-text-secondary font-medium">CT</th>
             </tr>
@@ -368,13 +370,13 @@ export default function CTNhapKhoPage() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={6} className="py-8 text-center text-hp-text-muted">
+                <td colSpan={7} className="py-8 text-center text-hp-text-muted">
                   Đang tải...
                 </td>
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} className="py-8 text-center text-hp-text-muted">
+                <td colSpan={7} className="py-8 text-center text-hp-text-muted">
                   Chưa có phiếu nhập kho
                 </td>
               </tr>
@@ -385,6 +387,9 @@ export default function CTNhapKhoPage() {
                   <td className="px-4 py-3 font-mono font-semibold text-hp-primary">{p.so_phieu}</td>
                   <td className="px-4 py-3 text-hp-text-secondary text-xs">{p.ngay}</td>
                   <td className="px-4 py-3 text-hp-text-secondary text-xs truncate max-w-[120px]">{p.doi_tac || "—"}</td>
+                  <td className="px-4 py-3">
+                    <AnhLinkList urls={p.anh_urls} />
+                  </td>
                   <td className="px-4 py-3 text-right font-semibold text-hp-primary">{formatVND(p.tong_tien)}</td>
                   <td className="px-4 py-3 text-center">
                     <button onClick={() => openChiTiet(p)} className="p-1.5 hover:bg-hp-primary/10 text-hp-text-muted hover:text-hp-primary rounded-hp-lg">
@@ -398,7 +403,7 @@ export default function CTNhapKhoPage() {
           {!loading && filtered.length > 0 && (
             <tfoot className="bg-hp-primary/10 border-t-2 border-hp-border">
               <tr>
-                <td colSpan={4} className="px-4 py-2 font-bold text-hp-text text-sm">
+                <td colSpan={5} className="px-4 py-2 font-bold text-hp-text text-sm">
                   Tổng ({filtered.length} phiếu)
                 </td>
                 <td className="px-4 py-2 text-right font-bold text-hp-primary">{formatVND(filtered.reduce((s, p) => s + (p.tong_tien || 0), 0))}</td>
@@ -486,7 +491,10 @@ export default function CTNhapKhoPage() {
                 <AnhChungTuPhieu
                   phieuId={selectedPhieu.id}
                   anhUrls={selectedPhieu.anh_urls || []}
-                  onChange={(urls) => setSelectedPhieu((prev) => (prev ? { ...prev, anh_urls: urls } : prev))}
+                  onChange={(urls) => {
+                    setSelectedPhieu((prev) => (prev ? { ...prev, anh_urls: urls } : prev));
+                    setPhieuList((prev) => prev.map((p) => (p.id === selectedPhieu.id ? { ...p, anh_urls: urls } : p)));
+                  }}
                 />
               </div>
             </div>

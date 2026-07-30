@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { Download, Search, RefreshCw, Eye, X, Plus, Trash2, Pencil, Bot, Loader, FileText, FileDown, AlertTriangle } from "lucide-react";
 import HangHoaInput from "@/components/HangHoaInput";
 import AnhChungTuPhieu from "@/components/AnhChungTuPhieu";
+import AnhLinkList from "@/components/AnhLinkList";
 import { getPhieuList, getChiTietPhieu, createPhieu, updatePhieu, deletePhieu, docPhieu, docPhieuMulti, getHangHoa } from "@/lib/api-client";
 import { useCongTrinh } from "@/components/CongTrinhProvider";
 import { useAuth } from "@/components/SessionProvider";
@@ -342,7 +343,7 @@ export default function PhieuNhapPage() {
     }
   };
 
-  const colSpan = isAdminUser ? 7 : 6;
+  const colSpan = isAdminUser ? 8 : 7;
 
   return (
     <div className="space-y-6">
@@ -435,6 +436,7 @@ export default function PhieuNhapPage() {
                 <th className="text-left px-4 py-3 text-hp-text-secondary font-medium">Ngày</th>
                 {isAdminUser && <th className="text-left px-4 py-3 text-hp-text-secondary font-medium">Công trình</th>}
                 <th className="text-left px-4 py-3 text-hp-text-secondary font-medium">Nhà cung cấp / Ghi chú</th>
+                <th className="text-left px-4 py-3 text-hp-text-secondary font-medium">Hình ảnh</th>
                 <th className="text-right px-4 py-3 text-hp-text-secondary font-medium">Tổng tiền</th>
                 <th className="text-center px-4 py-3 text-hp-text-secondary font-medium">Chi tiết</th>
               </tr>
@@ -460,6 +462,9 @@ export default function PhieuNhapPage() {
                     <td className="px-4 py-3 text-hp-text-secondary text-xs">{p.ngay}</td>
                     {isAdminUser && <td className="px-4 py-3 text-hp-text text-xs truncate max-w-[160px]">{ctMap[p.cong_trinh_id] || "—"}</td>}
                     <td className="px-4 py-3 text-hp-text-secondary text-xs truncate max-w-[120px]">{p.doi_tac || "—"}</td>
+                    <td className="px-4 py-3">
+                      <AnhLinkList urls={p.anh_urls} />
+                    </td>
                     <td className="px-4 py-3 text-right font-semibold text-hp-accent">{formatVND(p.tong_tien)}</td>
                     <td className="px-4 py-3 text-center whitespace-nowrap">
                       <button onClick={() => openChiTiet(p)} title="Xem chi tiết" className="p-1.5 hover:bg-hp-accent/10 text-hp-text-muted hover:text-hp-accent rounded-hp-md transition-colors">
@@ -584,7 +589,10 @@ export default function PhieuNhapPage() {
                 <AnhChungTuPhieu
                   phieuId={selectedPhieu.id}
                   anhUrls={selectedPhieu.anh_urls || []}
-                  onChange={(urls) => setSelectedPhieu((prev) => (prev ? { ...prev, anh_urls: urls } : prev))}
+                  onChange={(urls) => {
+                    setSelectedPhieu((prev) => (prev ? { ...prev, anh_urls: urls } : prev));
+                    setPhieuList((prev) => prev.map((p) => (p.id === selectedPhieu.id ? { ...p, anh_urls: urls } : p)));
+                  }}
                 />
               </div>
             </div>
