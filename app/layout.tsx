@@ -1,10 +1,21 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
 export const metadata: Metadata = {
   title: "KhoCtr — Quản lý kho công trình HP Cons",
   description: "Hệ thống quản lý kho vật liệu xây dựng HP Cons Việt Nam",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "KhoCtr",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#096AA7",
 };
 
 // Chống nháy màn hình (FOUC): đọc localStorage TRƯỚC khi React hydrate, set thẳng
