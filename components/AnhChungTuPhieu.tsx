@@ -3,14 +3,17 @@
 /**
  * Khu vực "Ảnh chứng từ nhập kho" trong modal Chi tiết phiếu — dùng chung cho
  * cả 2 bản trang (App Tổng phieu-nhap/, App Con ct/[id]/nhap-kho/). Upload
- * qua Route Handler (Admin SDK ghi Storage), không gọi Storage trực tiếp từ
- * browser — đúng nguyên tắc bảo mật chung của app (xem lib/firebase/admin.ts).
+ * qua Route Handler (server resize+nén bằng sharp rồi ghi R2), không gọi
+ * R2 trực tiếp từ browser — đúng nguyên tắc bảo mật chung của app (xem
+ * lib/r2.ts, app/api/phieu/[id]/anh/route.ts).
  */
 import { useRef, useState } from "react";
 import { Camera, Loader, X } from "lucide-react";
 import { uploadAnhPhieu, deleteAnhPhieu } from "@/lib/api-client";
 
-const MAX_SIZE = 4 * 1024 * 1024;
+// Ảnh gốc chụp điện thoại thường 3-8MB — server sẽ tự resize+nén khi lưu,
+// không cần chặn gắt ở phía client.
+const MAX_SIZE = 15 * 1024 * 1024;
 
 function errDetail(err: unknown, fallback: string): string {
   const e = err as { response?: { data?: { detail?: string } } };
@@ -38,7 +41,7 @@ export default function AnhChungTuPhieu({
     if (files.length === 0) return;
     const oversized = files.find((f) => f.size > MAX_SIZE);
     if (oversized) {
-      setError(`Ảnh "${oversized.name}" vượt quá 4MB`);
+      setError(`Ảnh "${oversized.name}" vượt quá 15MB`);
       return;
     }
     setError("");
@@ -115,7 +118,7 @@ export default function AnhChungTuPhieu({
           <>
             <Camera className="w-5 h-5 text-hp-text-muted mx-auto mb-1" />
             <p className="text-hp-text-secondary text-xs font-medium">Click hoặc kéo ảnh vào đây</p>
-            <p className="text-hp-text-muted text-xs mt-0.5">JPG, PNG — tối đa 4MB/ảnh</p>
+            <p className="text-hp-text-muted text-xs mt-0.5">JPG, PNG — tối đa 15MB/ảnh (tự động nén khi lưu)</p>
           </>
         )}
         <input

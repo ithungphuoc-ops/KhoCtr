@@ -1,4 +1,5 @@
 import { randomUUID } from "crypto";
+import sharp from "sharp";
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/session";
 import { addAnhPhieu, removeAnhPhieu, getPhieuById } from "@/lib/data/phieu";
@@ -6,8 +7,10 @@ import { getCongTrinhById } from "@/lib/data/cong-trinh";
 import { apiError } from "@/lib/api-error";
 import { uploadToR2, deleteFromR2 } from "@/lib/r2";
 
-const MAX_SIZE = 4 * 1024 * 1024;
-const ALLOWED_TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png" };
+// Nhận ảnh gốc rộng rãi (ảnh chụp điện thoại thường 3-8MB) — sẽ nén lại
+// trước khi lưu, không cần chặn gắt ở mức nhỏ như trước.
+const MAX_SIZE = 15 * 1024 * 1024;
+const ALLOWED_TYPES = new Set(["image/jpeg", "image/png"]);
 
 /** Thay / hoặc \ trong tên công trình bằng "-" để không vô tình tạo thêm cấp thư mục ngoài ý muốn. */
 function sanitizeFolderName(name: string): string {
@@ -23,15 +26,24 @@ function decodeKey(encoded: string): string {
   return encoded.split("/").map(decodeURIComponent).join("/");
 }
 
-/** Upload 1 file lên R2 (nhóm theo tên công trình của phiếu), trả về URL phục vụ qua chính app. */
+/**
+ * Upload 1 file lên R2 (nhóm theo tên công trình của phiếu) — resize cạnh dài
+ * tối đa 1600px + nén JPEG chất lượng 75 trước khi lưu (giảm dung lượng
+ * nhiều, vẫn đọc rõ chữ/số trên chứng từ). Output luôn là JPEG, kể cả input
+ * là PNG — ảnh chụp chứng từ không cần nền trong suốt, JPEG nén tốt hơn hẳn.
+ */
 async function uploadOne(phieuId: number, congTrinhFolder: string, file: File): Promise<string> {
-  const ext = ALLOWED_TYPES[file.type];
-  if (!ext) throw new Error(`File "${file.name}" không phải ảnh JPG/PNG`);
-  if (file.size > MAX_SIZE) throw new Error(`Ảnh "${file.name}" vượt quá 4MB`);
+  if (!ALLOWED_TYPES.has(file.type)) throw new Error(`File "${file.name}" không phải ảnh JPG/PNG`);
+  if (file.size > MAX_SIZE) throw new Error(`Ảnh "${file.name}" vượt quá 15MB`);
 
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const key = `${congTrinhFolder}/phieu-anh/${phieuId}/${randomUUID()}.${ext}`;
-  await uploadToR2(key, buffer, file.type);
+  const original = Buffer.from(await file.arrayBuffer());
+  const compressed = await sharp(original)
+    .resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true })
+    .jpeg({ quality: 75, mozjpeg: true })
+    .toBuffer();
+
+  const key = `${congTrinhFolder}/phieu-anh/${phieuId}/${randomUUID()}.jpg`;
+  await uploadToR2(key, compressed, "image/jpeg");
   return `/api/files/${encodeKey(key)}`;
 }
 
