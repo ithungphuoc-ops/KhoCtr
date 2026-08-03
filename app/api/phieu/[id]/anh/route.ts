@@ -8,9 +8,10 @@ import { apiError } from "@/lib/api-error";
 import { uploadToR2, deleteFromR2 } from "@/lib/r2";
 
 // Nhận ảnh gốc rộng rãi (ảnh chụp điện thoại thường 3-8MB) — sẽ nén lại
-// trước khi lưu, không cần chặn gắt ở mức nhỏ như trước.
+// trước khi lưu, không cần chặn gắt ở mức nhỏ như trước. PDF dùng chung
+// giới hạn này nhưng KHÔNG nén (xem uploadOne).
 const MAX_SIZE = 15 * 1024 * 1024;
-const ALLOWED_TYPES = new Set(["image/jpeg", "image/png"]);
+const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "application/pdf"]);
 
 /** Thay / hoặc \ trong tên công trình bằng "-" để không vô tình tạo thêm cấp thư mục ngoài ý muốn. */
 function sanitizeFolderName(name: string): string {
@@ -27,16 +28,24 @@ function decodeKey(encoded: string): string {
 }
 
 /**
- * Upload 1 file lên R2 (nhóm theo tên công trình của phiếu) — resize cạnh dài
- * tối đa 1600px + nén JPEG chất lượng 75 trước khi lưu (giảm dung lượng
- * nhiều, vẫn đọc rõ chữ/số trên chứng từ). Output luôn là JPEG, kể cả input
- * là PNG — ảnh chụp chứng từ không cần nền trong suốt, JPEG nén tốt hơn hẳn.
+ * Upload 1 file lên R2 (nhóm theo tên công trình của phiếu). Ảnh JPG/PNG:
+ * resize cạnh dài tối đa 1600px + nén JPEG chất lượng 75 (giảm dung lượng
+ * nhiều, vẫn đọc rõ chữ/số) — output luôn JPEG kể cả input PNG. PDF: lưu
+ * nguyên bản, không nén (sharp không xử lý PDF đáng tin cậy) — mở bằng
+ * trình xem PDF gốc của trình duyệt.
  */
 async function uploadOne(phieuId: number, congTrinhFolder: string, file: File): Promise<string> {
-  if (!ALLOWED_TYPES.has(file.type)) throw new Error(`File "${file.name}" không phải ảnh JPG/PNG`);
-  if (file.size > MAX_SIZE) throw new Error(`Ảnh "${file.name}" vượt quá 15MB`);
+  if (!ALLOWED_TYPES.has(file.type)) throw new Error(`File "${file.name}" không phải ảnh JPG/PNG hoặc PDF`);
+  if (file.size > MAX_SIZE) throw new Error(`File "${file.name}" vượt quá 15MB`);
 
   const original = Buffer.from(await file.arrayBuffer());
+
+  if (file.type === "application/pdf") {
+    const key = `${congTrinhFolder}/phieu-anh/${phieuId}/${randomUUID()}.pdf`;
+    await uploadToR2(key, original, "application/pdf");
+    return `/api/files/${encodeKey(key)}`;
+  }
+
   const compressed = await sharp(original)
     .resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true })
     .jpeg({ quality: 75, mozjpeg: true })

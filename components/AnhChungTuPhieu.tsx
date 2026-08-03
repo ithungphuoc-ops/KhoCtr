@@ -8,13 +8,15 @@
  * lib/r2.ts, app/api/phieu/[id]/anh/route.ts).
  */
 import { useRef, useState } from "react";
-import { Camera, Loader, X } from "lucide-react";
+import { Camera, FileText, Loader, X } from "lucide-react";
 import { uploadAnhPhieu, deleteAnhPhieu } from "@/lib/api-client";
 import ImageLightbox from "@/components/ImageLightbox";
 
 // Ảnh gốc chụp điện thoại thường 3-8MB — server sẽ tự resize+nén khi lưu,
-// không cần chặn gắt ở phía client.
+// không cần chặn gắt ở phía client. PDF dùng chung giới hạn, không nén.
 const MAX_SIZE = 15 * 1024 * 1024;
+
+const isPdfUrl = (url: string) => url.toLowerCase().endsWith(".pdf");
 
 function errDetail(err: unknown, fallback: string): string {
   const e = err as { response?: { data?: { detail?: string } } };
@@ -38,11 +40,11 @@ export default function AnhChungTuPhieu({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFiles = async (fileList: FileList | File[]) => {
-    const files = Array.from(fileList).filter((f) => f.type.startsWith("image/"));
+    const files = Array.from(fileList).filter((f) => f.type.startsWith("image/") || f.type === "application/pdf");
     if (files.length === 0) return;
     const oversized = files.find((f) => f.size > MAX_SIZE);
     if (oversized) {
-      setError(`Ảnh "${oversized.name}" vượt quá 15MB`);
+      setError(`File "${oversized.name}" vượt quá 15MB`);
       return;
     }
     setError("");
@@ -79,8 +81,19 @@ export default function AnhChungTuPhieu({
         <div className="flex flex-wrap gap-2">
           {anhUrls.map((url) => (
             <div key={url} className="relative w-20 h-20 rounded-hp-md overflow-hidden border border-hp-border group">
-              {/* eslint-disable-next-line @next/next/no-img-element -- ảnh Firebase Storage động, không dùng next/image */}
-              <img src={url} alt="Ảnh chứng từ nhập kho" className="w-full h-full object-cover cursor-pointer" onClick={() => setPreview(url)} />
+              {isPdfUrl(url) ? (
+                <button
+                  onClick={() => window.open(url, "_blank", "noopener,noreferrer")}
+                  className="w-full h-full flex flex-col items-center justify-center gap-1 bg-hp-surface hover:bg-hp-elevated text-hp-danger"
+                  title="Mở PDF ở tab mới"
+                >
+                  <FileText className="w-6 h-6" />
+                  <span className="text-[10px] font-medium">PDF</span>
+                </button>
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element -- ảnh động từ R2, không dùng next/image
+                <img src={url} alt="Ảnh chứng từ nhập kho" className="w-full h-full object-cover cursor-pointer" onClick={() => setPreview(url)} />
+              )}
               <button
                 onClick={() => handleDelete(url)}
                 disabled={deletingUrl === url}
@@ -119,14 +132,14 @@ export default function AnhChungTuPhieu({
           <>
             <Camera className="w-5 h-5 text-hp-text-muted mx-auto mb-1" />
             <p className="text-hp-text-secondary text-xs font-medium">Click hoặc kéo ảnh vào đây</p>
-            <p className="text-hp-text-muted text-xs mt-0.5">JPG, PNG — tối đa 15MB/ảnh (tự động nén khi lưu)</p>
+            <p className="text-hp-text-muted text-xs mt-0.5">JPG, PNG, PDF — tối đa 15MB (ảnh tự nén, PDF giữ nguyên)</p>
           </>
         )}
         <input
           ref={inputRef}
           type="file"
           multiple
-          accept=".jpg,.jpeg,.png"
+          accept=".jpg,.jpeg,.png,.pdf"
           className="hidden"
           onChange={(e) => e.target.files && handleFiles(e.target.files)}
         />
