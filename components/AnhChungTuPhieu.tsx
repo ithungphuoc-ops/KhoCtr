@@ -83,9 +83,9 @@ export default function AnhChungTuPhieu({
             <div key={url} className="relative w-20 h-20 rounded-hp-md overflow-hidden border border-hp-border group">
               {isPdfUrl(url) ? (
                 <button
-                  onClick={() => window.open(url, "_blank", "noopener,noreferrer")}
+                  onClick={() => setPreview(url)}
                   className="w-full h-full flex flex-col items-center justify-center gap-1 bg-hp-surface hover:bg-hp-elevated text-hp-danger"
-                  title="Mở PDF ở tab mới"
+                  title="Xem PDF"
                 >
                   <FileText className="w-6 h-6" />
                   <span className="text-[10px] font-medium">PDF</span>
