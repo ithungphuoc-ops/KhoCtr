@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from "react";
 import { Search, RefreshCw, Eye, Plus, X, Trash2, FileDown, Bot, Loader } from "lucide-react";
 import { getPhieuList, getChiTietPhieu, createPhieu, getHangHoa, docPhieu, docPhieuMulti, matchItems } from "@/lib/api-client";
 import HangHoaInput from "@/components/HangHoaInput";
+import HangHoaItemCards from "@/components/HangHoaItemCards";
 import AnhChungTuPhieu from "@/components/AnhChungTuPhieu";
 import AnhLinkList from "@/components/AnhLinkList";
 import { BatchPhieuPopup, type BatchPhieuInput, type SavedBatchPhieu, type MatchResult } from "@/components/BatchPhieuPopup";
@@ -539,61 +540,80 @@ export default function CTNhapKhoPage() {
               </div>
 
               <div className="border border-hp-border rounded-hp-xl overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead className="bg-hp-surface">
-                    <tr>
-                      <th className="text-left px-3 py-2 text-hp-text-secondary font-medium w-8">#</th>
-                      <th className="text-left px-3 py-2 text-hp-text-secondary font-medium">Tên hàng hóa</th>
-                      <th className="text-left px-3 py-2 text-hp-text-secondary font-medium w-20">ĐVT</th>
-                      <th className="text-right px-3 py-2 text-hp-text-secondary font-medium w-24">Số lượng</th>
-                      <th className="text-right px-3 py-2 text-hp-text-secondary font-medium w-28">Đơn giá</th>
-                      <th className="text-right px-3 py-2 text-hp-text-secondary font-medium w-28">Thành tiền</th>
-                      <th className="w-8"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {items.map((it, i) => (
-                      <tr key={i} className="border-t border-hp-border hover:bg-hp-elevated">
-                        <td className="px-3 py-1.5 text-hp-text-muted text-xs">{i + 1}</td>
-                        <td className="px-3 py-1.5">
-                          <HangHoaInput
-                            value={it.ten_hang}
-                            onChange={(val) => updateItem(i, "ten_hang", val)}
-                            onSelect={(hh) => {
-                              const next = [...items];
-                              next[i] = { ...next[i], ma_hang: hh.ma_hang || "", ten_hang: hh.ten_hang, dvt: hh.dvt || "cái", selected: true };
-                              setItems(next);
-                            }}
-                            hangHoaList={hangHoaList}
-                            theme="green"
-                            placeholder="Tên hàng..."
-                            isAdmin={user?.role === "admin"}
-                          />
-                        </td>
-                        <td className="px-3 py-1.5">
-                          <input
-                            value={it.dvt}
-                            onChange={(e) => updateItem(i, "dvt", e.target.value)}
-                            readOnly={!!it.selected}
-                            className={`w-full border border-hp-border rounded px-2 py-1 text-xs bg-hp-card text-hp-text focus:outline-none ${it.selected ? "bg-hp-surface text-hp-text-secondary cursor-default" : "focus:ring-2 focus:ring-hp-accent"}`}
-                          />
-                        </td>
-                        <td className="px-3 py-1.5">
-                          <input type="number" value={it.so_luong} onChange={(e) => updateItem(i, "so_luong", e.target.value)} placeholder="0" className="w-full border border-hp-border rounded px-2 py-1 text-xs text-right bg-hp-card text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
-                        </td>
-                        <td className="px-3 py-1.5">
-                          <input type="number" value={it.don_gia} onChange={(e) => updateItem(i, "don_gia", e.target.value)} placeholder="0" className="w-full border border-hp-border rounded px-2 py-1 text-xs text-right bg-hp-card text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
-                        </td>
-                        <td className="px-3 py-1.5 text-right text-xs font-medium text-hp-text">{it.thanh_tien ? formatVND(parseFloat(String(it.thanh_tien))) : "—"}</td>
-                        <td className="px-2">
-                          <button onClick={() => removeItem(i)} disabled={items.length === 1} className="p-1 hover:bg-hp-danger/10 text-hp-text-disabled hover:text-hp-danger rounded disabled:opacity-30">
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </td>
+                <div className="hidden md:block">
+                  <table className="w-full text-sm">
+                    <thead className="bg-hp-surface">
+                      <tr>
+                        <th className="text-left px-3 py-2 text-hp-text-secondary font-medium w-8">#</th>
+                        <th className="text-left px-3 py-2 text-hp-text-secondary font-medium">Tên hàng hóa</th>
+                        <th className="text-left px-3 py-2 text-hp-text-secondary font-medium w-20">ĐVT</th>
+                        <th className="text-right px-3 py-2 text-hp-text-secondary font-medium w-24">Số lượng</th>
+                        <th className="text-right px-3 py-2 text-hp-text-secondary font-medium w-28">Đơn giá</th>
+                        <th className="text-right px-3 py-2 text-hp-text-secondary font-medium w-28">Thành tiền</th>
+                        <th className="w-8"></th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {items.map((it, i) => (
+                        <tr key={i} className="border-t border-hp-border hover:bg-hp-elevated">
+                          <td className="px-3 py-1.5 text-hp-text-muted text-xs">{i + 1}</td>
+                          <td className="px-3 py-1.5">
+                            <HangHoaInput
+                              value={it.ten_hang}
+                              onChange={(val) => updateItem(i, "ten_hang", val)}
+                              onSelect={(hh) => {
+                                const next = [...items];
+                                next[i] = { ...next[i], ma_hang: hh.ma_hang || "", ten_hang: hh.ten_hang, dvt: hh.dvt || "cái", selected: true };
+                                setItems(next);
+                              }}
+                              hangHoaList={hangHoaList}
+                              theme="green"
+                              placeholder="Tên hàng..."
+                              isAdmin={user?.role === "admin"}
+                            />
+                          </td>
+                          <td className="px-3 py-1.5">
+                            <input
+                              value={it.dvt}
+                              onChange={(e) => updateItem(i, "dvt", e.target.value)}
+                              readOnly={!!it.selected}
+                              className={`w-full border border-hp-border rounded px-2 py-1 text-xs bg-hp-card text-hp-text focus:outline-none ${it.selected ? "bg-hp-surface text-hp-text-secondary cursor-default" : "focus:ring-2 focus:ring-hp-accent"}`}
+                            />
+                          </td>
+                          <td className="px-3 py-1.5">
+                            <input type="number" value={it.so_luong} onChange={(e) => updateItem(i, "so_luong", e.target.value)} placeholder="0" className="w-full border border-hp-border rounded px-2 py-1 text-xs text-right bg-hp-card text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
+                          </td>
+                          <td className="px-3 py-1.5">
+                            <input type="number" value={it.don_gia} onChange={(e) => updateItem(i, "don_gia", e.target.value)} placeholder="0" className="w-full border border-hp-border rounded px-2 py-1 text-xs text-right bg-hp-card text-hp-text focus:outline-none focus:ring-2 focus:ring-hp-accent" />
+                          </td>
+                          <td className="px-3 py-1.5 text-right text-xs font-medium text-hp-text">{it.thanh_tien ? formatVND(parseFloat(String(it.thanh_tien))) : "—"}</td>
+                          <td className="px-2">
+                            <button onClick={() => removeItem(i)} disabled={items.length === 1} className="p-1 hover:bg-hp-danger/10 text-hp-text-disabled hover:text-hp-danger rounded disabled:opacity-30">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="md:hidden p-2">
+                  <HangHoaItemCards
+                    items={items}
+                    hangHoaList={hangHoaList}
+                    isAdmin={user?.role === "admin"}
+                    theme="green"
+                    totalTextClass="text-hp-primary"
+                    formatVND={(n) => formatVND(typeof n === "string" ? parseFloat(n) || 0 : n)}
+                    onFieldChange={(i, field, val) => updateItem(i, field, val)}
+                    onSelectHangHoa={(i, hh) => {
+                      const next = [...items];
+                      next[i] = { ...next[i], ma_hang: hh.ma_hang || "", ten_hang: hh.ten_hang, dvt: hh.dvt || "cái", selected: true };
+                      setItems(next);
+                    }}
+                    onRemove={removeItem}
+                  />
+                </div>
                 <div className="px-3 py-2 border-t border-hp-border flex justify-between items-center bg-hp-surface">
                   <button onClick={addItem} className="text-xs text-hp-accent hover:underline flex items-center gap-1">
                     <Plus className="w-3 h-3" /> Thêm dòng

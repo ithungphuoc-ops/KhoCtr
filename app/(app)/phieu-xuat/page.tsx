@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Upload, Search, RefreshCw, Eye, X, Plus, Trash2, Pencil, Bot, Loader, FileText, FileDown, AlertTriangle } from "lucide-react";
 import HangHoaInput from "@/components/HangHoaInput";
+import HangHoaItemCards from "@/components/HangHoaItemCards";
 import { getPhieuList, getChiTietPhieu, createPhieu, updatePhieu, deletePhieu, docPhieu, docPhieuMulti, getHangHoa, getTonKho } from "@/lib/api-client";
 import { useCongTrinh } from "@/components/CongTrinhProvider";
 import { useAuth } from "@/components/SessionProvider";
@@ -793,7 +794,7 @@ export default function PhieuXuatPage() {
                         <Plus className="w-3 h-3" /> Thêm dòng
                       </button>
                     </div>
-                    <div className="border border-hp-border rounded-hp-md overflow-hidden">
+                    <div className="hidden md:block border border-hp-border rounded-hp-md overflow-hidden">
                       <table className="w-full text-xs">
                         <thead className="bg-hp-surface">
                           <tr>
@@ -847,6 +848,19 @@ export default function PhieuXuatPage() {
                           ))}
                         </tbody>
                       </table>
+                    </div>
+                    <div className="md:hidden">
+                      <HangHoaItemCards
+                        items={items}
+                        hangHoaList={hangHoaList}
+                        isAdmin={isAdminUser}
+                        theme="orange"
+                        totalTextClass="text-hp-warning"
+                        formatVND={(n) => formatVND(typeof n === "string" ? parseFloat(n) || 0 : n)}
+                        onFieldChange={(i, field, val) => updateItem(i, field, val)}
+                        onSelectHangHoa={(i, hh) => setItems((prev) => prev.map((r, j) => (j !== i ? r : { ...r, ma_hang: hh.ma_hang || "", ten_hang: hh.ten_hang, dvt: hh.dvt || r.dvt, selected: true })))}
+                        onRemove={(i) => setItems((prev) => prev.filter((_, j) => j !== i))}
+                      />
                     </div>
                   </div>
                 </>

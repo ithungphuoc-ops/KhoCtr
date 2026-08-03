@@ -185,21 +185,22 @@ export function Header({ session, onMenuClick }: { session: Session; onMenuClick
       </div>
 
       <div className="flex items-center gap-1.5 md:gap-3">
-        <div className="relative hidden md:block" ref={pickerRef}>
+        <div className="relative" ref={pickerRef}>
           <button
             onClick={openPicker}
-            className={`flex items-center gap-2 px-3 min-h-10 border rounded-hp-md text-sm transition-colors bg-hp-card
+            aria-label="Chọn khoảng thời gian"
+            className={`flex items-center gap-2 px-2.5 md:px-3 min-h-10 border rounded-hp-md text-sm transition-colors bg-hp-card
               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent
               ${showPicker ? "border-hp-accent text-hp-accent" : "border-hp-border text-hp-text-secondary hover:border-hp-accent hover:text-hp-accent"}`}
           >
             <Calendar className="w-4 h-4 text-hp-accent" />
-            <span className="font-medium">{formatVN(dateFrom)}</span>
-            <span className="text-hp-text-muted mx-0.5">–</span>
-            <span className="font-medium">{formatVN(dateTo)}</span>
+            <span className="font-medium hidden md:inline">{formatVN(dateFrom)}</span>
+            <span className="text-hp-text-muted mx-0.5 hidden md:inline">–</span>
+            <span className="font-medium hidden md:inline">{formatVN(dateTo)}</span>
           </button>
 
           {showPicker && (
-            <div className="absolute right-0 top-full mt-2 w-72 bg-hp-elevated border border-hp-border rounded-hp-lg shadow-md z-50">
+            <div className="absolute right-0 top-full mt-2 w-[calc(100vw-2rem)] max-w-72 bg-hp-elevated border border-hp-border rounded-hp-lg shadow-md z-50">
               <div className="px-4 pt-3 pb-2 border-b border-hp-divider">
                 <span className="text-sm font-semibold text-hp-text">Chọn khoảng thời gian</span>
               </div>
@@ -264,10 +265,11 @@ export function Header({ session, onMenuClick }: { session: Session; onMenuClick
         <button
           onClick={handleExport}
           disabled={exporting}
-          className="hidden md:flex items-center gap-2 px-4 min-h-10 bg-hp-primary text-white rounded-hp-md text-sm font-medium hover:bg-hp-primary/90 transition-colors disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent"
+          aria-label={exporting ? "Đang xuất..." : exportLabel}
+          className="flex items-center gap-2 px-2.5 md:px-4 min-h-10 bg-hp-primary text-white rounded-hp-md text-sm font-medium hover:bg-hp-primary/90 transition-colors disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent"
         >
           {exporting ? <Loader className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-          <span>{exporting ? "Đang xuất..." : exportLabel}</span>
+          <span className="hidden md:inline">{exporting ? "Đang xuất..." : exportLabel}</span>
         </button>
 
         <div className="hidden md:block w-px h-6 bg-hp-border" />

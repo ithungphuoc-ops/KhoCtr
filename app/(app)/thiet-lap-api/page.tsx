@@ -257,15 +257,15 @@ export default function ThietLapAPIPage() {
         </div>
         <button
           onClick={loadConfigs}
-          className="flex items-center gap-1.5 text-xs text-hp-text-secondary hover:text-hp-text px-3 py-1.5 rounded-hp-lg hover:bg-hp-elevated transition-colors"
+          className="flex items-center gap-1.5 text-xs text-hp-text-secondary hover:text-hp-text px-3 min-h-10 rounded-hp-lg hover:bg-hp-elevated transition-colors"
         >
           <RefreshCw className="w-3.5 h-3.5" />
           Làm mới
         </button>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
-        <div className="w-72 flex-shrink-0 bg-hp-card border-r border-hp-border overflow-y-auto">
+      <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+        <div className="w-full md:w-72 flex-shrink-0 max-h-48 md:max-h-none bg-hp-card border-b md:border-b-0 md:border-r border-hp-border overflow-y-auto">
           <div className="px-4 py-3 border-b border-hp-border">
             <span className="text-xs font-bold text-hp-text-muted uppercase tracking-widest">Danh sách công trình ({congTrinhs.length})</span>
           </div>
@@ -481,13 +481,13 @@ export default function ThietLapAPIPage() {
                     <button
                       onClick={handleDeleteKey}
                       disabled={actionLoading}
-                      className="px-3 py-1.5 bg-hp-danger text-white text-xs rounded-hp-lg hover:bg-hp-danger/90 font-medium disabled:opacity-50"
+                      className="px-3 min-h-10 bg-hp-danger text-white text-xs rounded-hp-lg hover:bg-hp-danger/90 font-medium disabled:opacity-50"
                     >
                       {actionLoading ? "Đang xóa..." : "Xác nhận xóa"}
                     </button>
                     <button
                       onClick={() => setShowDeleteConfirm(false)}
-                      className="px-3 py-1.5 bg-hp-elevated text-hp-text-secondary text-xs rounded-hp-lg border border-hp-border hover:bg-hp-surface font-medium"
+                      className="px-3 min-h-10 bg-hp-elevated text-hp-text-secondary text-xs rounded-hp-lg border border-hp-border hover:bg-hp-surface font-medium"
                     >
                       Hủy
                     </button>
