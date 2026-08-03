@@ -27,6 +27,7 @@ const routeNames: Record<string, string> = {
   "/cai-dat": "Cấu hình",
   "/canh-bao": "Cảnh báo tồn kho",
   "/phan-quyen": "Phân quyền",
+  "/thung-rac": "Thùng rác",
 };
 
 const formatVN = (d: string) => {

@@ -67,6 +67,9 @@ export const uploadAnhPhieu = (id: number, files: File[]) => {
   return request<{ anh_urls: string[] }>("POST", `/phieu/${id}/anh`, { body: fd });
 };
 export const deleteAnhPhieu = (id: number, url: string) => request<{ anh_urls: string[] }>("DELETE", `/phieu/${id}/anh`, { params: { url } });
+export const getPhieuTrash = (params?: FetchOpts["params"]) => request("GET", "/phieu/trash", { params });
+export const restorePhieu = (id: number) => request("POST", `/phieu/${id}/restore`);
+export const purgePhieuVinhVien = (id: number) => request("DELETE", `/phieu/${id}/purge`);
 
 // Hang hoa
 export const getHangHoa = (params?: FetchOpts["params"]) => request("GET", "/hang-hoa/", { params });

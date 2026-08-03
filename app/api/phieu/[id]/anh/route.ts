@@ -5,7 +5,7 @@ import { requireSession } from "@/lib/session";
 import { addAnhPhieu, removeAnhPhieu, getPhieuById } from "@/lib/data/phieu";
 import { getCongTrinhById } from "@/lib/data/cong-trinh";
 import { apiError } from "@/lib/api-error";
-import { uploadToR2, deleteFromR2 } from "@/lib/r2";
+import { uploadToR2, deleteFromR2, keyFromServingUrl } from "@/lib/r2";
 
 // Nhận ảnh gốc rộng rãi (ảnh chụp điện thoại thường 3-8MB) — sẽ nén lại
 // trước khi lưu, không cần chặn gắt ở mức nhỏ như trước. PDF dùng chung
@@ -21,10 +21,6 @@ function sanitizeFolderName(name: string): string {
 
 function encodeKey(key: string): string {
   return key.split("/").map(encodeURIComponent).join("/");
-}
-
-function decodeKey(encoded: string): string {
-  return encoded.split("/").map(decodeURIComponent).join("/");
 }
 
 /**
@@ -54,12 +50,6 @@ async function uploadOne(phieuId: number, congTrinhFolder: string, file: File): 
   const key = `${congTrinhFolder}/phieu-anh/${phieuId}/${randomUUID()}.jpg`;
   await uploadToR2(key, compressed, "image/jpeg");
   return `/api/files/${encodeKey(key)}`;
-}
-
-/** Lấy lại key gốc trong bucket từ 1 URL đã sinh ở uploadOne() (dạng /api/files/<key đã encode>). */
-function keyFromServingUrl(url: string): string | null {
-  const prefix = "/api/files/";
-  return url.startsWith(prefix) ? decodeKey(url.slice(prefix.length)) : null;
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

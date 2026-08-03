@@ -1,6 +1,7 @@
 import "server-only";
 import { select, insert, update, del } from "@/lib/firestore/client";
 import { logActivity } from "@/lib/data/nhat-ky";
+import { deleteFromR2, keyFromServingUrl } from "@/lib/r2";
 
 export interface Phieu {
   id: number;
@@ -13,6 +14,8 @@ export interface Phieu {
   tong_tien: number;
   nguon: string;
   anh_urls?: string[];
+  deleted_at?: string | null;
+  deleted_by?: string | null;
   [key: string]: unknown;
 }
 
@@ -47,14 +50,16 @@ export async function getPhieuList(opts: {
   offset?: number;
   dateFrom?: string;
   dateTo?: string;
+  includeDeleted?: boolean;
 } = {}): Promise<Phieu[]> {
-  const { congTrinhId, loai, search, limit = 200, offset = 0, dateFrom, dateTo } = opts;
+  const { congTrinhId, loai, search, limit = 200, offset = 0, dateFrom, dateTo, includeDeleted = false } = opts;
   let extra = "";
   if (congTrinhId) extra += `&cong_trinh_id=eq.${congTrinhId}`;
   if (loai) extra += `&loai=eq.${loai}`;
   if (search) extra += `&or=(so_phieu.ilike.*${search}*,doi_tac.ilike.*${search}*)`;
   if (dateFrom) extra += `&ngay=gte.${dateFrom}`;
   if (dateTo) extra += `&ngay=lte.${dateTo}`;
+  if (!includeDeleted) extra += `&deleted_at=is.null`;
   return (await select("phieu", {
     filters: `limit=${limit}&offset=${offset}${extra}`,
     order: "ngay.desc",
@@ -93,7 +98,7 @@ export async function createPhieu(input: {
   userEmail?: string;
 }): Promise<{ phieuId: number; phieu: Phieu }> {
   const existing = await select("phieu", {
-    filters: `cong_trinh_id=eq.${input.congTrinhId}&so_phieu=eq.${input.soPhieu}`,
+    filters: `cong_trinh_id=eq.${input.congTrinhId}&so_phieu=eq.${input.soPhieu}&deleted_at=is.null`,
   });
   if (existing.length > 0) {
     throw new Error(`Số phiếu '${input.soPhieu}' đã tồn tại trong công trình này`);
@@ -166,17 +171,77 @@ export async function updatePhieu(
   });
 }
 
-/** Port từ api/firestore_client.py::delete_phieu + router log */
+/**
+ * Xóa phiếu = chuyển vào thùng rác (soft-delete), KHÔNG xóa chi_tiet_phieu —
+ * giữ lại để còn khôi phục được trong 30 ngày. Xóa vĩnh viễn thật do
+ * purgePhieuPermanently() đảm nhiệm (gọi tay từ Thùng rác hoặc do cron sau
+ * 30 ngày). Tên hàm + chữ ký giữ nguyên để route DELETE hiện có không cần sửa.
+ */
 export async function deletePhieu(id: number, userEmail?: string): Promise<void> {
+  const rows = await update("phieu", { deleted_at: new Date().toISOString(), deleted_by: userEmail || "" }, `id=eq.${id}&deleted_at=is.null`);
+  if (rows.length === 0) throw new Error(`Không tìm thấy phiếu id=${id} (hoặc đã ở thùng rác)`);
+  await logActivity({
+    action: "soft_delete_phieu",
+    entityType: "phieu",
+    entityId: String(id),
+    details: `Chuyen phieu id=${id} vao thung rac`,
+    userEmail,
+  });
+}
+
+/** Khôi phục phiếu khỏi thùng rác. */
+export async function restorePhieu(id: number, userEmail?: string): Promise<void> {
+  const rows = await update("phieu", { deleted_at: null, deleted_by: null }, `id=eq.${id}`);
+  if (rows.length === 0) throw new Error(`Không tìm thấy phiếu id=${id}`);
+  await logActivity({
+    action: "restore_phieu",
+    entityType: "phieu",
+    entityId: String(id),
+    details: `Khoi phuc phieu id=${id} tu thung rac`,
+    userEmail,
+  });
+}
+
+/** Xóa vĩnh viễn — dọn ảnh/PDF trên R2 rồi xóa chi_tiet_phieu + phieu. Dùng cho cả nút "Xóa vĩnh viễn" (Admin) và cron tự xóa sau 30 ngày. */
+export async function purgePhieuPermanently(id: number, userEmail?: string): Promise<void> {
+  const phieu = await getPhieuById(id);
+  if (!phieu) return;
+  for (const url of phieu.anh_urls || []) {
+    const key = keyFromServingUrl(url);
+    if (key) await deleteFromR2(key);
+  }
   await del("chi_tiet_phieu", `phieu_id=eq.${id}`);
   await del("phieu", `id=eq.${id}`);
   await logActivity({
-    action: "delete_phieu",
+    action: "purge_phieu",
     entityType: "phieu",
     entityId: String(id),
-    details: `Xoa phieu id=${id}`,
+    details: `Xoa vinh vien phieu id=${id} (${phieu.so_phieu || ""})`,
     userEmail,
   });
+}
+
+/** Danh sách phiếu trong thùng rác — engine chưa có operator "is not null" nên lọc lại bằng JS. */
+export async function getDeletedPhieuList(opts: { congTrinhId?: number; loai?: string } = {}): Promise<Phieu[]> {
+  const { congTrinhId, loai } = opts;
+  let extra = "";
+  if (congTrinhId) extra += `&cong_trinh_id=eq.${congTrinhId}`;
+  if (loai) extra += `&loai=eq.${loai}`;
+  const rows = (await select("phieu", { filters: `limit=100000${extra}`, order: "deleted_at.desc" })) as Phieu[];
+  return rows.filter((p) => !!p.deleted_at);
+}
+
+/**
+ * Phiếu đã ở thùng rác quá `beforeIso` — dùng cho cron tự xóa sau 30 ngày.
+ * QUAN TRỌNG: matchValue() trong lib/firestore/client.ts so sánh "lt" bằng string khi
+ * giá trị không phải số — với field không tồn tại (phiếu chưa từng bị xóa), rowVal thành
+ * "" và "" < bất kỳ chuỗi ngày nào cũng là true, nên filter "deleted_at=lt.X" một mình sẽ
+ * khớp NHẦM luôn các phiếu đang hoạt động. Phải lọc lại bằng JS để chỉ giữ phiếu có
+ * deleted_at thật sự tồn tại.
+ */
+export async function getExpiredDeletedPhieu(beforeIso: string): Promise<Phieu[]> {
+  const rows = (await select("phieu", { filters: `deleted_at=lt.${beforeIso}` })) as Phieu[];
+  return rows.filter((p) => !!p.deleted_at);
 }
 
 /** Port từ api/firestore_client.py::get_lich_su */
@@ -244,7 +309,7 @@ export async function deleteChiTietByHang(congTrinhId: number, tenHang: string):
 /** Port từ api/firestore_client.py::get_thong_ke_tong */
 export async function getThongKeTong() {
   const cts = await select("cong_trinh", { order: "ten_ct.asc" });
-  const phieus = (await select("phieu", { query: "loai,cong_trinh_id,tong_tien,ngay", filters: "limit=100000" })) as Phieu[];
+  const phieus = (await select("phieu", { query: "loai,cong_trinh_id,tong_tien,ngay", filters: "limit=100000&deleted_at=is.null" })) as Phieu[];
   const nk = phieus.filter((p) => p.loai === "NK");
   const xk = phieus.filter((p) => p.loai === "XK");
   return {

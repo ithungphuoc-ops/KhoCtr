@@ -924,7 +924,7 @@ export default function PhieuNhapPage() {
               <div>
                 <h3 className="font-bold text-hp-text">Xóa phiếu nhập kho?</h3>
                 <p className="text-sm text-hp-text-secondary mt-1">
-                  Phiếu <b className="text-hp-danger">{confirmDelete.so_phieu}</b> ngày {confirmDelete.ngay} và toàn bộ chi tiết sẽ bị xóa vĩnh viễn.
+                  Phiếu <b className="text-hp-danger">{confirmDelete.so_phieu}</b> ngày {confirmDelete.ngay} sẽ được chuyển vào Thùng rác, có thể khôi phục trong 30 ngày.
                 </p>
               </div>
             </div>
@@ -933,7 +933,7 @@ export default function PhieuNhapPage() {
                 Hủy
               </button>
               <button onClick={handleDelete} disabled={deleting} className="px-4 py-2 min-h-10 text-sm font-medium text-white bg-hp-danger hover:bg-hp-danger/90 rounded-hp-md disabled:opacity-50">
-                {deleting ? "Đang xóa..." : "Xóa vĩnh viễn"}
+                {deleting ? "Đang xóa..." : "Xóa phiếu"}
               </button>
             </div>
           </div>

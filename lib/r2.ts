@@ -51,3 +51,14 @@ export async function deleteFromR2(key: string): Promise<void> {
     // Bỏ qua lỗi xóa file vật lý (VD: đã bị xóa từ trước) — Firestore đã cập nhật đúng ở nơi gọi.
   }
 }
+
+/** Lấy lại key gốc trong bucket từ 1 URL serving dạng /api/files/<key đã encode> (xem app/api/files/[...path]/route.ts). */
+export function keyFromServingUrl(url: string): string | null {
+  const prefix = "/api/files/";
+  if (!url.startsWith(prefix)) return null;
+  return url
+    .slice(prefix.length)
+    .split("/")
+    .map(decodeURIComponent)
+    .join("/");
+}

@@ -10,7 +10,7 @@ import { usePathname } from "next/navigation";
 import {
   BarChart2, Bell, StickyNote, Download, Upload, Package, Box, Building2,
   Shield, ChevronLeft, ChevronRight, X, Database, CheckCircle, Cpu,
-  ChevronDown, ChevronUp, Layers, ClipboardList, History,
+  ChevronDown, ChevronUp, Layers, ClipboardList, History, Trash2,
 } from "lucide-react";
 import { useCongTrinh } from "@/components/CongTrinhProvider";
 import type { Session } from "@/lib/session";
@@ -54,6 +54,7 @@ const groupHeThong = {
     { icon: Building2, label: "Công trình", path: "/cong-trinh" },
     { icon: Shield, label: "Phân quyền", path: "/phan-quyen" },
     { icon: Cpu, label: "Thiết lập API AI", path: "/thiet-lap-api", adminOnly: true },
+    { icon: Trash2, label: "Thùng rác", path: "/thung-rac", adminOnly: true },
   ] as NavItem[],
 };
 
