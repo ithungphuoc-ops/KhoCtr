@@ -10,6 +10,7 @@
 import { useRef, useState } from "react";
 import { Camera, Loader, X } from "lucide-react";
 import { uploadAnhPhieu, deleteAnhPhieu } from "@/lib/api-client";
+import ImageLightbox from "@/components/ImageLightbox";
 
 // Ảnh gốc chụp điện thoại thường 3-8MB — server sẽ tự resize+nén khi lưu,
 // không cần chặn gắt ở phía client.
@@ -133,12 +134,7 @@ export default function AnhChungTuPhieu({
 
       {error && <p className="text-hp-danger text-xs bg-hp-danger/10 p-2 rounded-hp-md">{error}</p>}
 
-      {preview && (
-        <div className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-6" onClick={() => setPreview(null)}>
-          {/* eslint-disable-next-line @next/next/no-img-element -- xem ảnh gốc, không cần tối ưu next/image */}
-          <img src={preview} alt="Ảnh chứng từ (xem lớn)" className="max-w-full max-h-full rounded-hp-md" />
-        </div>
-      )}
+      {preview && <ImageLightbox url={preview} onClose={() => setPreview(null)} />}
     </div>
   );
 }
