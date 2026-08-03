@@ -78,6 +78,10 @@ export default function PhieuXuatPage() {
   const [deleting, setDeleting] = useState(false);
 
   const [hangHoaList, setHangHoaList] = useState<HangHoa[]>([]);
+  // Map tên hàng (đã normalize) -> tồn cuối, dùng để cảnh báo xuất vượt tồn. null = chưa
+  // có dữ liệu tồn kho tin cậy (đang xem "Tất cả công trình" hoặc getTonKho lỗi) -> bỏ qua check.
+  const [tonKhoMap, setTonKhoMap] = useState<Record<string, number> | null>(null);
+  const [overstockItems, setOverstockItems] = useState<ItemRow[] | null>(null);
 
   // Khác PhieuNhap: gợi ý hàng hóa cho XK lấy từ TỒN KHO hiện có (chỉ hàng còn > 0),
   // không phải toàn bộ danh mục — không thể xuất hàng chưa từng nhập.
@@ -85,17 +89,19 @@ export default function PhieuXuatPage() {
     if (selectedCT) {
       getTonKho({ cong_trinh_id: selectedCT.id })
         .then((res) => {
-          const rows = ((res.data as { data?: TonKhoRow[] })?.data || [])
-            .filter((tk) => (tk.ton_cuoi ?? 0) > 0)
-            .map((tk) => ({ ten_hang: tk.ten_hang, dvt: tk.dvt || "cái", ma_hang: "" }) as HangHoa);
+          const allRows = (res.data as { data?: TonKhoRow[] })?.data || [];
+          const rows = allRows.filter((tk) => (tk.ton_cuoi ?? 0) > 0).map((tk) => ({ ten_hang: tk.ten_hang, dvt: tk.dvt || "cái", ma_hang: "" }) as HangHoa);
           setHangHoaList(rows);
+          setTonKhoMap(Object.fromEntries(allRows.map((tk) => [normalize(tk.ten_hang), tk.ton_cuoi ?? 0])));
         })
-        .catch(() =>
+        .catch(() => {
+          setTonKhoMap(null);
           getHangHoa({ limit: 2000, cong_trinh_id: selectedCT.id })
             .then((res) => setHangHoaList((res.data as { data?: HangHoa[] })?.data || []))
-            .catch(() => {}),
-        );
+            .catch(() => {});
+        });
     } else {
+      setTonKhoMap(null);
       getHangHoa({ limit: 2000 })
         .then((res) => setHangHoaList((res.data as { data?: HangHoa[] })?.data || []))
         .catch(() => {});
@@ -270,7 +276,7 @@ export default function PhieuXuatPage() {
     );
   };
 
-  const handleCreate = async () => {
+  const handleCreate = async (force = false) => {
     if (!selectedCT) {
       setCreateError("Chưa chọn công trình");
       return;
@@ -288,6 +294,13 @@ export default function PhieuXuatPage() {
       const invalid = validItems.find((it) => !hangHoaList.some((h) => normalize(h.ten_hang) === normalize(it.ten_hang)));
       if (invalid) {
         setCreateError(`"${invalid.ten_hang}" không có trong kho. Vui lòng chọn từ danh sách gợi ý.`);
+        return;
+      }
+    }
+    if (!force && tonKhoMap) {
+      const overLimit = validItems.filter((it) => (parseFloat(String(it.so_luong)) || 0) > (tonKhoMap[normalize(it.ten_hang)] ?? 0));
+      if (overLimit.length > 0) {
+        setOverstockItems(overLimit);
         return;
       }
     }
@@ -311,11 +324,13 @@ export default function PhieuXuatPage() {
         fillFormFromPhieu(batchList[nextIdx]);
         setCreateError("");
         loadData();
+        loadHangHoa();
       } else {
         setBatchList([]);
         setBatchIdx(-1);
         setShowCreate(false);
         loadData();
+        loadHangHoa();
       }
     } catch (e) {
       setCreateError(errDetail(e, "Lỗi tạo phiếu. Thử lại."));
@@ -883,7 +898,7 @@ export default function PhieuXuatPage() {
                   Hủy
                 </button>
                 {(createMode === "manual" || editingPhieu) && (
-                  <button onClick={editingPhieu ? handleUpdate : handleCreate} disabled={creating} className="px-5 py-2 min-h-10 bg-hp-warning hover:bg-hp-warning/90 text-white rounded-hp-md text-sm font-medium disabled:opacity-50">
+                  <button onClick={() => (editingPhieu ? handleUpdate() : handleCreate())} disabled={creating} className="px-5 py-2 min-h-10 bg-hp-warning hover:bg-hp-warning/90 text-white rounded-hp-md text-sm font-medium disabled:opacity-50">
                     {creating ? "Đang lưu..." : editingPhieu ? "Cập nhật" : batchList.length > 1 ? `Lưu & Tiếp (${batchIdx + 1}/${batchList.length})` : "Lưu Phiếu XK"}
                   </button>
                 )}
@@ -911,6 +926,44 @@ export default function PhieuXuatPage() {
               </button>
               <button onClick={handleDelete} disabled={deleting} className="px-4 py-2 min-h-10 text-sm font-medium text-white bg-hp-danger hover:bg-hp-danger/90 rounded-hp-md disabled:opacity-50">
                 {deleting ? "Đang xóa..." : "Xóa phiếu"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {overstockItems && (
+        <div className="fixed inset-0 bg-hp-overlay flex items-center justify-center z-50 p-4">
+          <div className="bg-hp-elevated border border-hp-border rounded-hp-lg shadow-md w-full max-w-md p-6">
+            <div className="flex items-start gap-3 mb-4">
+              <AlertTriangle className="w-6 h-6 text-hp-danger flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-bold text-hp-text">Số lượng xuất vượt tồn kho</h3>
+                <p className="text-sm text-hp-text-secondary mt-1">Các mặt hàng sau sẽ có tồn kho âm sau khi lưu phiếu này:</p>
+              </div>
+            </div>
+            <ul className="text-sm space-y-1.5 mb-4 max-h-48 overflow-y-auto">
+              {overstockItems.map((it, i) => (
+                <li key={i} className="flex justify-between gap-2 text-hp-text-secondary">
+                  <span className="truncate">{it.ten_hang}</span>
+                  <span className="text-hp-danger font-medium flex-shrink-0">
+                    Xuất {fmt(Number(it.so_luong))} / Tồn {fmt(tonKhoMap?.[normalize(it.ten_hang)] ?? 0)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setOverstockItems(null)} className="px-4 py-2 min-h-10 text-sm text-hp-text-secondary hover:bg-hp-muted/20 rounded-hp-md">
+                Hủy
+              </button>
+              <button
+                onClick={() => {
+                  setOverstockItems(null);
+                  handleCreate(true);
+                }}
+                className="px-4 py-2 min-h-10 text-sm font-medium text-white bg-hp-danger hover:bg-hp-danger/90 rounded-hp-md"
+              >
+                Vẫn lưu phiếu
               </button>
             </div>
           </div>

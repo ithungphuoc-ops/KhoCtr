@@ -3,7 +3,7 @@
 // Port từ frontend/src/pages/ct/CTXuatKho.jsx (gồm cả phần "AI đọc PDF hàng loạt" —
 // nay đã port đầy đủ, xem app/ct/[id]/nhap-kho/page.tsx cho bản NK tương ứng).
 import { useState, useEffect, useRef } from "react";
-import { Search, RefreshCw, Eye, Plus, X, Trash2, FileDown, Bot, Loader } from "lucide-react";
+import { Search, RefreshCw, Eye, Plus, X, Trash2, FileDown, Bot, Loader, AlertTriangle } from "lucide-react";
 import { getPhieuList, getChiTietPhieu, createPhieu, getHangHoa, getTonKho, docPhieu, docPhieuMulti, matchItems } from "@/lib/api-client";
 import HangHoaInput from "@/components/HangHoaInput";
 import HangHoaItemCards from "@/components/HangHoaItemCards";
@@ -68,6 +68,8 @@ export default function CTXuatKhoPage() {
   const [items, setItems] = useState<ItemRow[]>([emptyItem()]);
   const [saveMsg, setSaveMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
   const [hangHoaList, setHangHoaList] = useState<HangHoa[]>([]);
+  const [tonKhoMap, setTonKhoMap] = useState<Record<string, number> | null>(null);
+  const [overstockItems, setOverstockItems] = useState<ItemRow[] | null>(null);
 
   const loadData = () => {
     setLoading(true);
@@ -80,16 +82,17 @@ export default function CTXuatKhoPage() {
   const loadHangHoa = () =>
     getTonKho({ cong_trinh_id: parseInt(ctId) })
       .then((res) => {
-        const rows = ((res.data as { data?: TonKhoRow[] })?.data || [])
-          .filter((tk) => (tk.ton_cuoi ?? 0) > 0)
-          .map((tk) => ({ ten_hang: tk.ten_hang, dvt: tk.dvt || "cái", ma_hang: "" }) as HangHoa);
+        const allRows = (res.data as { data?: TonKhoRow[] })?.data || [];
+        const rows = allRows.filter((tk) => (tk.ton_cuoi ?? 0) > 0).map((tk) => ({ ten_hang: tk.ten_hang, dvt: tk.dvt || "cái", ma_hang: "" }) as HangHoa);
         setHangHoaList(rows);
+        setTonKhoMap(Object.fromEntries(allRows.map((tk) => [normalize(tk.ten_hang), tk.ton_cuoi ?? 0])));
       })
-      .catch(() =>
+      .catch(() => {
+        setTonKhoMap(null);
         getHangHoa({ limit: 2000, cong_trinh_id: parseInt(ctId) })
           .then((res) => setHangHoaList((res.data as { data?: HangHoa[] })?.data || []))
-          .catch(() => {}),
-      );
+          .catch(() => {});
+      });
 
   // AI đọc PDF hàng loạt
   const [aiLoading, setAiLoading] = useState(false);
@@ -246,7 +249,7 @@ export default function CTXuatKhoPage() {
 
   const tongTien = items.reduce((s, it) => s + (parseFloat(String(it.thanh_tien)) || 0), 0);
 
-  const handleSave = async () => {
+  const handleSave = async (force = false) => {
     if (!form.so_phieu || !form.ngay) {
       setSaveMsg({ type: "err", text: "Vui lòng nhập số phiếu và ngày" });
       return;
@@ -260,6 +263,13 @@ export default function CTXuatKhoPage() {
       const invalid = validItems.find((it) => !hangHoaList.some((h) => normalize(h.ten_hang) === normalize(it.ten_hang)));
       if (invalid) {
         setSaveMsg({ type: "err", text: `"${invalid.ten_hang}" không có trong kho. Vui lòng chọn từ danh sách gợi ý.` });
+        return;
+      }
+    }
+    if (!force && tonKhoMap) {
+      const overLimit = validItems.filter((it) => (parseFloat(it.so_luong) || 0) > (tonKhoMap[normalize(it.ten_hang)] ?? 0));
+      if (overLimit.length > 0) {
+        setOverstockItems(overLimit);
         return;
       }
     }
@@ -282,6 +292,7 @@ export default function CTXuatKhoPage() {
       setItems([emptyItem()]);
       setShowForm(false);
       loadData();
+      loadHangHoa();
     } catch (e) {
       setSaveMsg({ type: "err", text: errDetail(e, "Lỗi khi lưu phiếu") });
     } finally {
@@ -618,7 +629,7 @@ export default function CTXuatKhoPage() {
                 <button onClick={() => setShowForm(false)} className="px-5 min-h-10 border border-hp-border rounded-hp-lg text-sm text-hp-text-secondary hover:bg-hp-elevated">
                   Hủy
                 </button>
-                <button onClick={handleSave} disabled={saving} className="px-6 min-h-10 bg-hp-warning hover:bg-hp-warning/90 text-white rounded-hp-lg text-sm font-medium disabled:opacity-50 flex items-center gap-2">
+                <button onClick={() => handleSave()} disabled={saving} className="px-6 min-h-10 bg-hp-warning hover:bg-hp-warning/90 text-white rounded-hp-lg text-sm font-medium disabled:opacity-50 flex items-center gap-2">
                   {saving ? (
                     <>
                       <RefreshCw className="w-4 h-4 animate-spin" /> Đang lưu...
@@ -649,6 +660,44 @@ export default function CTXuatKhoPage() {
           <button onClick={() => setBatchMsg(null)} className="ml-3 underline text-white/80">
             Đóng
           </button>
+        </div>
+      )}
+
+      {overstockItems && (
+        <div className="fixed inset-0 bg-hp-overlay flex items-center justify-center z-50 p-4">
+          <div className="bg-hp-elevated border border-hp-border rounded-hp-xl shadow-md w-full max-w-md p-6">
+            <div className="flex items-start gap-3 mb-4">
+              <AlertTriangle className="w-6 h-6 text-hp-danger flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-bold text-hp-text">Số lượng xuất vượt tồn kho</h3>
+                <p className="text-sm text-hp-text-secondary mt-1">Các mặt hàng sau sẽ có tồn kho âm sau khi lưu phiếu này:</p>
+              </div>
+            </div>
+            <ul className="text-sm space-y-1.5 mb-4 max-h-48 overflow-y-auto">
+              {overstockItems.map((it, i) => (
+                <li key={i} className="flex justify-between gap-2 text-hp-text-secondary">
+                  <span className="truncate">{it.ten_hang}</span>
+                  <span className="text-hp-danger font-medium flex-shrink-0">
+                    Xuất {fmt(parseFloat(it.so_luong) || 0)} / Tồn {fmt(tonKhoMap?.[normalize(it.ten_hang)] ?? 0)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setOverstockItems(null)} className="px-4 min-h-10 border border-hp-border rounded-hp-lg text-sm text-hp-text-secondary hover:bg-hp-elevated">
+                Hủy
+              </button>
+              <button
+                onClick={() => {
+                  setOverstockItems(null);
+                  handleSave(true);
+                }}
+                className="px-4 min-h-10 bg-hp-danger hover:bg-hp-danger/90 text-white rounded-hp-lg text-sm font-medium"
+              >
+                Vẫn lưu phiếu
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

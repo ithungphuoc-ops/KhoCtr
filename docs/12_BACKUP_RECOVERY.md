@@ -1,131 +1,61 @@
-# Backup & Phục hồi — KhoUNICE Web
+# Backup & Phục hồi — KhoCtr (KhoUNICE Web)
 
-> Cập nhật lần cuối: 07/2026
+> Cập nhật lần cuối: 08/2026 — viết lại hoàn toàn cho stack hiện tại (Firestore + Cloudflare R2), thay cho bản cũ mô tả Supabase/Render đã ngừng dùng.
 
 ---
 
-## 1. Những gì cần backup
+## 1. Hiện trạng thực tế — đọc kỹ trước khi tin có backup
 
-| Dữ liệu | Nơi lưu | Tần suất backup | Mức độ quan trọng |
+⚠️ **Tại thời điểm viết tài liệu này, KHÔNG có cơ chế backup/export tự động nào được cấu hình** cho Firestore hay R2 trong dự án. Đây là điểm cần Sếp lưu ý và quyết định có nên thiết lập thêm không (xem mục 4 — gợi ý, chưa làm).
+
+| Dữ liệu | Nơi lưu | Backup tự động? | Mức độ quan trọng |
 |---|---|---|---|
-| Database (phiếu, tồn kho...) | Supabase cloud | Tự động (Supabase) | 🔴 Tối quan trọng |
-| `ENCRYPTION_KEY` | Render env + `.env` | **Backup ngay khi tạo** | 🔴 Tối quan trọng |
-| `JWT_SECRET` | Render env + `.env` | Khi thay đổi | 🟠 Quan trọng |
-| Toàn bộ source code | GitHub | Mỗi lần push | 🟡 Bình thường |
-| File `.env` local | Máy Sếp | Khi thay đổi | 🟠 Quan trọng |
+| Database (phiếu, tồn kho, công trình, hàng hóa...) | Firestore project `hpcons-khoctr` | ❌ Chưa cấu hình export định kỳ | 🔴 Tối quan trọng |
+| Ảnh/PDF chứng từ | Cloudflare R2 bucket | ❌ Chưa bật versioning | 🟠 Quan trọng |
+| Toàn bộ source code | GitHub `ithungphuoc-ops/KhoCtr` | ✅ Có (mỗi lần push, có lịch sử commit) | 🟢 An toàn |
+| Biến môi trường (`ENCRYPTION_KEY`, R2 keys, `CRON_SECRET`...) | Vercel Environment Variables | ❌ Không tự backup — chỉ tồn tại trên Vercel | 🔴 Tối quan trọng |
 
 ---
 
-## 2. ENCRYPTION_KEY — Quy trình backup bắt buộc
+## 2. `ENCRYPTION_KEY` — vẫn quan trọng như trước
 
-### Tại sao quan trọng?
-`ENCRYPTION_KEY` dùng để mã hóa API Key của từng công trình. Nếu mất key này:
-- ❌ Toàn bộ API Key trong database không giải mã được
-- ❌ Phải vào từng công trình nhập lại API Key từ đầu
-- ❌ Không có cách khôi phục tự động
+Dùng để mã hoá API Key AI của từng công trình (`lib/crypto/fernet.ts`). Nếu mất key này: toàn bộ API Key AI đã lưu không giải mã được, phải vào **Thiết lập API AI** nhập lại cho từng công trình — không có cách khôi phục tự động.
 
-### Quy trình backup (làm ngay sau khi cấu hình)
-
-**Bước 1:** Sao chép `ENCRYPTION_KEY` từ file `.env` local hoặc Render dashboard.
-
-**Bước 2:** Lưu vào **ít nhất 2 trong 3** nơi sau:
-- Trình quản lý mật khẩu (Bitwarden, 1Password, KeePass...)
-- Tài liệu nội bộ mã hóa của công ty HP Cons
-- USB/ổ cứng offline được khóa
-
-**Bước 3:** Ghi chú kèm theo:
-```
-Tên:     ENCRYPTION_KEY KhoUNICE Web
-Giá trị: <dán key vào đây>
-Ngày:    07/07/2026
-Dùng cho: Giải mã API Key các công trình trong Supabase DB
-Cảnh báo: KHÔNG xóa - KHÔNG chia sẻ - KHÔNG commit GitHub
-```
+**Nên làm:** copy giá trị `ENCRYPTION_KEY` hiện tại từ Vercel → lưu vào trình quản lý mật khẩu (Bitwarden/1Password...) hoặc tài liệu nội bộ mã hoá của công ty. Tương tự với `R2_ACCESS_KEY_ID`/`R2_SECRET_ACCESS_KEY` và `CRON_SECRET` — mất thì phải tạo lại (R2 key tạo lại trong Cloudflare dashboard; `CRON_SECRET` tự đặt giá trị mới rồi cập nhật cả trên Vercel).
 
 ---
 
 ## 3. Quy trình phục hồi khi gặp sự cố
 
-### 3.1 Render bị reset env vars (mất biến môi trường)
+### 3.1 Vercel mất biến môi trường
+1. Vercel → project khoctr → **Settings → Environment Variables** → thêm lại từ nơi đã backup (mục 2).
+2. Redeploy lại (env var không tự trigger deploy).
 
-1. Vào Render → service Kho-Tong → tab **Environment**
-2. Thêm lại các biến từ backup (đặc biệt `ENCRYPTION_KEY`)
-3. Render tự redeploy — xong
+### 3.2 Mất `ENCRYPTION_KEY` hoàn toàn (không có backup)
+> Tình huống nghiêm trọng — không có cách tự động phục hồi.
+1. Tạo key mới, set vào Vercel.
+2. Vào **Thiết lập API AI** trên web, nhập lại API Key cho từng công trình.
+3. Backup ngay key mới.
 
-**Kiểm tra:** Log phải thấy `[config] ENCRYPTION_KEY: SET`
+### 3.3 Firestore mất/hỏng dữ liệu
+Firestore là dịch vụ được Google quản lý (độ bền cao), nhưng **không có nghĩa là có point-in-time backup** trừ khi tự cấu hình export. Hiện tại **chưa cấu hình** — nếu dữ liệu bị xóa nhầm ở quy mô lớn (ví dụ xóa cả 1 công trình — xem mục 4), **không có cách khôi phục** ngoài phiếu nằm trong Thùng rác (`/thung-rac`, giữ 30 ngày, chỉ áp dụng cho xóa phiếu lẻ, không áp dụng khi xóa cả công trình).
 
----
-
-### 3.2 Mất file `.env` local
-
-1. Tạo lại file `backend/.env`
-2. Lấy giá trị từ Render Environment hoặc backup
-3. Đảm bảo `ENCRYPTION_KEY` đúng với giá trị đã lưu trong DB
-
----
-
-### 3.3 Mất `ENCRYPTION_KEY` hoàn toàn (không backup)
-
-> ⚠️ **Tình huống nghiêm trọng nhất.** Không có cách tự động phục hồi.
-
-**Xử lý:**
-1. Sinh `ENCRYPTION_KEY` mới:
-   ```python
-   from cryptography.fernet import Fernet
-   print(Fernet.generate_key().decode())
-   ```
-2. Cập nhật Render và `.env` local với key mới
-3. Vào **Hệ thống → Thiết lập API** trên web app
-4. Nhập lại API Key cho **từng công trình** (hệ thống tự mã hóa bằng key mới)
-5. Backup key mới ngay lập tức
+### 3.4 R2 mất file ảnh/PDF
+Chưa bật versioning — file bị xóa/ghi đè thì mất luôn, không có bản cũ để khôi phục.
 
 ---
 
-### 3.4 Rotate ENCRYPTION_KEY (đổi key định kỳ)
+## 4. Gợi ý thiết lập thêm (chưa làm — Sếp cân nhắc)
 
-> Dùng khi nghi ngờ key bị lộ hoặc định kỳ bảo mật (6-12 tháng).
-
-**Bước 1:** Sinh key mới:
-```python
-from cryptography.fernet import Fernet
-print(Fernet.generate_key().decode())
-```
-
-**Bước 2:** Cập nhật `.env` và Render với key mới.
-
-**Bước 3:** Gọi endpoint re-encrypt (sẽ có trong phiên bản sau):
-```
-POST /api/ai-config/rotate-key
-Header: Authorization: Bearer <admin_token>
-Body: { "old_key": "...", "new_key": "..." }
-```
-
-> ⚠️ Chưa implement trong phiên bản hiện tại. Tạm thời: nhập lại API Key từng CT nếu cần rotate.
+- **Firestore scheduled export**: Google Cloud hỗ trợ export Firestore định kỳ ra Cloud Storage (cần bật qua Google Cloud Console, có phát sinh chi phí lưu trữ nhỏ). Hiện chưa bật.
+- **R2 bucket versioning**: Cloudflare R2 hỗ trợ bật versioning cho bucket để giữ lại phiên bản cũ khi file bị ghi đè/xóa. Hiện chưa bật.
+- Cả 2 việc trên đều thực hiện trực tiếp trên dashboard (Google Cloud / Cloudflare), không cần sửa code — nếu Sếp muốn làm, có thể nhờ hướng dẫn từng bước cụ thể khi cần.
 
 ---
 
-### 3.5 Supabase mất dữ liệu
+## 5. Checklist trước khi deploy thay đổi lớn
 
-Supabase tự backup hàng ngày (kể cả free tier). Để restore:
-1. Vào Supabase Dashboard → **Database → Backups**
-2. Chọn điểm restore
-3. Xác nhận — Supabase tự phục hồi
-
----
-
-## 4. Checklist trước khi deploy lên production
-
-- [ ] `ENCRYPTION_KEY` đã được backup ở ít nhất 2 nơi
-- [ ] Tất cả env vars đã có trên Render
-- [ ] Bảng `project_ai_config` đã tạo trong Supabase
-- [ ] Log Render không có `MISSING` hay `ERROR` khi khởi động
-- [ ] Test đăng nhập Admin thành công
-- [ ] Test đọc phiếu AI ít nhất 1 công trình
-
----
-
-## 5. Liên hệ hỗ trợ kỹ thuật
-
-Dự án do AI Assistant hỗ trợ phát triển. Để tiếp tục:
-- Mở lại hội thoại với context `PROJECT_CONTEXT.md`
-- Hoặc đọc `HUONG_DAN.md` trong thư mục gốc dự án
+- [ ] Đã backup các biến môi trường quan trọng ở nơi an toàn (mục 2)
+- [ ] `npm run build` local pass trước khi push
+- [ ] Sau deploy, `curl` các route chính không trả `500`
+- [ ] Test tay các luồng bị ảnh hưởng trực tiếp trên trình duyệt/điện thoại thật

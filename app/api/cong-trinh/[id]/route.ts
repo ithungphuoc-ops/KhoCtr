@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireSession } from "@/lib/session";
+import { requireSession, requireAdmin } from "@/lib/session";
 import { getCongTrinhById, updateCongTrinh, deleteCongTrinh } from "@/lib/data/cong-trinh";
 import { apiError } from "@/lib/api-error";
 
@@ -29,7 +29,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireSession();
+    await requireAdmin();
     const { id } = await params;
     await deleteCongTrinh(Number(id));
     return NextResponse.json({ success: true, id: Number(id) });

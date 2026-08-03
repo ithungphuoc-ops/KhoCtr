@@ -1,152 +1,60 @@
-# Hướng dẫn Triển khai — KhoUNICE Web
+# Hướng dẫn Triển khai — KhoCtr (KhoUNICE Web)
 
-> Cập nhật lần cuối: 07/2026
+> Cập nhật lần cuối: 08/2026 — viết lại hoàn toàn cho stack hiện tại (Next.js/Vercel/Firebase/R2), thay cho bản cũ mô tả stack Python/Supabase/Render đã ngừng dùng.
 
 ---
 
-## 1. Yêu cầu môi trường
+## 1. Kiến trúc hiện tại
 
-| Thành phần | Yêu cầu |
+| Thành phần | Công nghệ |
 |---|---|
-| Python | 3.11+ |
-| Node.js | 18+ |
-| Supabase | PostgreSQL cloud |
-| Render.com | Free tier (hoặc Starter) |
+| App | Next.js 15 (App Router) + TypeScript, deploy trên **Vercel** |
+| Database | **Firebase Firestore** (project `hpcons-khoctr`), truy cập qua lớp giả PostgREST tự viết `lib/firestore/client.ts` |
+| Lưu ảnh/PDF chứng từ | **Cloudflare R2** (bucket private), app là cầu nối duy nhất qua `app/api/files/[...path]/route.ts` — không có URL public trực tiếp |
+| Đăng nhập (SSO) | `account.hpcore.vn`, verify session cookie qua Firebase project riêng `hpcons-portal` |
+| AI đọc phiếu | Gemini / Claude / OpenAI — key theo từng công trình (mã hoá Fernet) hoặc key fallback chung |
+| Domain | khoct.hpcore.vn |
+| GitHub | `ithungphuoc-ops/KhoCtr`, nhánh `main` |
+
+Không còn Python/FastAPI, Supabase, Render, hay JWT tự chế — đã thay hoàn toàn bằng SSO cookie + Firebase Admin SDK.
 
 ---
 
-## 2. Biến môi trường bắt buộc
+## 2. Biến môi trường (xem `.env.local.example` — luôn là nguồn chính xác nhất)
 
-Tất cả biến dưới đây phải được cấu hình trên **Render → Environment** và trong file `backend/.env` (local). Thiếu bất kỳ biến nào backend sẽ báo lỗi và không khởi động.
-
-| Biến | Mô tả | Bắt buộc |
+| Biến | Dùng cho | Bắt buộc |
 |---|---|---|
-| `SUPABASE_URL` | URL project Supabase | ✅ |
-| `SUPABASE_KEY` | Anon key Supabase | ✅ |
-| `JWT_SECRET` | Secret ký JWT token | ✅ |
-| `SETUP_KEY` | Key tạo tài khoản admin lần đầu | ✅ |
-| `ENCRYPTION_KEY` | **Fernet key mã hóa API Key của công trình** | ✅ |
-| `CLAUDE_API_KEY` | API key Claude (fallback nếu CT chưa cấu hình) | ⚠️ |
-| `GEMINI_API_KEY` | API key Gemini (fallback) | ⚠️ |
-| `GEMINI_MODEL` | Model Gemini (vd: `gemini-1.5-flash`) | ✅ |
-| `OPENAI_API_KEY` | API key OpenAI (tùy chọn) | ➖ |
-| `OPENAI_MODEL` | Model OpenAI (vd: `gpt-4o-mini`) | ➖ |
+| `HPCORE_FIREBASE_SERVICE_ACCOUNT` | Verify session SSO (project `hpcons-portal`) | ✅ |
+| `KHOCTR_FIREBASE_SERVICE_ACCOUNT` | Firestore nghiệp vụ kho (project `hpcons-khoctr`) | ✅ |
+| `ENCRYPTION_KEY` (hoặc `ENCRYPTION_KEYS` nếu cần nhiều key để rotate) | Mã hoá API Key AI theo công trình (`lib/crypto/fernet.ts`) | ✅ |
+| `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | Upload/xem ảnh chứng từ (`lib/r2.ts`) — không có giá trị mặc định | ✅ |
+| `R2_BUCKET`, `R2_ACCOUNT_ID` | Có giá trị mặc định hardcode trong `lib/r2.ts`, chỉ cần set nếu đổi bucket | ➖ |
+| `CRON_SECRET` | Xác thực Vercel Cron gọi `app/api/cron/purge-phieu` (tự xóa vĩnh viễn phiếu trong thùng rác sau 30 ngày) | ✅ |
+| `CLAUDE_API_KEY` / `GEMINI_API_KEY` / `GEMINI_MODEL` / `OPENAI_API_KEY` / `OPENAI_MODEL` | Fallback AI đọc phiếu khi công trình chưa tự cấu hình | ⚠️ ít nhất 1 provider |
+
+Cấu hình tại: **Vercel → chọn project khoctr → Settings → Environment Variables** (áp dụng cho Production). Sau khi thêm/sửa biến, phải **redeploy lại** (đổi env var không tự trigger redeploy như trước).
 
 ---
 
-## 3. ENCRYPTION_KEY — Quan trọng
+## 3. Quy trình deploy
 
-### 3.1 Vai trò
-`ENCRYPTION_KEY` dùng để **mã hóa API Key của từng công trình** trước khi lưu vào database. Nếu mất key này, toàn bộ API Key trong database sẽ không thể giải mã và phải nhập lại.
-
-### 3.2 Quy tắc bắt buộc
-- ✅ **CHỈ có 1 ENCRYPTION_KEY duy nhất** cho toàn hệ thống.
-- ✅ Lưu trong Render Environment Variables và file `.env` local.
-- ✅ **Backup ngay** vào nơi an toàn (trình quản lý mật khẩu, két thông tin công ty).
-- ❌ **KHÔNG** commit vào GitHub hay bất kỳ source code nào.
-- ❌ **KHÔNG** để backend tự sinh key mới — nếu tự sinh mỗi lần restart thì mất dữ liệu mã hóa.
-
-### 3.3 Sinh key lần đầu (đã làm, không cần làm lại)
-```python
-from cryptography.fernet import Fernet
-print(Fernet.generate_key().decode())
-```
-Key được sinh ra là một chuỗi base64 dài ~44 ký tự. **Lưu ngay, không tái tạo.**
-
-### 3.4 Backup key (bắt buộc)
-Sao chép `ENCRYPTION_KEY` từ Render → lưu vào:
-- Trình quản lý mật khẩu (Bitwarden, 1Password...)
-- Hoặc tài liệu nội bộ được mã hóa của công ty
+1. Push code lên `main` trên GitHub.
+2. Vercel **không luôn tự deploy khi push** (đã gặp vài lần không tự chạy) — dùng **Deploy Hook** (Vercel → Settings → Git → Deploy Hooks) để trigger chắc chắn:
+   ```
+   curl -X POST <URL Deploy Hook>
+   ```
+3. Kiểm tra deploy xong: `curl` vài route chính, kỳ vọng `307` (redirect đăng nhập) hoặc `401`, KHÔNG phải `500`.
+4. Test tay các luồng chính bị ảnh hưởng (Sếp tự làm trên trình duyệt/điện thoại thật — không có cách tự động hoá việc này).
 
 ---
 
-## 4. Cấu hình trên Render
+## 4. Sự cố thường gặp đã từng xảy ra
 
-### Bước 1: Vào Dashboard Render
-1. Mở https://dashboard.render.com
-2. Chọn service **Kho-Tong**
-3. Vào tab **Environment**
-
-### Bước 2: Thêm biến môi trường
-Click **Add Environment Variable** và thêm từng biến:
-
-```
-SUPABASE_URL        = <lấy từ Supabase project settings>
-SUPABASE_KEY        = <anon key từ Supabase>
-JWT_SECRET          = [REDACTED-ROTATED]
-SETUP_KEY           = HPCONS_SETUP_2026
-ENCRYPTION_KEY      = <lấy từ file .env local hoặc backup>
-CLAUDE_API_KEY      = <key Claude của công ty>
-GEMINI_API_KEY      = <key Gemini>
-GEMINI_MODEL        = gemini-1.5-flash
-OPENAI_API_KEY      = (để trống nếu không dùng)
-OPENAI_MODEL        = gpt-4o-mini
-```
-
-> ⚠️ **Lưu ý:** Sau khi thêm/sửa env vars, Render sẽ **tự động redeploy**. Không cần push code.
-
-### Bước 3: Kiểm tra sau deploy
-Mở log Render, chắc chắn thấy dòng:
-```
-[config] ENCRYPTION_KEY: SET
-[config] GEMINI_API_KEY: SET (AQ.Ab8...)
-```
-Nếu thấy `ENCRYPTION_KEY: MISSING` → backend sẽ từ chối khởi động.
+- **`require() of ES Module ... jose`**: `firebase-admin` phụ thuộc `jwks-rsa` yêu cầu `jose` bản CommonJS, nhưng npm có thể kéo về `jose` v6 (pure ESM) gây lỗi runtime. Đã khoá bằng `"overrides": {"jose": "^4.15.9"}` trong `package.json` — nếu gặp lại lỗi tương tự, kiểm tra override này còn đúng không sau khi `npm install`/update dependency.
+- **Vercel không tự deploy**: xem mục 3, luôn có Deploy Hook làm phương án dự phòng.
 
 ---
 
-## 5. Cấu hình local (.env)
+## 5. Khôi phục / Backup
 
-File `backend/.env` (không commit GitHub):
-```env
-SUPABASE_URL=https://...supabase.co
-SUPABASE_KEY=eyJ...
-CLAUDE_API_KEY=sk-ant-api03-...
-GEMINI_API_KEY=AQ.Ab8...
-GEMINI_MODEL=gemini-1.5-flash
-OPENAI_API_KEY=
-OPENAI_MODEL=gpt-4o-mini
-JWT_SECRET=[REDACTED-ROTATED]
-SETUP_KEY=HPCONS_SETUP_2026
-ENCRYPTION_KEY=<cùng giá trị với Render>
-```
-
-> Chạy local: `CHAY_WEB_APP.bat` — tự load `.env` qua python-dotenv.
-
----
-
-## 6. Database — Supabase
-
-### Bảng cần có (chạy SQL trong Supabase SQL Editor)
-
-#### project_ai_config
-```sql
-CREATE TABLE IF NOT EXISTS project_ai_config (
-  id              SERIAL PRIMARY KEY,
-  project_id      INT REFERENCES cong_trinh(id) ON DELETE CASCADE,
-  provider        TEXT DEFAULT 'gemini',
-  api_key_enc     TEXT,
-  model           TEXT,
-  max_token       INT DEFAULT 2000,
-  system_prompt   TEXT,
-  status          TEXT DEFAULT 'active',
-  updated_by      TEXT,
-  updated_at      TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(project_id)
-);
-```
-
----
-
-## 7. Triển khai lại từ đầu (Disaster Recovery)
-
-Xem chi tiết tại `docs/12_BACKUP_RECOVERY.md`.
-
----
-
-## 8. Lịch sử deploy
-
-| Ngày | Commit | Nội dung |
-|---|---|---|
-| 07/07/2026 | ab23913 | Fix Dashboard CT filter |
-| 07/07/2026 | 054c3dd | Fix backend v_ton_kho, thêm Ghi chú menu |
+Xem `docs/12_BACKUP_RECOVERY.md`.
