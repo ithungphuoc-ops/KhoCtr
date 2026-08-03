@@ -4,10 +4,11 @@
 // docPhieu/docPhieuMulti + matchItems + BatchPhieuPopup — nay đã port đầy đủ).
 import { useState, useEffect, useRef } from "react";
 import { Search, RefreshCw, Eye, Plus, X, Trash2, FileDown, Bot, Loader } from "lucide-react";
-import { getPhieuList, getChiTietPhieu, createPhieu, getHangHoa, docPhieu, docPhieuMulti, matchItems } from "@/lib/api-client";
+import { getPhieuList, getChiTietPhieu, createPhieu, uploadAnhPhieu, getHangHoa, docPhieu, docPhieuMulti, matchItems } from "@/lib/api-client";
 import HangHoaInput from "@/components/HangHoaInput";
 import HangHoaItemCards from "@/components/HangHoaItemCards";
 import AnhChungTuPhieu from "@/components/AnhChungTuPhieu";
+import AnhChungTuStaging from "@/components/AnhChungTuStaging";
 import AnhLinkList from "@/components/AnhLinkList";
 import { BatchPhieuPopup, type BatchPhieuInput, type SavedBatchPhieu, type MatchResult } from "@/components/BatchPhieuPopup";
 import { exportPhieuList } from "@/lib/export-excel";
@@ -67,6 +68,7 @@ export default function CTNhapKhoPage() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ so_phieu: "", ngay: today(), doi_tac: "", ghi_chu: "" });
   const [items, setItems] = useState<ItemRow[]>([emptyItem()]);
+  const [stagedFiles, setStagedFiles] = useState<File[]>([]);
   const [saveMsg, setSaveMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
   const [hangHoaList, setHangHoaList] = useState<HangHoa[]>([]);
 
@@ -261,7 +263,7 @@ export default function CTNhapKhoPage() {
     setSaving(true);
     setSaveMsg(null);
     try {
-      await createPhieu({
+      const res = await createPhieu({
         cong_trinh_id: parseInt(ctId),
         loai: "NK",
         so_phieu: form.so_phieu,
@@ -272,9 +274,18 @@ export default function CTNhapKhoPage() {
         user_email: user?.email || "",
         items: validItems.map((it) => ({ ten_hang: it.ten_hang, dvt: it.dvt || "cái", so_luong: parseFloat(it.so_luong) || 0, don_gia: parseFloat(it.don_gia) || 0, thanh_tien: parseFloat(String(it.thanh_tien)) || 0 })),
       });
+      const newId = (res.data as { phieu_id?: number })?.phieu_id;
+      if (newId && stagedFiles.length > 0) {
+        try {
+          await uploadAnhPhieu(newId, stagedFiles);
+        } catch {
+          alert("Đã lưu phiếu nhưng lỗi upload ảnh chứng từ. Vào Chi tiết phiếu để up lại.");
+        }
+      }
       setSaveMsg({ type: "ok", text: "Lưu phiếu thành công!" });
       setForm({ so_phieu: "", ngay: today(), doi_tac: "", ghi_chu: "" });
       setItems([emptyItem()]);
+      setStagedFiles([]);
       setShowForm(false);
       loadData();
     } catch (e) {
@@ -515,7 +526,13 @@ export default function CTNhapKhoPage() {
                 <h3 className="font-bold text-hp-text text-lg">Tạo phiếu nhập kho mới</h3>
                 <p className="text-xs text-hp-text-secondary mt-0.5">{hangHoaList.length > 0 ? `${hangHoaList.length} mặt hàng trong danh mục` : "Danh mục chưa tải"}</p>
               </div>
-              <button onClick={() => setShowForm(false)} className="p-1 hover:bg-hp-card rounded-hp-lg">
+              <button
+                onClick={() => {
+                  setShowForm(false);
+                  setStagedFiles([]);
+                }}
+                className="p-1 hover:bg-hp-card rounded-hp-lg"
+              >
                 <X className="w-5 h-5 text-hp-text-muted" />
               </button>
             </div>
@@ -622,10 +639,20 @@ export default function CTNhapKhoPage() {
                 </div>
               </div>
 
+              <div className="pt-2 border-t border-hp-border">
+                <AnhChungTuStaging files={stagedFiles} onChange={setStagedFiles} />
+              </div>
+
               {saveMsg && <div className={`p-3 rounded-hp-xl text-sm ${saveMsg.type === "ok" ? "bg-hp-success/15 text-hp-success" : "bg-hp-danger/15 text-hp-danger"}`}>{saveMsg.text}</div>}
 
               <div className="flex justify-end gap-3 pt-2">
-                <button onClick={() => setShowForm(false)} className="px-5 min-h-10 border border-hp-border rounded-hp-lg text-sm text-hp-text-secondary hover:bg-hp-elevated">
+                <button
+                  onClick={() => {
+                    setShowForm(false);
+                    setStagedFiles([]);
+                  }}
+                  className="px-5 min-h-10 border border-hp-border rounded-hp-lg text-sm text-hp-text-secondary hover:bg-hp-elevated"
+                >
                   Hủy
                 </button>
                 <button onClick={handleSave} disabled={saving} className="px-6 min-h-10 bg-hp-primary hover:bg-hp-primary/90 text-white rounded-hp-lg text-sm font-medium disabled:opacity-50 flex items-center gap-2">

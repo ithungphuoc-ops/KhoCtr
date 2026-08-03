@@ -6,8 +6,9 @@ import { Download, Search, RefreshCw, Eye, X, Plus, Trash2, Pencil, Bot, Loader,
 import HangHoaInput from "@/components/HangHoaInput";
 import HangHoaItemCards from "@/components/HangHoaItemCards";
 import AnhChungTuPhieu from "@/components/AnhChungTuPhieu";
+import AnhChungTuStaging from "@/components/AnhChungTuStaging";
 import AnhLinkList from "@/components/AnhLinkList";
-import { getPhieuList, getChiTietPhieu, createPhieu, updatePhieu, deletePhieu, docPhieu, docPhieuMulti, getHangHoa } from "@/lib/api-client";
+import { getPhieuList, getChiTietPhieu, createPhieu, updatePhieu, deletePhieu, uploadAnhPhieu, docPhieu, docPhieuMulti, getHangHoa } from "@/lib/api-client";
 import { useCongTrinh } from "@/components/CongTrinhProvider";
 import { useAuth } from "@/components/SessionProvider";
 import { exportPhieuList } from "@/lib/export-excel";
@@ -74,6 +75,7 @@ export default function PhieuNhapPage() {
   const [createError, setCreateError] = useState("");
   const [form, setForm] = useState({ so_phieu: "", ngay: todayStr(), doi_tac: "", ghi_chu: "" });
   const [items, setItems] = useState<ItemRow[]>([emptyItem()]);
+  const [stagedFiles, setStagedFiles] = useState<File[]>([]);
 
   const [confirmDelete, setConfirmDelete] = useState<Phieu | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -277,7 +279,7 @@ export default function PhieuNhapPage() {
     setCreating(true);
     setCreateError("");
     try {
-      await createPhieu({
+      const res = await createPhieu({
         cong_trinh_id: selectedCT.id,
         loai: "NK",
         so_phieu: form.so_phieu.trim(),
@@ -288,6 +290,15 @@ export default function PhieuNhapPage() {
         user_email: user?.email || "",
         items: validItems.map((it) => ({ ...it, so_luong: parseFloat(String(it.so_luong)) || 0, don_gia: parseFloat(String(it.don_gia)) || 0, thanh_tien: it.thanh_tien || 0 })),
       });
+      const newId = (res.data as { phieu_id?: number })?.phieu_id;
+      if (newId && stagedFiles.length > 0) {
+        try {
+          await uploadAnhPhieu(newId, stagedFiles);
+        } catch {
+          alert("Đã lưu phiếu nhưng lỗi upload ảnh chứng từ. Vào Chi tiết phiếu để up lại.");
+        }
+      }
+      setStagedFiles([]);
       if (batchList.length > 0 && batchIdx < batchList.length - 1) {
         const nextIdx = batchIdx + 1;
         setBatchIdx(nextIdx);
@@ -620,6 +631,7 @@ export default function PhieuNhapPage() {
                 onClick={() => {
                   setShowCreate(false);
                   setEditingPhieu(null);
+                  setStagedFiles([]);
                 }}
                 className="p-1 hover:bg-hp-muted/20 rounded-hp-md text-hp-text-muted"
               >
@@ -861,6 +873,18 @@ export default function PhieuNhapPage() {
                       />
                     </div>
                   </div>
+
+                  <div className="pt-2 border-t border-hp-border">
+                    {editingPhieu ? (
+                      <AnhChungTuPhieu
+                        phieuId={editingPhieu.id}
+                        anhUrls={editingPhieu.anh_urls || []}
+                        onChange={(urls) => setEditingPhieu((prev) => (prev ? { ...prev, anh_urls: urls } : prev))}
+                      />
+                    ) : (
+                      <AnhChungTuStaging files={stagedFiles} onChange={setStagedFiles} />
+                    )}
+                  </div>
                 </>
               )}
             </div>
@@ -875,6 +899,7 @@ export default function PhieuNhapPage() {
                   onClick={() => {
                     setShowCreate(false);
                     setEditingPhieu(null);
+                    setStagedFiles([]);
                   }}
                   className="px-4 py-2 min-h-10 border border-hp-border text-hp-text-secondary rounded-hp-md text-sm hover:bg-hp-elevated"
                 >
