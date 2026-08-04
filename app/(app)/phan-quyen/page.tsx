@@ -2,7 +2,7 @@
 
 // Port từ frontend/src/pages/PhanQuyen.jsx.
 import { useState, useEffect } from "react";
-import { Shield, RefreshCw, CheckCircle, XCircle, Save, X } from "lucide-react";
+import { Shield, RefreshCw, CheckCircle, XCircle, Save, X, Trash2, AlertTriangle } from "lucide-react";
 import { api } from "@/lib/api-client";
 import { useCongTrinh } from "@/components/CongTrinhProvider";
 import { useAuth } from "@/components/SessionProvider";
@@ -22,6 +22,8 @@ export default function PhanQuyenPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const [confirmDeleteUser, setConfirmDeleteUser] = useState<AppUser | null>(null);
+  const [deletingUser, setDeletingUser] = useState(false);
 
   const isAdmin = currentUser?.role === "admin";
 
@@ -76,6 +78,22 @@ export default function PhanQuyenPage() {
       setMsg({ type: "err", text: errDetail(err, "Lỗi lưu phân quyền") });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!confirmDeleteUser) return;
+    setDeletingUser(true);
+    setMsg(null);
+    try {
+      await api.delete(`/auth/users/${confirmDeleteUser.id}`);
+      setConfirmDeleteUser(null);
+      setMsg({ type: "ok", text: `Đã xóa "${confirmDeleteUser.ten}" khỏi danh sách.` });
+      await loadData();
+    } catch (err) {
+      setMsg({ type: "err", text: errDetail(err, "Xóa tài khoản thất bại.") });
+    } finally {
+      setDeletingUser(false);
     }
   };
 
@@ -143,12 +161,14 @@ export default function PhanQuyenPage() {
                     </div>
                   </th>
                 ))}
+                <th className="w-12"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-hp-border">
               {users.map((u) => {
                 const userPerms = perms[u.id] || new Set<number>();
                 const isCurrentAdmin = u.role === "admin";
+                const isSelf = u.email === currentUser?.email;
 
                 return (
                   <tr key={u.id} className="hover:bg-hp-elevated">
@@ -168,6 +188,17 @@ export default function PhanQuyenPage() {
                         />
                       </td>
                     ))}
+                    <td className="text-center px-3 py-3">
+                      {!isSelf && (
+                        <button
+                          onClick={() => setConfirmDeleteUser(u)}
+                          title="Xóa khỏi danh sách"
+                          className="p-1.5 text-hp-text-muted hover:text-hp-danger hover:bg-hp-danger/10 rounded-hp-lg transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 );
               })}
@@ -181,14 +212,26 @@ export default function PhanQuyenPage() {
           {users.map((u) => {
             const userPerms = perms[u.id] || new Set<number>();
             const isCurrentAdmin = u.role === "admin";
+            const isSelf = u.email === currentUser?.email;
             return (
               <CardListItem key={u.id}>
-                <div>
-                  <div className="font-medium text-hp-text text-sm flex items-center gap-2">
-                    {u.ten}
-                    {isCurrentAdmin && <span className="text-xs bg-hp-primary/15 text-hp-primary px-1.5 py-0.5 rounded font-semibold">ADMIN</span>}
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="font-medium text-hp-text text-sm flex items-center gap-2">
+                      {u.ten}
+                      {isCurrentAdmin && <span className="text-xs bg-hp-primary/15 text-hp-primary px-1.5 py-0.5 rounded font-semibold">ADMIN</span>}
+                    </div>
+                    <div className="text-xs text-hp-text-muted">{u.email}</div>
                   </div>
-                  <div className="text-xs text-hp-text-muted">{u.email}</div>
+                  {!isSelf && (
+                    <button
+                      onClick={() => setConfirmDeleteUser(u)}
+                      title="Xóa khỏi danh sách"
+                      className="min-w-11 min-h-11 flex items-center justify-center flex-shrink-0 text-hp-text-muted hover:text-hp-danger hover:bg-hp-danger/10 rounded-hp-lg transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
                 <div className="pt-1 border-t border-hp-divider space-y-1">
                   {congTrinhs.map((ct) => (
@@ -207,6 +250,30 @@ export default function PhanQuyenPage() {
               </CardListItem>
             );
           })}
+        </div>
+      )}
+
+      {confirmDeleteUser && (
+        <div className="fixed inset-0 bg-hp-overlay flex items-center justify-center z-50 p-4">
+          <div className="bg-hp-elevated border border-hp-border rounded-hp-lg shadow-md w-full max-w-sm p-6">
+            <div className="flex items-start gap-3 mb-4">
+              <AlertTriangle className="w-6 h-6 text-hp-danger flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-bold text-hp-text">Xóa &quot;{confirmDeleteUser.ten}&quot; khỏi danh sách?</h3>
+                <p className="text-sm text-hp-text-secondary mt-1">
+                  Chỉ xóa khỏi danh sách Phân quyền của KhoCtr, không ảnh hưởng tài khoản đăng nhập ở HPCore. Nếu người này vẫn còn quyền dùng app Kho và đăng nhập lại, họ sẽ tự xuất hiện lại (mất hết công trình đã cấp trước đó, cần cấp lại).
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setConfirmDeleteUser(null)} disabled={deletingUser} className="px-4 py-2 min-h-10 text-sm text-hp-text-secondary hover:bg-hp-muted/20 rounded-hp-md">
+                Hủy
+              </button>
+              <button onClick={handleDeleteUser} disabled={deletingUser} className="px-4 py-2 min-h-10 text-sm font-medium text-white bg-hp-danger hover:bg-hp-danger/90 rounded-hp-md disabled:opacity-50">
+                {deletingUser ? "Đang xóa..." : "Xóa"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

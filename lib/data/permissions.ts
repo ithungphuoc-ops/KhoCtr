@@ -34,3 +34,15 @@ export async function savePermissions(permissions: { user_id: number; cong_trinh
 export async function listUsers(): Promise<AppUser[]> {
   return (await select("app_users", { query: "id,email,ten,role,active,created_at", order: "id.asc" })) as AppUser[];
 }
+
+/**
+ * Xóa 1 tài khoản khỏi danh sách nội bộ của KhoCtr (collection app_users +
+ * user_congtrinh liên quan) — KHÔNG đụng gì tới tài khoản đăng nhập thật ở
+ * HPCore (account.hpcore.vn/hpcons-portal). Nếu người này vẫn còn quyền
+ * "warehouse" và đăng nhập lại, họ sẽ tự tạo lại bản ghi (xem
+ * lib/session.ts::fetchCurrentUser) và xuất hiện lại trong danh sách.
+ */
+export async function deleteUser(id: number): Promise<void> {
+  await del("user_congtrinh", `user_id=eq.${id}`);
+  await del("app_users", `id=eq.${id}`);
+}
