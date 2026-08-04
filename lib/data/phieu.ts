@@ -62,7 +62,10 @@ export async function getPhieuList(opts: {
   if (!includeDeleted) extra += `&deleted_at=is.null`;
   return (await select("phieu", {
     filters: `limit=${limit}&offset=${offset}${extra}`,
-    order: "ngay.desc",
+    // Sắp theo ngày trước; nếu trùng ngày, phiếu tạo sau cùng (id lớn hơn — id là
+    // counter tăng dần theo thời điểm tạo, xem COUNTER_TABLES trong firestore/client.ts)
+    // lên trên, tránh thứ tự không rõ ràng khi nhiều phiếu cùng ngày.
+    order: "ngay.desc,id.desc",
   })) as Phieu[];
 }
 
