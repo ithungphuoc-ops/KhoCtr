@@ -75,16 +75,16 @@ export default function CTDashboardPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         {kpis.map((kpi, i) => (
           <div key={i} className="bg-hp-card rounded-hp-lg border border-hp-border p-4 flex items-center gap-3">
             <div className={`w-10 h-10 ${kpi.bg} rounded-hp-lg flex items-center justify-center flex-shrink-0`}>
               <kpi.icon className={`w-5 h-5 ${kpi.fg}`} />
             </div>
-            <div>
-              <div className="text-xs text-hp-text-secondary">{kpi.label}</div>
+            <div className="min-w-0">
+              <div className="text-xs text-hp-text-secondary truncate">{kpi.label}</div>
               <div className={`text-xl font-bold ${kpi.color || "text-hp-text"}`}>{kpi.value}</div>
-              <div className="text-xs text-hp-text-muted">{kpi.sub}</div>
+              <div className="text-xs text-hp-text-muted truncate">{kpi.sub}</div>
             </div>
           </div>
         ))}

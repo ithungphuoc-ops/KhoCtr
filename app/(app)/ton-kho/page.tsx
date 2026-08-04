@@ -63,26 +63,26 @@ export default function TonKhoPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
         <div className="bg-hp-card rounded-hp-lg border border-hp-border p-4 flex items-center gap-3">
           <Package className="w-8 h-8 text-hp-accent flex-shrink-0" />
-          <div>
+          <div className="min-w-0">
             <div className="text-2xl font-bold text-hp-text">{fmt(data.length)}</div>
-            <div className="text-sm text-hp-text-secondary">Tổng mặt hàng</div>
+            <div className="text-sm text-hp-text-secondary truncate">Tổng mặt hàng</div>
           </div>
         </div>
         <div className="bg-hp-card rounded-hp-lg border border-hp-border p-4 flex items-center gap-3">
           <CheckCircle className="w-8 h-8 text-hp-success flex-shrink-0" />
-          <div>
+          <div className="min-w-0">
             <div className="text-2xl font-bold text-hp-text">{fmt(conHangCount)}</div>
-            <div className="text-sm text-hp-text-secondary">Còn hàng trong kho</div>
+            <div className="text-sm text-hp-text-secondary truncate">Còn hàng trong kho</div>
           </div>
         </div>
-        <div className="bg-hp-card rounded-hp-lg border border-hp-border p-4 flex items-center gap-3 cursor-pointer hover:border-hp-danger/50 transition-colors" onClick={() => setShowCanhBao(!showCanhBao)}>
+        <div className="col-span-2 md:col-span-1 bg-hp-card rounded-hp-lg border border-hp-border p-4 flex items-center gap-3 cursor-pointer hover:border-hp-danger/50 transition-colors" onClick={() => setShowCanhBao(!showCanhBao)}>
           <AlertCircle className="w-8 h-8 text-hp-danger flex-shrink-0" />
-          <div>
+          <div className="min-w-0">
             <div className="text-2xl font-bold text-hp-danger">{fmt(canhBaoCount)}</div>
-            <div className="text-sm text-hp-text-secondary">Hết hàng / cần kiểm tra</div>
+            <div className="text-sm text-hp-text-secondary truncate">Hết hàng / cần kiểm tra</div>
           </div>
         </div>
       </div>

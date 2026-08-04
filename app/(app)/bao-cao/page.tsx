@@ -103,7 +103,7 @@ export default function BaoCaoPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         <div className="bg-hp-card rounded-hp-lg border border-hp-border p-4">
           <div className="text-xs text-hp-text-muted mb-1">Phiếu Nhập Kho</div>
           <div className="text-2xl font-bold text-hp-primary">{nkList.length}</div>

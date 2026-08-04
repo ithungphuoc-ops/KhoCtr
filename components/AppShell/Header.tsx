@@ -180,9 +180,9 @@ export function Header({ session, onMenuClick }: { session: Session; onMenuClick
           <Menu className="w-5 h-5" />
         </button>
         <Home className="w-4 h-4 text-hp-text-muted flex-shrink-0 hidden sm:block" />
-        <span className="text-hp-text-muted">Trang chủ</span>
-        <ChevronRight className="w-3 h-3 text-hp-text-disabled" />
-        <span className="text-hp-text font-medium">{pageName}</span>
+        <span className="text-hp-text-muted hidden sm:inline whitespace-nowrap">Trang chủ</span>
+        <ChevronRight className="w-3 h-3 text-hp-text-disabled hidden sm:block flex-shrink-0" />
+        <span className="text-hp-text font-medium min-w-0 truncate">{pageName}</span>
       </div>
 
       <div className="flex items-center gap-1.5 md:gap-3">

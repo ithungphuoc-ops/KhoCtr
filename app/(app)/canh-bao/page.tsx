@@ -75,7 +75,7 @@ export default function CanhBaoPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         {(
           [
             { label: "Tổng cảnh báo", value: data.length, color: "text-hp-text", active: filter === "all", key: "all" as Filter },

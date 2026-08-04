@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LayoutDashboard, Download, Upload, Package, Cpu, ChevronLeft, ChevronRight, ArrowLeft, Warehouse, BookOpen, FileUp, StickyNote, Menu, X } from "lucide-react";
 import { useCT } from "./CTProvider";
+import { BottomNav, type BottomNavItem } from "@/components/BottomNav";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Tổng quan", path: "" },
@@ -38,6 +39,13 @@ export function CTLayoutShell({ children }: { children: ReactNode }) {
   }, [mobileOpen]);
 
   const base = `/ct/${ctId}`;
+
+  const bottomNavItems: BottomNavItem[] = [
+    { icon: LayoutDashboard, label: "Tổng quan", path: base, exact: true },
+    { icon: Download, label: "Nhập kho", path: `${base}/nhap-kho` },
+    { icon: Upload, label: "Xuất kho", path: `${base}/xuat-kho` },
+    { icon: Package, label: "Tồn kho", path: `${base}/ton-kho` },
+  ];
 
   return (
     <div className="flex h-screen overflow-hidden bg-hp-bg">
@@ -116,8 +124,9 @@ export function CTLayoutShell({ children }: { children: ReactNode }) {
           <span className="text-sm font-semibold text-hp-text truncate">{congTrinh?.ten_ct || "Đang tải..."}</span>
           {congTrinh?.dia_chi && <span className="text-xs text-hp-text-muted truncate hidden sm:inline">&nbsp;·&nbsp; {String(congTrinh.dia_chi)}</span>}
         </div>
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-hp-bg">{children}</main>
+        <main className="flex-1 overflow-y-auto p-4 pb-20 md:p-6 bg-hp-bg">{children}</main>
       </div>
+      <BottomNav items={bottomNavItems} onMoreClick={() => setMobileOpen(true)} />
     </div>
   );
 }

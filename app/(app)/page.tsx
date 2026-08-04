@@ -575,7 +575,7 @@ export default function DashboardPage() {
         </button>
       </div>
 
-      <div className="flex gap-4">
+      <div className="hidden md:flex gap-4">
         <KPICard loading={loading} icon={Building2} iconBg="bg-hp-accent/15" iconColor="text-hp-accent" title="Tổng công trình" value={kpi?.so_cong_trinh ?? "—"} subtitle="Đang hoạt động" />
         <KPICard loading={loading} icon={Download} iconBg="bg-hp-primary/15" iconColor="text-hp-primary" title="Phiếu nhập" value={kpi?.so_phieu_nk ?? "—"} subtitle="Tổng số phiếu" />
         <KPICard loading={loading} icon={Upload} iconBg="bg-hp-warning/15" iconColor="text-hp-warning" title="Phiếu xuất" value={kpi?.so_phieu_xk ?? "—"} subtitle="Tổng số phiếu" />
@@ -583,7 +583,7 @@ export default function DashboardPage() {
         <KPICard loading={loading} icon={AlertTriangle} iconBg="bg-hp-danger/15" iconColor="text-hp-danger" title="Cảnh báo hết hàng" value={kpi?.so_canh_bao ?? "—"} subtitle="Tồn ≤ 0" valueColor="text-hp-danger" />
       </div>
 
-      <div className="flex gap-4">
+      <div className="hidden md:flex gap-4">
         <KPICard loading={loading} icon={TrendingUp} iconBg="bg-hp-primary/15" iconColor="text-hp-primary" title="Tổng tiền nhập" value={formatVND(kpi?.tong_tien_nk)} subtitle="Giá trị phiếu NK" valueColor="text-hp-primary" />
         <KPICard loading={loading} icon={TrendingDown} iconBg="bg-hp-warning/15" iconColor="text-hp-warning" title="Tổng tiền xuất" value={formatVND(kpi?.tong_tien_xk)} subtitle="Giá trị phiếu XK" valueColor="text-hp-warning" />
         <KPICard loading={loading} icon={DollarSign} iconBg="bg-hp-accent/15" iconColor="text-hp-accent" title="Tổng phiếu" value={fmt(tongPhieu)} subtitle="NK + XK" />
@@ -591,7 +591,20 @@ export default function DashboardPage() {
         <KPICard loading={loading} icon={Layers} iconBg="bg-hp-danger/15" iconColor="text-hp-danger" title="Âm kho" value={kpi?.so_am_kho ?? "—"} subtitle="Tồn < 0" valueColor="text-hp-danger" />
       </div>
 
-      <div className="grid gap-4" style={{ gridTemplateColumns: "5fr 3fr" }}>
+      <div className="grid grid-cols-2 gap-3 md:hidden">
+        <KPICard loading={loading} icon={Building2} iconBg="bg-hp-accent/15" iconColor="text-hp-accent" title="Tổng công trình" value={kpi?.so_cong_trinh ?? "—"} subtitle="Đang hoạt động" />
+        <KPICard loading={loading} icon={Download} iconBg="bg-hp-primary/15" iconColor="text-hp-primary" title="Phiếu nhập" value={kpi?.so_phieu_nk ?? "—"} subtitle="Tổng số phiếu" />
+        <KPICard loading={loading} icon={Upload} iconBg="bg-hp-warning/15" iconColor="text-hp-warning" title="Phiếu xuất" value={kpi?.so_phieu_xk ?? "—"} subtitle="Tổng số phiếu" />
+        <KPICard loading={loading} icon={Package} iconBg="bg-hp-muted/15" iconColor="text-hp-muted" title="Mặt hàng quản lý" value={fmt(kpi?.so_mat_hang)} subtitle="Mã hàng hóa" />
+        <KPICard loading={loading} icon={AlertTriangle} iconBg="bg-hp-danger/15" iconColor="text-hp-danger" title="Cảnh báo hết hàng" value={kpi?.so_canh_bao ?? "—"} subtitle="Tồn ≤ 0" valueColor="text-hp-danger" />
+        <KPICard loading={loading} icon={TrendingUp} iconBg="bg-hp-primary/15" iconColor="text-hp-primary" title="Tổng tiền nhập" value={formatVND(kpi?.tong_tien_nk)} subtitle="Giá trị phiếu NK" valueColor="text-hp-primary" />
+        <KPICard loading={loading} icon={TrendingDown} iconBg="bg-hp-warning/15" iconColor="text-hp-warning" title="Tổng tiền xuất" value={formatVND(kpi?.tong_tien_xk)} subtitle="Giá trị phiếu XK" valueColor="text-hp-warning" />
+        <KPICard loading={loading} icon={DollarSign} iconBg="bg-hp-accent/15" iconColor="text-hp-accent" title="Tổng phiếu" value={fmt(tongPhieu)} subtitle="NK + XK" />
+        <KPICard loading={loading} icon={AlertCircle} iconBg="bg-hp-warning/15" iconColor="text-hp-warning" title="Sắp hết hàng" value={kpi?.so_canh_bao_thap ?? canhBao.length} subtitle="Tồn ≤ 20" valueColor="text-hp-warning" />
+        <KPICard loading={loading} icon={Layers} iconBg="bg-hp-danger/15" iconColor="text-hp-danger" title="Âm kho" value={kpi?.so_am_kho ?? "—"} subtitle="Tồn < 0" valueColor="text-hp-danger" />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-[5fr_3fr] gap-4">
         <div className="bg-hp-card rounded-hp-lg shadow-sm border border-hp-border p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-hp-text">Biểu đồ Nhập - Xuất</h3>
@@ -631,12 +644,12 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <TopVatTuWidget title="Top vật tư nhập nhiều nhất" data={topNK} loading={loading} type="nk" />
         <TopVatTuWidget title="Top vật tư xuất nhiều nhất" data={topXK} loading={loading} type="xk" />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <TonKhoWidget data={tonKho} loading={loading} />
 
         <div className="bg-hp-card rounded-hp-lg shadow-sm border border-hp-border p-5">
