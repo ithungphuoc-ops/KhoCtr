@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 export const metadata: Metadata = {
   title: "KhoCtr — Quản lý kho công trình HP Cons",
   description: "Hệ thống quản lý kho vật liệu xây dựng HP Cons Việt Nam",
+  icons: { icon: "/logo-hpcons.png" },
 };
 
 // Chống nháy màn hình (FOUC): đọc localStorage TRƯỚC khi React hydrate, set thẳng
