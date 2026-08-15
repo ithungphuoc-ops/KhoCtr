@@ -20,18 +20,33 @@ const ICONS: Record<string, LucideIcon> = {
 };
 
 const ROLE_LABEL: Record<string, string> = { admin: "Quản trị viên", user: "Thủ kho" };
-const isBiz = (n: string) => n.startsWith("HPC ");
 
 interface AppEntry {
   name: string;
   href?: string;
   iconKey?: string;
+  category?: "ops" | "business";
   image?: string;
   color?: string;
   comingSoon?: boolean;
 }
 
-function Tile({ app, onNavigate }: { app: AppEntry; onNavigate: () => void }) {
+/** Tô sáng phần chữ khớp với từ khoá tìm kiếm — plain-match, khớp đúng luật lọc ở dưới. */
+function HighlightMatch({ text, query }: { text: string; query: string }) {
+  const q = query.trim();
+  if (!q) return <>{text}</>;
+  const index = text.toLowerCase().indexOf(q.toLowerCase());
+  if (index === -1) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, index)}
+      <mark className="rounded bg-green-500/20 px-0.5 font-semibold text-green-300">{text.slice(index, index + q.length)}</mark>
+      {text.slice(index + q.length)}
+    </>
+  );
+}
+
+function Tile({ app, onNavigate, query }: { app: AppEntry; onNavigate: () => void; query: string }) {
   const Icon = (app.iconKey && ICONS[app.iconKey]) || AppWindow;
   const current = !!app.href && app.href.includes("khoct.hpcore.vn");
   const inner = (
@@ -50,7 +65,7 @@ function Tile({ app, onNavigate }: { app: AppEntry; onNavigate: () => void }) {
       <span
         className={`text-center text-xs font-medium leading-tight ${app.comingSoon ? "text-hp-text-disabled" : "text-hp-text"}`}
       >
-        {app.name}
+        <HighlightMatch text={app.name} query={query} />
       </span>
       {current && (
         <span className="rounded-full bg-hp-primary/15 px-1.5 py-0.5 text-[9px] text-hp-primary">Đang dùng</span>
@@ -100,12 +115,12 @@ export function AppLauncher({ user, onClose }: { user: Session | null; onClose: 
     {
       title: "Nhân sự & Vận hành",
       subtitle: "Chấm công, đơn từ, đặt phòng, báo cáo...",
-      apps: list.filter((a) => !isBiz(a.name)),
+      apps: list.filter((a) => a.category !== "business"),
     },
     {
       title: "Ứng dụng nghiệp vụ",
       subtitle: "Kinh doanh, kho, tài sản, quy trình...",
-      apps: list.filter((a) => isBiz(a.name)),
+      apps: list.filter((a) => a.category === "business"),
     },
   ].filter((g) => g.apps.length > 0);
 
@@ -166,7 +181,7 @@ export function AppLauncher({ user, onClose }: { user: Session | null; onClose: 
                 <p className="mb-3 text-xs text-hp-text-muted">{g.subtitle}</p>
                 <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
                   {g.apps.map((app) => (
-                    <Tile key={app.name} app={app} onNavigate={onClose} />
+                    <Tile key={app.name} app={app} onNavigate={onClose} query={ql} />
                   ))}
                 </div>
               </div>
