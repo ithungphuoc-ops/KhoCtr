@@ -5,7 +5,7 @@
 // phụ thuộc getPhieuList/getTonKho/exportExcel — đã port xong ở GĐ2/GĐ3).
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, HelpCircle, Calendar, Download, ChevronRight, Home, LogOut, Loader, Sun, Moon, Menu } from "lucide-react";
+import { Bell, Gift, HelpCircle, Calendar, Download, ChevronRight, Home, LogOut, Loader, Sun, Moon, Menu } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { useCongTrinh } from "@/components/CongTrinhProvider";
 import { getPhieuList, getTonKho } from "@/lib/api-client";
@@ -287,6 +287,20 @@ export function Header({ session, onMenuClick }: { session: Session; onMenuClick
             </span>
           )}
         </button>
+
+        <a
+          href="https://quacuatoi.hpcore.vn"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Quà của tôi"
+          className="relative p-2.5 rounded-hp-md hover:bg-hp-elevated text-hp-text-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent"
+        >
+          <Gift className="w-5 h-5" />
+          {/* Số điểm tạm để 0 — chưa nối UrBox thật, xem hpcons-quacuatoi/openspec */}
+          <span className="absolute top-1 right-1 w-4 h-4 bg-hp-danger text-white text-xs rounded-full flex items-center justify-center leading-none">
+            0
+          </span>
+        </a>
 
         <button
           onClick={toggleTheme}
