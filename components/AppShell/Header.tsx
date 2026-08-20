@@ -293,13 +293,11 @@ export function Header({ session, onMenuClick }: { session: Session; onMenuClick
           target="_blank"
           rel="noopener noreferrer"
           title="Quà của tôi"
-          className="relative p-2.5 rounded-hp-md hover:bg-hp-elevated text-hp-text-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent"
+          className="flex items-center gap-2 px-2.5 md:px-4 min-h-10 bg-hp-success text-white rounded-hp-md text-sm font-medium hover:bg-hp-success/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent"
         >
-          <Gift className="w-5 h-5" />
+          <Gift className="w-4 h-4" />
           {/* Số điểm tạm để 0 — chưa nối UrBox thật, xem hpcons-quacuatoi/openspec */}
-          <span className="absolute top-1 right-1 w-4 h-4 bg-hp-danger text-white text-xs rounded-full flex items-center justify-center leading-none">
-            0
-          </span>
+          <span className="hidden md:inline">0 điểm</span>
         </a>
 
         <button
