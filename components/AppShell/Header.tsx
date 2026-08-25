@@ -8,6 +8,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Bell, Gift, HelpCircle, Calendar, Download, ChevronRight, Home, LogOut, Loader, Sun, Moon, Menu } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { useCongTrinh } from "@/components/CongTrinhProvider";
+import GiftPopup from "./GiftPopup";
 import { getPhieuList, getTonKho } from "@/lib/api-client";
 import { exportBaoCaoTongHop, exportPhieuList } from "@/lib/export-excel";
 import type { Phieu } from "@/lib/data/phieu";
@@ -55,6 +56,7 @@ export function Header({ session, onMenuClick }: { session: Session; onMenuClick
   const [exporting, setExporting] = useState(false);
   const [alertCount, setAlertCount] = useState(0);
   const [seenCount, setSeenCount] = useState(0);
+  const [giftOpen, setGiftOpen] = useState(false);
 
   useEffect(() => {
     setSeenCount(parseInt(localStorage.getItem("canh_bao_seen") || "0", 10));
@@ -170,6 +172,7 @@ export function Header({ session, onMenuClick }: { session: Session; onMenuClick
     .slice(0, 2);
 
   return (
+    <>
     <header className="bg-hp-surface border-b border-hp-border px-4 md:px-6 flex items-center justify-between h-[60px] flex-shrink-0">
       <div className="flex items-center gap-2 text-sm min-w-0">
         <button
@@ -288,17 +291,17 @@ export function Header({ session, onMenuClick }: { session: Session; onMenuClick
           )}
         </button>
 
-        <a
-          href="https://quacuatoi.hpcore.vn"
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          type="button"
+          onClick={() => setGiftOpen(true)}
           title="Quà của tôi"
+          aria-label="Quà của tôi"
           className="flex items-center gap-2 px-2.5 md:px-4 min-h-10 bg-hp-success text-white rounded-hp-md text-sm font-medium hover:bg-hp-success/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hp-accent"
         >
           <Gift className="w-4 h-4" />
           {/* Số điểm tạm để 0 — chưa nối UrBox thật, xem hpcons-quacuatoi/openspec */}
           <span className="hidden md:inline">0 điểm</span>
-        </a>
+        </button>
 
         <button
           onClick={toggleTheme}
@@ -360,5 +363,7 @@ export function Header({ session, onMenuClick }: { session: Session; onMenuClick
         </div>
       </div>
     </header>
+    {giftOpen && <GiftPopup onClose={() => setGiftOpen(false)} />}
+    </>
   );
 }
